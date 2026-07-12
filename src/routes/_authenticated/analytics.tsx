@@ -32,6 +32,7 @@ interface ScanEventRow {
   business_id: string | null;
   location_id: string | null;
   campaign: string | null;
+  destination_type: string | null;
   device_type: string | null;
   browser: string | null;
   os: string | null;
@@ -41,6 +42,8 @@ interface ScanEventRow {
   session_id: string | null;
   clicked_review: boolean | null;
   clicked_review_at: string | null;
+  destination_clicked: boolean | null;
+  destination_clicked_at: string | null;
 }
 
 interface QrLookup {
