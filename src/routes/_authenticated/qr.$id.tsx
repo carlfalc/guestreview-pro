@@ -38,6 +38,9 @@ import {
 import { generateShortCode } from "@/lib/short-code";
 import { QrDesigner } from "@/components/qr-designer";
 import { mergeDesign, type QrDesign } from "@/lib/qr-design";
+import { FormatStudio } from "@/components/format-studio";
+import type { LayoutTemplate } from "@/lib/qr-formats";
+import type { FormatContent } from "@/lib/format-render";
 
 export const Route = createFileRoute("/_authenticated/qr/$id")({
   component: QrDetail,
