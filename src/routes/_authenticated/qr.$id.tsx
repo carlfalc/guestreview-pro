@@ -73,6 +73,20 @@ function QrDetail() {
   const [design, setDesign] = useState<QrDesign>(mergeDesign(null));
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
+  // Format Studio state
+  const [projectName, setProjectName] = useState<string>("");
+  const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("clean-minimal");
+  const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
+  const [content, setContent] = useState<FormatContent>({
+    businessName: "",
+    logoUrl: null,
+    headline: "Loved your visit?",
+    supportText: "Scan to leave us a review.",
+    ctaText: "Leave a review",
+  });
+  const [savingProject, setSavingProject] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!qr) return;
     setLabel(qr.label ?? "");
@@ -81,9 +95,20 @@ function QrDetail() {
     setDestinationLabelValue(qr.destination_label ?? "");
     setLandingMode((qr.landing_mode as "landing" | "redirect") ?? "landing");
     setExpiresAt(qr.expires_at ? new Date(qr.expires_at).toISOString().slice(0, 16) : "");
-    const biz = qr.businesses as { logo_url?: string; brand_primary?: string } | null;
+    const biz = qr.businesses as { logo_url?: string; brand_primary?: string; name?: string } | null;
     setDesign(mergeDesign((qr.design as Partial<QrDesign> | null) ?? null));
     setLogoUrl(qr.logo_url ?? biz?.logo_url ?? null);
+    setProjectName((qr.project_name as string | null) ?? `${biz?.name ?? "Untitled"} — Format Pack`);
+    setLayoutTemplate(((qr.layout_template as LayoutTemplate | null) ?? "clean-minimal") as LayoutTemplate);
+    const fmts = qr.selected_formats;
+    setSelectedFormats(Array.isArray(fmts) ? (fmts as string[]) : []);
+    setContent({
+      businessName: biz?.name ?? "",
+      logoUrl: qr.logo_url ?? biz?.logo_url ?? null,
+      headline: (qr.headline as string | null) ?? "Loved your visit?",
+      supportText: (qr.support_text as string | null) ?? "Scan to leave us a review.",
+      ctaText: (qr.cta_text as string | null) ?? (qr.destination_label ?? "Leave a review"),
+    });
   }, [qr]);
 
   const shortUrl = useMemo(() => {
