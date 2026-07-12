@@ -41,9 +41,17 @@ function QrDetail() {
   });
 
   const [style, setStyle] = useState<"square" | "circle" | "rounded">("square");
-  const [fg, setFg] = useState<string>(qr?.fg_color ?? "#000000");
-  const [bg, setBg] = useState<string>(qr?.bg_color ?? "#ffffff");
-  const [label, setLabel] = useState<string>(qr?.label ?? "");
+  const [fg, setFg] = useState<string>("#000000");
+  const [bg, setBg] = useState<string>("#ffffff");
+  const [label, setLabel] = useState<string>("");
+
+  useEffect(() => {
+    if (!qr) return;
+    setStyle((qr.style as "square" | "circle" | "rounded") ?? "square");
+    setFg(qr.fg_color ?? "#000000");
+    setBg(qr.bg_color ?? "#ffffff");
+    setLabel(qr.label ?? "");
+  }, [qr]);
 
   const shortUrl = useMemo(() => {
     if (!qr) return "";
@@ -60,6 +68,17 @@ function QrDetail() {
     toast.success("Saved");
     qc.invalidateQueries({ queryKey: ["qr", id] });
   }
+
+  async function deleteQr() {
+    if (!qr) return;
+    if (!confirm("Delete this QR code? Scan history will also be removed.")) return;
+    const { error } = await supabase.from("qr_codes").delete().eq("id", qr.id);
+    if (error) return toast.error(error.message);
+    toast.success("Deleted");
+    qc.invalidateQueries({ queryKey: ["all-qr"] });
+    navigate({ to: "/qr" });
+  }
+
 
   function downloadSvg() {
     const svg = svgRef.current?.querySelector("svg");
