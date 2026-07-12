@@ -1,5 +1,5 @@
 import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Star, Globe, Phone, MapPin } from "lucide-react";
@@ -29,13 +29,45 @@ interface QrRow {
   locations: { name: string | null; location_type: string | null } | null;
 }
 
+function sessionStorageKey(qrId: string) {
+  return `grp:scan:${qrId}`;
+}
+
+function getOrCreateSessionId(): string {
+  const key = "grp:sid";
+  try {
+    let sid = sessionStorage.getItem(key);
+    if (!sid) {
+      sid = crypto.randomUUID();
+      sessionStorage.setItem(key, sid);
+    }
+    return sid;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
+
+async function hashString(input: string): Promise<string> {
+  const buf = new TextEncoder().encode(input);
+  const hash = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hash))
+    .slice(0, 8)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 function GuestLanding() {
   const { code } = useParams({ from: "/r/$code" });
   const navigate = useNavigate();
   const [qr, setQr] = useState<QrRow | null>(null);
+  const [eventId, setEventId] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const didRun = useRef(false);
 
   useEffect(() => {
+    if (didRun.current) return;
+    didRun.current = true;
+
     (async () => {
       const { data, error } = await supabase
         .from("qr_codes")
@@ -49,33 +81,61 @@ function GuestLanding() {
         setNotFound(true);
         return;
       }
-      setQr(data as unknown as QrRow);
-      // Fire scan event
-      const ua = navigator.userAgent;
-      const parsed = parseUserAgent(ua);
-      let country: string | null = null;
+      const qrRow = data as unknown as QrRow;
+      setQr(qrRow);
+
+      // Reuse an existing event id for this QR in this session to avoid duplicates on refresh.
+      let existingId: string | null = null;
       try {
-        country = Intl.DateTimeFormat().resolvedOptions().timeZone?.split("/")[0] ?? null;
+        existingId = sessionStorage.getItem(sessionStorageKey(qrRow.id));
       } catch {
         // ignore
       }
-      const visitorHash = await hashString(`${ua}-${new Date().toDateString()}`);
-      await supabase.from("scan_events").insert({
-        qr_code_id: data.id,
-        business_id: data.business_id,
-        location_id: data.location_id,
-        owner_id: data.owner_id,
-        campaign: data.campaign,
-        country,
-        device_type: parsed.device_type,
-        os: parsed.os,
-        browser: parsed.browser,
-        user_agent: ua,
-        visitor_hash: visitorHash,
-        referrer: document.referrer || null,
-      });
-      // Increment scan count via update
-      await supabase.rpc("increment_qr_scans", { p_qr_id: data.id }).then(
+      if (existingId) {
+        setEventId(existingId);
+        return;
+      }
+
+      const ua = navigator.userAgent;
+      const parsed = parseUserAgent(ua);
+      let timezone: string | null = null;
+      try {
+        timezone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? null;
+      } catch {
+        // ignore
+      }
+      const sessionId = getOrCreateSessionId();
+      const visitorHash = await hashString(`${ua}-${sessionId}`);
+
+      const { data: inserted, error: insErr } = await supabase
+        .from("scan_events")
+        .insert({
+          qr_code_id: qrRow.id,
+          business_id: qrRow.business_id,
+          location_id: qrRow.location_id,
+          owner_id: qrRow.owner_id,
+          campaign: qrRow.campaign,
+          device_type: parsed.device_type,
+          os: parsed.os,
+          browser: parsed.browser,
+          user_agent: ua,
+          visitor_hash: visitorHash,
+          referrer: document.referrer || null,
+          session_id: sessionId,
+          timezone,
+        })
+        .select("id")
+        .single();
+
+      if (insErr || !inserted) return;
+      setEventId(inserted.id);
+      try {
+        sessionStorage.setItem(sessionStorageKey(qrRow.id), inserted.id);
+      } catch {
+        // ignore
+      }
+      // Increment scans_count exactly once for this new event.
+      await supabase.rpc("increment_qr_scans", { p_qr_id: qrRow.id }).then(
         () => {},
         () => {},
       );
@@ -84,16 +144,12 @@ function GuestLanding() {
 
   async function goReview() {
     if (!qr) return;
-    // mark clicked (best-effort — a fresh insert with clicked_review=true)
-    await supabase.from("scan_events").insert({
-      qr_code_id: qr.id,
-      business_id: qr.business_id,
-      location_id: qr.location_id,
-      owner_id: qr.owner_id,
-      campaign: qr.campaign,
-      clicked_review: true,
-      user_agent: navigator.userAgent,
-    });
+    if (eventId) {
+      await supabase.rpc("mark_scan_clicked", { p_event_id: eventId }).then(
+        () => {},
+        () => {},
+      );
+    }
     const url = qr.businesses?.google_review_url;
     if (url) window.location.href = url;
   }
@@ -189,10 +245,4 @@ function GuestLanding() {
       </div>
     </div>
   );
-}
-
-async function hashString(input: string): Promise<string> {
-  const buf = new TextEncoder().encode(input);
-  const hash = await crypto.subtle.digest("SHA-256", buf);
-  return Array.from(new Uint8Array(hash)).slice(0, 8).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
