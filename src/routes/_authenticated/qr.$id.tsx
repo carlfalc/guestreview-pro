@@ -164,6 +164,7 @@ function QrDetail() {
     }
     toast.success("Project saved");
     qc.invalidateQueries({ queryKey: ["qr", id] });
+  }
 
   async function setStatus(next: "active" | "paused" | "archived") {
     if (!qr) return;
