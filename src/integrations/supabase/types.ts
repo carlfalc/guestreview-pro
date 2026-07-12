@@ -156,13 +156,19 @@ export type Database = {
       }
       qr_codes: {
         Row: {
+          archived_at: string | null
           bg_color: string | null
           business_id: string
           campaign: string | null
           created_at: string
+          destination_label: string | null
+          destination_type: string
+          destination_url: string | null
+          expires_at: string | null
           fg_color: string | null
           id: string
           label: string | null
+          landing_mode: string
           location_id: string | null
           logo_url: string | null
           owner_id: string
@@ -173,13 +179,19 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           bg_color?: string | null
           business_id: string
           campaign?: string | null
           created_at?: string
+          destination_label?: string | null
+          destination_type?: string
+          destination_url?: string | null
+          expires_at?: string | null
           fg_color?: string | null
           id?: string
           label?: string | null
+          landing_mode?: string
           location_id?: string | null
           logo_url?: string | null
           owner_id: string
@@ -190,13 +202,19 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           bg_color?: string | null
           business_id?: string
           campaign?: string | null
           created_at?: string
+          destination_label?: string | null
+          destination_type?: string
+          destination_url?: string | null
+          expires_at?: string | null
           fg_color?: string | null
           id?: string
           label?: string | null
+          landing_mode?: string
           location_id?: string | null
           logo_url?: string | null
           owner_id?: string
