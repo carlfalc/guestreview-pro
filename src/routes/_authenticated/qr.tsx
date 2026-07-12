@@ -349,7 +349,7 @@ function CreateQrDialog({
             <Select value={destinationType} onValueChange={(v) => setDestinationType(v as DestinationType)}>
               <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {DESTINATION_TYPES.map((t) => (
+                {DESTINATION_TYPES.map((t: { value: DestinationType; label: string }) => (
                   <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                 ))}
               </SelectContent>
