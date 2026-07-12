@@ -24,6 +24,14 @@ import { QrCode, ArrowRight, Plus, Building2, AlertCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { generateShortCode } from "@/lib/short-code";
+import {
+  DESTINATION_TYPES,
+  destinationLabel,
+  isValidHttpsUrl,
+  statusBadgeVariant,
+  statusLabel,
+  type DestinationType,
+} from "@/lib/qr-destinations";
 
 export const Route = createFileRoute("/_authenticated/qr")({
   component: QrList,
@@ -106,6 +114,7 @@ function QrList() {
           {qrs.map((q) => {
             const biz = q.businesses as { name?: string; brand_primary?: string } | null;
             const loc = q.locations as { name?: string; location_type?: string } | null;
+            const effectiveStatus = computeEffectiveStatus(q.status, q.expires_at);
             return (
               <Link key={q.id} to="/qr/$id" params={{ id: q.id }} className="group">
                 <Card className="rounded-2xl border-border/70 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]">
@@ -119,12 +128,16 @@ function QrList() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{q.label || "Untitled QR"}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {biz?.name} · {loc?.name ?? "Entire business"}
+                        {biz?.name} · {destinationLabel(q.destination_type as DestinationType)}
+                        {loc?.name ? ` · ${loc.name}` : ""}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <Badge variant="secondary" className="rounded-full">{q.scans_count} scans</Badge>
-                      <ArrowRight className="ml-auto mt-1 h-3 w-3 text-muted-foreground transition group-hover:translate-x-0.5" />
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant={statusBadgeVariant(effectiveStatus)} className="rounded-full text-[10px]">
+                        {statusLabel(effectiveStatus)}
+                      </Badge>
+                      <span className="text-[11px] text-muted-foreground">{q.scans_count} scans</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground transition group-hover:translate-x-0.5" />
                     </div>
                   </CardContent>
                 </Card>
@@ -140,7 +153,7 @@ function QrList() {
             </div>
             <h3 className="text-lg font-semibold">Create your first QR code</h3>
             <p className="max-w-sm text-sm text-muted-foreground">
-              Choose one of your businesses and generate a branded Google review QR code.
+              Point a QR code to a Google review page, menu, booking link, Wi-Fi, and more.
             </p>
             <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
               <Button className="rounded-full" onClick={() => setOpen(true)}>
@@ -160,7 +173,7 @@ function QrList() {
             </div>
             <h3 className="text-lg font-semibold">Create a business first</h3>
             <p className="max-w-sm text-sm text-muted-foreground">
-              Add your business details and Google review URL before generating a QR code.
+              Add your business details before generating a QR code.
             </p>
             <Link to="/businesses" className="mt-2">
               <Button className="rounded-full"><Plus className="mr-1 h-4 w-4" /> Create Business</Button>
@@ -183,6 +196,13 @@ function QrList() {
   );
 }
 
+function computeEffectiveStatus(status: string, expires_at: string | null): "active" | "paused" | "expired" | "archived" {
+  if (status === "archived") return "archived";
+  if (status === "paused") return "paused";
+  if (expires_at && new Date(expires_at).getTime() < Date.now()) return "expired";
+  return "active";
+}
+
 function CreateQrDialog({
   open,
   onOpenChange,
@@ -198,6 +218,12 @@ function CreateQrDialog({
   const [locationId, setLocationId] = useState<string>("none");
   const [label, setLabel] = useState("");
   const [campaign, setCampaign] = useState("");
+  const [destinationType, setDestinationType] = useState<DestinationType>("google_review");
+  const [destinationUrl, setDestinationUrl] = useState("");
+  const [destinationLabelValue, setDestinationLabelValue] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [status, setStatus] = useState<"active" | "paused">("active");
+  const [landingMode, setLandingMode] = useState<"landing" | "redirect">("landing");
   const [style, setStyle] = useState<"square" | "rounded" | "circle">("square");
   const [fg, setFg] = useState("#000000");
   const [bg, setBg] = useState("#ffffff");
@@ -222,33 +248,47 @@ function CreateQrDialog({
     },
   });
 
-  // Load brand colour when business changes
   useEffect(() => {
     if (business?.brand_primary) setFg(business.brand_primary);
     setLocationId("none");
   }, [business]);
 
-  // Reset on close
+  useEffect(() => {
+    if (destinationType === "google_review") {
+      setDestinationUrl(business?.google_review_url ?? "");
+    }
+  }, [destinationType, business]);
+
   useEffect(() => {
     if (!open) {
       setBusinessId("");
       setLocationId("none");
       setLabel("");
       setCampaign("");
+      setDestinationType("google_review");
+      setDestinationUrl("");
+      setDestinationLabelValue("");
+      setExpiresAt("");
+      setStatus("active");
+      setLandingMode("landing");
       setStyle("square");
       setFg("#000000");
       setBg("#ffffff");
     }
   }, [open]);
 
-  const missingReviewUrl = !!business && !business.google_review_url;
+  const isGoogleReview = destinationType === "google_review";
+  const missingReviewUrl = isGoogleReview && !!business && !business.google_review_url;
+  const urlToValidate = isGoogleReview ? business?.google_review_url ?? "" : destinationUrl;
+  const urlValid = isValidHttpsUrl(urlToValidate);
 
   async function submit() {
     if (!business) return toast.error("Select a business");
     if (missingReviewUrl) {
-      return toast.error(
-        "This business does not yet have a Google review URL. Add one in Business Details before generating a QR code.",
-      );
+      return toast.error("This business has no Google review URL. Add one first or pick a different destination type.");
+    }
+    if (!urlValid) {
+      return toast.error("Enter a valid https:// URL for the destination.");
     }
     setSaving(true);
     try {
@@ -263,6 +303,12 @@ function CreateQrDialog({
           short_code: generateShortCode(),
           label: label.trim() || "Untitled QR",
           campaign: campaign.trim() || null,
+          destination_type: destinationType,
+          destination_url: isGoogleReview ? business.google_review_url : destinationUrl.trim(),
+          destination_label: destinationLabelValue.trim() || null,
+          expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+          status,
+          landing_mode: landingMode,
           style,
           fg_color: fg,
           bg_color: bg,
@@ -298,21 +344,41 @@ function CreateQrDialog({
             </Select>
           </div>
 
+          <div className="space-y-1.5">
+            <Label>Destination type</Label>
+            <Select value={destinationType} onValueChange={(v) => setDestinationType(v as DestinationType)}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {DESTINATION_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {missingReviewUrl && (
             <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>
-                This business does not yet have a Google review URL. Add one in Business Details before generating a QR code.
-              </span>
+              <span>This business has no Google review URL. Add one in Business Details, or pick another destination type.</span>
             </div>
           )}
 
-          {business?.google_review_url && (
-            <div className="rounded-xl bg-accent/50 p-3 text-xs">
-              <p className="uppercase tracking-wide text-muted-foreground">Destination</p>
-              <p className="mt-1 truncate font-mono">{business.google_review_url}</p>
-            </div>
-          )}
+          <div className="space-y-1.5">
+            <Label>Destination URL</Label>
+            <Input
+              value={isGoogleReview ? business?.google_review_url ?? "" : destinationUrl}
+              onChange={(e) => setDestinationUrl(e.target.value)}
+              disabled={isGoogleReview}
+              placeholder="https://..."
+              className="rounded-xl font-mono text-xs"
+            />
+            {isGoogleReview && (
+              <p className="text-[11px] text-muted-foreground">Uses the business's Google review URL. Switch to Custom to override.</p>
+            )}
+            {!isGoogleReview && destinationUrl && !urlValid && (
+              <p className="text-[11px] text-destructive">Enter a valid https:// URL.</p>
+            )}
+          </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
@@ -320,11 +386,15 @@ function CreateQrDialog({
               <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Front desk" className="rounded-xl" />
             </div>
             <div className="space-y-1.5">
-              <Label>Campaign (optional)</Label>
+              <Label>Destination label</Label>
+              <Input value={destinationLabelValue} onChange={(e) => setDestinationLabelValue(e.target.value)} placeholder="View menu" className="rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Campaign</Label>
               <Input value={campaign} onChange={(e) => setCampaign(e.target.value)} placeholder="Summer 2025" className="rounded-xl" />
             </div>
             <div className="space-y-1.5">
-              <Label>Location (optional)</Label>
+              <Label>Location</Label>
               <Select value={locationId} onValueChange={setLocationId} disabled={!businessId}>
                 <SelectTrigger className="rounded-xl"><SelectValue placeholder="Entire business" /></SelectTrigger>
                 <SelectContent>
@@ -334,6 +404,30 @@ function CreateQrDialog({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Status</Label>
+              <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Landing behaviour</Label>
+              <Select value={landingMode} onValueChange={(v) => setLandingMode(v as typeof landingMode)}>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="landing">Show landing page</SelectItem>
+                  <SelectItem value="redirect">Redirect immediately</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Expires at (optional)</Label>
+              <Input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="rounded-xl" />
             </div>
             <div className="space-y-1.5">
               <Label>QR style</Label>
@@ -350,7 +444,7 @@ function CreateQrDialog({
               <Label>Foreground</Label>
               <Input type="color" value={fg} onChange={(e) => setFg(e.target.value)} className="h-10 rounded-xl p-1" />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 sm:col-span-2">
               <Label>Background</Label>
               <Input type="color" value={bg} onChange={(e) => setBg(e.target.value)} className="h-10 rounded-xl p-1" />
             </div>
@@ -358,7 +452,7 @@ function CreateQrDialog({
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-full">Cancel</Button>
-          <Button onClick={submit} disabled={!businessId || missingReviewUrl || saving} className="rounded-full">
+          <Button onClick={submit} disabled={!businessId || missingReviewUrl || !urlValid || saving} className="rounded-full">
             {saving ? "Creating..." : "Create QR Code"}
           </Button>
         </DialogFooter>
