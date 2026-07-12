@@ -115,6 +115,102 @@ export type Database = {
           },
         ]
       }
+      marketing_packs: {
+        Row: {
+          archived_at: string | null
+          business_id: string
+          created_at: string
+          cta_text: string | null
+          description: string | null
+          footer_text: string | null
+          format_customizations: Json
+          global_settings: Json
+          headline: string | null
+          id: string
+          layout_template: string
+          owner_id: string
+          pack_type: string
+          preview_url: string | null
+          project_name: string
+          qr_code_id: string
+          selected_formats: Json
+          show_business_name: boolean
+          show_google_badge: boolean
+          show_logo: boolean
+          show_stars: boolean
+          status: string
+          support_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          business_id: string
+          created_at?: string
+          cta_text?: string | null
+          description?: string | null
+          footer_text?: string | null
+          format_customizations?: Json
+          global_settings?: Json
+          headline?: string | null
+          id?: string
+          layout_template?: string
+          owner_id: string
+          pack_type?: string
+          preview_url?: string | null
+          project_name: string
+          qr_code_id: string
+          selected_formats?: Json
+          show_business_name?: boolean
+          show_google_badge?: boolean
+          show_logo?: boolean
+          show_stars?: boolean
+          status?: string
+          support_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          business_id?: string
+          created_at?: string
+          cta_text?: string | null
+          description?: string | null
+          footer_text?: string | null
+          format_customizations?: Json
+          global_settings?: Json
+          headline?: string | null
+          id?: string
+          layout_template?: string
+          owner_id?: string
+          pack_type?: string
+          preview_url?: string | null
+          project_name?: string
+          qr_code_id?: string
+          selected_formats?: Json
+          show_business_name?: boolean
+          show_google_badge?: boolean
+          show_logo?: boolean
+          show_stars?: boolean
+          status?: string
+          support_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_packs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_packs_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

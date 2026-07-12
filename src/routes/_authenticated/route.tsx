@@ -5,6 +5,7 @@ import {
   Building2,
   QrCode,
   LineChart,
+  Package,
   Settings,
   LogOut,
   Menu,
@@ -28,6 +29,7 @@ const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/businesses", label: "Businesses", icon: Building2 },
   { to: "/qr", label: "QR codes", icon: QrCode },
+  { to: "/marketing-packs", label: "Marketing Packs", icon: Package },
   { to: "/analytics", label: "Analytics", icon: LineChart },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;

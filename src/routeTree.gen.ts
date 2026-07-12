@@ -19,7 +19,10 @@ import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBusinessesRouteImport } from './routes/_authenticated/businesses'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedMarketingPacksIndexRouteImport } from './routes/_authenticated/marketing-packs.index'
 import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/qr.$id'
+import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
+import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -71,11 +74,29 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMarketingPacksIndexRoute =
+  AuthenticatedMarketingPacksIndexRouteImport.update({
+    id: '/marketing-packs/',
+    path: '/marketing-packs/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedQrIdRoute = AuthenticatedQrIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AuthenticatedQrRoute,
 } as any)
+const AuthenticatedMarketingPacksNewRoute =
+  AuthenticatedMarketingPacksNewRouteImport.update({
+    id: '/marketing-packs/new',
+    path: '/marketing-packs/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingPacksIdRoute =
+  AuthenticatedMarketingPacksIdRouteImport.update({
+    id: '/marketing-packs/$id',
+    path: '/marketing-packs/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBusinessesIdRoute =
   AuthenticatedBusinessesIdRouteImport.update({
     id: '/$id',
@@ -94,7 +115,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
+  '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
+  '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
+  '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,7 +131,10 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
+  '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
+  '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
+  '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,7 +149,10 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
   '/_authenticated/businesses/$id': typeof AuthenticatedBusinessesIdRoute
+  '/_authenticated/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
+  '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
+  '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,7 +167,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/r/$code'
     | '/businesses/$id'
+    | '/marketing-packs/$id'
+    | '/marketing-packs/new'
     | '/qr/$id'
+    | '/marketing-packs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,7 +183,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/r/$code'
     | '/businesses/$id'
+    | '/marketing-packs/$id'
+    | '/marketing-packs/new'
     | '/qr/$id'
+    | '/marketing-packs'
   id:
     | '__root__'
     | '/'
@@ -164,7 +200,10 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/r/$code'
     | '/_authenticated/businesses/$id'
+    | '/_authenticated/marketing-packs/$id'
+    | '/_authenticated/marketing-packs/new'
     | '/_authenticated/qr/$id'
+    | '/_authenticated/marketing-packs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -247,12 +286,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing-packs/': {
+      id: '/_authenticated/marketing-packs/'
+      path: '/marketing-packs'
+      fullPath: '/marketing-packs/'
+      preLoaderRoute: typeof AuthenticatedMarketingPacksIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/qr/$id': {
       id: '/_authenticated/qr/$id'
       path: '/$id'
       fullPath: '/qr/$id'
       preLoaderRoute: typeof AuthenticatedQrIdRouteImport
       parentRoute: typeof AuthenticatedQrRoute
+    }
+    '/_authenticated/marketing-packs/new': {
+      id: '/_authenticated/marketing-packs/new'
+      path: '/marketing-packs/new'
+      fullPath: '/marketing-packs/new'
+      preLoaderRoute: typeof AuthenticatedMarketingPacksNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing-packs/$id': {
+      id: '/_authenticated/marketing-packs/$id'
+      path: '/marketing-packs/$id'
+      fullPath: '/marketing-packs/$id'
+      preLoaderRoute: typeof AuthenticatedMarketingPacksIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/businesses/$id': {
       id: '/_authenticated/businesses/$id'
@@ -296,6 +356,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedMarketingPacksIdRoute: typeof AuthenticatedMarketingPacksIdRoute
+  AuthenticatedMarketingPacksNewRoute: typeof AuthenticatedMarketingPacksNewRoute
+  AuthenticatedMarketingPacksIndexRoute: typeof AuthenticatedMarketingPacksIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -304,6 +367,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedMarketingPacksIdRoute: AuthenticatedMarketingPacksIdRoute,
+  AuthenticatedMarketingPacksNewRoute: AuthenticatedMarketingPacksNewRoute,
+  AuthenticatedMarketingPacksIndexRoute: AuthenticatedMarketingPacksIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
