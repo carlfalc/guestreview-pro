@@ -296,6 +296,7 @@ function QrDetail() {
             <Button variant="outline" onClick={() => setStatus("active")} className="rounded-full"><RefreshCw className="mr-1 h-4 w-4"/>Restore</Button>
           )}
           <Button variant="outline" onClick={duplicateQr} className="rounded-full"><CopyIcon className="mr-1 h-4 w-4"/>Duplicate</Button>
+          <Button variant="outline" onClick={convertToMarketingPack} className="rounded-full"><Package className="mr-1 h-4 w-4"/>Convert to Marketing Pack</Button>
         </div>
       </div>
 
