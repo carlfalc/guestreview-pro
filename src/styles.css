@@ -171,10 +171,12 @@
   }
 
   body {
-    background-color: var(--color-background);
+    background: radial-gradient(ellipse at top, #12194d 0%, #060826 55%, #030417 100%);
+    background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     letter-spacing: -0.01em;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4 {
