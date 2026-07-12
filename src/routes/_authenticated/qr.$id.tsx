@@ -103,7 +103,7 @@ function QrDetail() {
       destination_label: destinationLabelValue.trim() || null,
       landing_mode: landingMode,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
-      design: design as unknown as Record<string, unknown>,
+      design: design as unknown as never,
       logo_url: logoUrl,
       fg_color: design.fg,
       bg_color: design.bg,
