@@ -63,7 +63,7 @@ function AnalyticsPage() {
         supabase
           .from("scan_events")
           .select(
-            "id, created_at, qr_code_id, business_id, location_id, campaign, device_type, browser, os, timezone, country_code, country_name, session_id, clicked_review, clicked_review_at",
+            "id, created_at, qr_code_id, business_id, location_id, campaign, destination_type, device_type, browser, os, timezone, country_code, country_name, session_id, clicked_review, clicked_review_at, destination_clicked, destination_clicked_at",
           )
           .gte("created_at", since)
           .order("created_at", { ascending: false })
