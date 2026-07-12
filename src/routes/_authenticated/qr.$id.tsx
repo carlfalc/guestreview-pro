@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,9 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { QRCodeSVG } from "qrcode.react";
-import { ArrowLeft, Download, Copy, ExternalLink } from "lucide-react";
+import { ArrowLeft, Download, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/qr/$id")({
   component: QrDetail,
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/qr/$id")({
 function QrDetail() {
   const { id } = useParams({ from: "/_authenticated/qr/$id" });
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const svgRef = useRef<HTMLDivElement>(null);
 
   const { data: qr } = useQuery({
@@ -40,9 +41,17 @@ function QrDetail() {
   });
 
   const [style, setStyle] = useState<"square" | "circle" | "rounded">("square");
-  const [fg, setFg] = useState<string>(qr?.fg_color ?? "#000000");
-  const [bg, setBg] = useState<string>(qr?.bg_color ?? "#ffffff");
-  const [label, setLabel] = useState<string>(qr?.label ?? "");
+  const [fg, setFg] = useState<string>("#000000");
+  const [bg, setBg] = useState<string>("#ffffff");
+  const [label, setLabel] = useState<string>("");
+
+  useEffect(() => {
+    if (!qr) return;
+    setStyle((qr.style as "square" | "circle" | "rounded") ?? "square");
+    setFg(qr.fg_color ?? "#000000");
+    setBg(qr.bg_color ?? "#ffffff");
+    setLabel(qr.label ?? "");
+  }, [qr]);
 
   const shortUrl = useMemo(() => {
     if (!qr) return "";
@@ -59,6 +68,17 @@ function QrDetail() {
     toast.success("Saved");
     qc.invalidateQueries({ queryKey: ["qr", id] });
   }
+
+  async function deleteQr() {
+    if (!qr) return;
+    if (!confirm("Delete this QR code? Scan history will also be removed.")) return;
+    const { error } = await supabase.from("qr_codes").delete().eq("id", qr.id);
+    if (error) return toast.error(error.message);
+    toast.success("Deleted");
+    qc.invalidateQueries({ queryKey: ["all-qr"] });
+    navigate({ to: "/qr" });
+  }
+
 
   function downloadSvg() {
     const svg = svgRef.current?.querySelector("svg");
@@ -181,6 +201,10 @@ function QrDetail() {
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Button onClick={downloadPng} className="rounded-full"><Download className="mr-1 h-4 w-4"/>PNG</Button>
               <Button variant="outline" onClick={downloadSvg} className="rounded-full"><Download className="mr-1 h-4 w-4"/>SVG</Button>
+              <a href={shortUrl} target="_blank" rel="noreferrer" className="col-span-1">
+                <Button variant="outline" className="w-full rounded-full"><ExternalLink className="mr-1 h-4 w-4"/>Test</Button>
+              </a>
+              <Button variant="outline" onClick={deleteQr} className="rounded-full text-destructive hover:text-destructive"><Trash2 className="mr-1 h-4 w-4"/>Delete</Button>
             </div>
             <div className="mt-4 rounded-2xl bg-accent p-3 text-center text-xs text-accent-foreground">
               <span className="font-semibold">{qr.scans_count}</span> total scans
