@@ -13,10 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowLeft,
-  Download,
   Copy,
   ExternalLink,
   Trash2,
@@ -27,7 +25,7 @@ import {
   Copy as CopyIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DESTINATION_TYPES,
   destinationLabel,
@@ -38,6 +36,8 @@ import {
   type DestinationType,
 } from "@/lib/qr-destinations";
 import { generateShortCode } from "@/lib/short-code";
+import { QrDesigner } from "@/components/qr-designer";
+import { mergeDesign, type QrDesign } from "@/lib/qr-design";
 
 export const Route = createFileRoute("/_authenticated/qr/$id")({
   component: QrDetail,
@@ -47,7 +47,6 @@ function QrDetail() {
   const { id } = useParams({ from: "/_authenticated/qr/$id" });
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const svgRef = useRef<HTMLDivElement>(null);
 
   const { data: qr } = useQuery({
     queryKey: ["qr", id],
@@ -62,27 +61,26 @@ function QrDetail() {
     },
   });
 
-  const [style, setStyle] = useState<"square" | "circle" | "rounded">("square");
-  const [fg, setFg] = useState<string>("#000000");
-  const [bg, setBg] = useState<string>("#ffffff");
   const [label, setLabel] = useState<string>("");
   const [destinationType, setDestinationType] = useState<DestinationType>("google_review");
   const [destinationUrl, setDestinationUrl] = useState<string>("");
   const [destinationLabelValue, setDestinationLabelValue] = useState<string>("");
   const [landingMode, setLandingMode] = useState<"landing" | "redirect">("landing");
   const [expiresAt, setExpiresAt] = useState<string>("");
+  const [design, setDesign] = useState<QrDesign>(mergeDesign(null));
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!qr) return;
-    setStyle((qr.style as "square" | "circle" | "rounded") ?? "square");
-    setFg(qr.fg_color ?? "#000000");
-    setBg(qr.bg_color ?? "#ffffff");
     setLabel(qr.label ?? "");
     setDestinationType((qr.destination_type as DestinationType) ?? "google_review");
     setDestinationUrl(qr.destination_url ?? "");
     setDestinationLabelValue(qr.destination_label ?? "");
     setLandingMode((qr.landing_mode as "landing" | "redirect") ?? "landing");
     setExpiresAt(qr.expires_at ? new Date(qr.expires_at).toISOString().slice(0, 16) : "");
+    const biz = qr.businesses as { logo_url?: string; brand_primary?: string } | null;
+    setDesign(mergeDesign((qr.design as Partial<QrDesign> | null) ?? null));
+    setLogoUrl(qr.logo_url ?? biz?.logo_url ?? null);
   }, [qr]);
 
   const shortUrl = useMemo(() => {
@@ -99,15 +97,16 @@ function QrDetail() {
     if (!qr) return;
     if (!urlValid) return toast.error("Destination URL is not a valid https:// URL");
     const patch = {
-      style,
-      fg_color: fg,
-      bg_color: bg,
       label,
       destination_type: destinationType,
       destination_url: isGoogleReview ? biz?.google_review_url ?? null : destinationUrl.trim() || null,
       destination_label: destinationLabelValue.trim() || null,
       landing_mode: landingMode,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+      design: design as unknown as never,
+      logo_url: logoUrl,
+      fg_color: design.fg,
+      bg_color: design.bg,
     };
     const { error } = await supabase.from("qr_codes").update(patch).eq("id", qr.id);
     if (error) return toast.error(error.message);
@@ -155,9 +154,11 @@ function QrDetail() {
         landing_mode: qr.landing_mode,
         expires_at: qr.expires_at,
         status: "active",
-        style: qr.style,
+        design: qr.design ?? {},
+        logo_url: qr.logo_url,
         fg_color: qr.fg_color,
         bg_color: qr.bg_color,
+        style: qr.style,
       })
       .select("id")
       .single();
@@ -175,38 +176,6 @@ function QrDetail() {
     toast.success("Deleted");
     qc.invalidateQueries({ queryKey: ["all-qr"] });
     navigate({ to: "/qr" });
-  }
-
-  function downloadSvg() {
-    const svg = svgRef.current?.querySelector("svg");
-    if (!svg) return;
-    const src = new XMLSerializer().serializeToString(svg);
-    const blob = new Blob([src], { type: "image/svg+xml" });
-    triggerDownload(URL.createObjectURL(blob), `${qr?.short_code}.svg`);
-  }
-
-  function downloadPng() {
-    const svg = svgRef.current?.querySelector("svg");
-    if (!svg) return;
-    const src = new XMLSerializer().serializeToString(svg);
-    const img = new Image();
-    const svgBlob = new Blob([src], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
-    img.onload = () => {
-      const size = 1024;
-      const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext("2d")!;
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, size, size);
-      ctx.drawImage(img, 0, 0, size, size);
-      canvas.toBlob((b) => {
-        if (b) triggerDownload(URL.createObjectURL(b), `${qr?.short_code}.png`);
-      });
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
   }
 
   function copyUrl() {
@@ -253,7 +222,7 @@ function QrDetail() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
         <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
           <CardContent className="p-6 space-y-5">
             <div className="grid gap-3 sm:grid-cols-2">
@@ -311,25 +280,6 @@ function QrDetail() {
                   )}
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label>Style</Label>
-                <Select value={style} onValueChange={(v) => setStyle(v as "square" | "circle" | "rounded")}>
-                  <SelectTrigger className="rounded-xl"><SelectValue/></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="square">Square</SelectItem>
-                    <SelectItem value="rounded">Rounded</SelectItem>
-                    <SelectItem value="circle">Circle</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Foreground</Label>
-                <Input type="color" value={fg} onChange={(e) => setFg(e.target.value)} className="h-10 rounded-xl p-1"/>
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Background</Label>
-                <Input type="color" value={bg} onChange={(e) => setBg(e.target.value)} className="h-10 rounded-xl p-1"/>
-              </div>
             </div>
 
             <div className="grid gap-2 rounded-2xl bg-accent/40 p-4 text-xs sm:grid-cols-2">
@@ -351,44 +301,22 @@ function QrDetail() {
               <Button variant="outline" onClick={deleteQr} className="rounded-full text-destructive hover:text-destructive"><Trash2 className="mr-1 h-4 w-4"/>Delete</Button>
               <Button onClick={saveAll} className="rounded-full">Save changes</Button>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
-          <CardContent className="p-6">
-            <div
-              ref={svgRef}
-              className="mx-auto flex aspect-square w-full items-center justify-center overflow-hidden p-4"
-              style={{
-                background: bg,
-                borderRadius: style === "circle" ? "9999px" : style === "rounded" ? "2rem" : "1rem",
-              }}
-            >
-              <QRCodeSVG
-                value={shortUrl}
-                size={280}
-                fgColor={fg}
-                bgColor={bg}
-                level="H"
-                imageSettings={
-                  biz?.logo_url
-                    ? { src: biz.logo_url, height: 48, width: 48, excavate: true }
-                    : undefined
-                }
-              />
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button onClick={downloadPng} className="rounded-full"><Download className="mr-1 h-4 w-4"/>PNG</Button>
-              <Button variant="outline" onClick={downloadSvg} className="rounded-full"><Download className="mr-1 h-4 w-4"/>SVG</Button>
-              <a href={shortUrl} target="_blank" rel="noreferrer" className="col-span-2">
-                <Button variant="outline" className="w-full rounded-full"><ExternalLink className="mr-1 h-4 w-4"/>Test</Button>
-              </a>
-            </div>
-            <div className="mt-4 rounded-2xl bg-accent p-3 text-center text-xs text-accent-foreground">
+            <div className="rounded-2xl bg-accent p-3 text-center text-xs text-accent-foreground">
               <span className="font-semibold">{qr.scans_count}</span> total scans
             </div>
           </CardContent>
         </Card>
+
+        <QrDesigner
+          value={design}
+          onChange={setDesign}
+          url={shortUrl}
+          logoUrl={logoUrl}
+          onLogoChange={setLogoUrl}
+          brandColor={biz?.brand_primary ?? null}
+          filenameStem={qr.short_code}
+        />
       </div>
     </div>
   );
@@ -401,13 +329,4 @@ function MetaRow({ label, children }: { label: string; children: React.ReactNode
       <div className="mt-0.5 truncate">{children}</div>
     </div>
   );
-}
-
-function triggerDownload(url: string, filename: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
 }
