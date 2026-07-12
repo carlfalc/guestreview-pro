@@ -142,6 +142,29 @@ function QrDetail() {
     qc.invalidateQueries({ queryKey: ["qr", id] });
   }
 
+  async function saveFormatProject() {
+    if (!qr) return;
+    setSavingProject(true);
+    setSaveError(null);
+    const patch = {
+      project_name: projectName.trim() || null,
+      layout_template: layoutTemplate,
+      selected_formats: selectedFormats as unknown as never,
+      headline: content.headline.trim() || null,
+      support_text: content.supportText.trim() || null,
+      cta_text: content.ctaText.trim() || null,
+      format_last_edited_at: new Date().toISOString(),
+    };
+    const { error } = await supabase.from("qr_codes").update(patch).eq("id", qr.id);
+    setSavingProject(false);
+    if (error) {
+      setSaveError(error.message);
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Project saved");
+    qc.invalidateQueries({ queryKey: ["qr", id] });
+
   async function setStatus(next: "active" | "paused" | "archived") {
     if (!qr) return;
     const patch: { status: string; archived_at?: string | null } = { status: next };
