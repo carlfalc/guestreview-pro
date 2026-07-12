@@ -161,22 +161,30 @@ export type Database = {
           business_id: string
           campaign: string | null
           created_at: string
+          cta_text: string | null
           design: Json
           destination_label: string | null
           destination_type: string
           destination_url: string | null
           expires_at: string | null
           fg_color: string | null
+          format_customizations: Json
+          format_last_edited_at: string | null
+          headline: string | null
           id: string
           label: string | null
           landing_mode: string
+          layout_template: string
           location_id: string | null
           logo_url: string | null
           owner_id: string
+          project_name: string | null
           scans_count: number
+          selected_formats: Json
           short_code: string
           status: string
           style: string | null
+          support_text: string | null
           updated_at: string
         }
         Insert: {
@@ -185,22 +193,30 @@ export type Database = {
           business_id: string
           campaign?: string | null
           created_at?: string
+          cta_text?: string | null
           design?: Json
           destination_label?: string | null
           destination_type?: string
           destination_url?: string | null
           expires_at?: string | null
           fg_color?: string | null
+          format_customizations?: Json
+          format_last_edited_at?: string | null
+          headline?: string | null
           id?: string
           label?: string | null
           landing_mode?: string
+          layout_template?: string
           location_id?: string | null
           logo_url?: string | null
           owner_id: string
+          project_name?: string | null
           scans_count?: number
+          selected_formats?: Json
           short_code: string
           status?: string
           style?: string | null
+          support_text?: string | null
           updated_at?: string
         }
         Update: {
@@ -209,22 +225,30 @@ export type Database = {
           business_id?: string
           campaign?: string | null
           created_at?: string
+          cta_text?: string | null
           design?: Json
           destination_label?: string | null
           destination_type?: string
           destination_url?: string | null
           expires_at?: string | null
           fg_color?: string | null
+          format_customizations?: Json
+          format_last_edited_at?: string | null
+          headline?: string | null
           id?: string
           label?: string | null
           landing_mode?: string
+          layout_template?: string
           location_id?: string | null
           logo_url?: string | null
           owner_id?: string
+          project_name?: string | null
           scans_count?: number
+          selected_formats?: Json
           short_code?: string
           status?: string
           style?: string | null
+          support_text?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -255,6 +279,9 @@ export type Database = {
           country_code: string | null
           country_name: string | null
           created_at: string
+          destination_clicked: boolean
+          destination_clicked_at: string | null
+          destination_type: string | null
           device_type: string | null
           id: string
           location_id: string | null
@@ -279,6 +306,9 @@ export type Database = {
           country_code?: string | null
           country_name?: string | null
           created_at?: string
+          destination_clicked?: boolean
+          destination_clicked_at?: string | null
+          destination_type?: string | null
           device_type?: string | null
           id?: string
           location_id?: string | null
@@ -303,6 +333,9 @@ export type Database = {
           country_code?: string | null
           country_name?: string | null
           created_at?: string
+          destination_clicked?: boolean
+          destination_clicked_at?: string | null
+          destination_type?: string | null
           device_type?: string | null
           id?: string
           location_id?: string | null
@@ -375,7 +408,14 @@ export type Database = {
         Returns: boolean
       }
       increment_qr_scans: { Args: { p_qr_id: string }; Returns: undefined }
-      mark_scan_clicked: { Args: { p_event_id: string }; Returns: undefined }
+      mark_scan_clicked: {
+        Args: {
+          p_event_id: string
+          p_is_review?: boolean
+          p_session_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user"
