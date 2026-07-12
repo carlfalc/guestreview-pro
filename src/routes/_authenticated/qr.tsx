@@ -197,12 +197,6 @@ function QrList() {
   );
 }
 
-function computeEffectiveStatus(status: string, expires_at: string | null): "active" | "paused" | "expired" | "archived" {
-  if (status === "archived") return "archived";
-  if (status === "paused") return "paused";
-  if (expires_at && new Date(expires_at).getTime() < Date.now()) return "expired";
-  return "active";
-}
 
 function CreateQrDialog({
   open,
