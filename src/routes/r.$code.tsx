@@ -201,7 +201,12 @@ function ActiveLanding({ qr, eventId }: { qr: QrRow; eventId: string | null }) {
 
   async function goDestination() {
     if (eventId) {
-      await supabase.rpc("mark_scan_clicked", { p_event_id: eventId }).then(() => {}, () => {});
+      const sid = getOrCreateSessionId();
+      await supabase.rpc("mark_scan_clicked", {
+        p_event_id: eventId,
+        p_session_id: sid,
+        p_is_review: dtype === "google_review",
+      }).then(() => {}, () => {});
     }
     if (finalUrl) window.location.href = finalUrl;
   }
