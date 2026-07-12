@@ -370,6 +370,24 @@ function QrDetail() {
           filenameStem={qr.short_code}
         />
       </div>
+
+      <FormatStudio
+        projectName={projectName}
+        setProjectName={setProjectName}
+        layoutTemplate={layoutTemplate}
+        setLayoutTemplate={setLayoutTemplate}
+        selectedIds={selectedFormats}
+        setSelectedIds={setSelectedFormats}
+        content={content}
+        setContent={setContent}
+        qrDesign={design}
+        qrData={shortUrl}
+        logoUrl={logoUrl}
+        brand={biz?.brand_primary ?? "#0071e3"}
+        onSave={saveFormatProject}
+        saving={savingProject}
+        saveError={saveError}
+      />
     </div>
   );
 }
