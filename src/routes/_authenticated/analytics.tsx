@@ -32,6 +32,7 @@ interface ScanEventRow {
   business_id: string | null;
   location_id: string | null;
   campaign: string | null;
+  destination_type: string | null;
   device_type: string | null;
   browser: string | null;
   os: string | null;
@@ -41,6 +42,8 @@ interface ScanEventRow {
   session_id: string | null;
   clicked_review: boolean | null;
   clicked_review_at: string | null;
+  destination_clicked: boolean | null;
+  destination_clicked_at: string | null;
 }
 
 interface QrLookup {
@@ -60,7 +63,7 @@ function AnalyticsPage() {
         supabase
           .from("scan_events")
           .select(
-            "id, created_at, qr_code_id, business_id, location_id, campaign, device_type, browser, os, timezone, country_code, country_name, session_id, clicked_review, clicked_review_at",
+            "id, created_at, qr_code_id, business_id, location_id, campaign, destination_type, device_type, browser, os, timezone, country_code, country_name, session_id, clicked_review, clicked_review_at, destination_clicked, destination_clicked_at",
           )
           .gte("created_at", since)
           .order("created_at", { ascending: false })
@@ -112,11 +115,23 @@ function AnalyticsPage() {
 
   // Metric computations
   const totalScans = events.length;
-  const sessionSet = new Set<string>();
-  events.forEach((e) => { if (e.session_id) sessionSet.add(e.session_id); });
-  const uniqueSessions = sessionSet.size || totalScans; // fall back for legacy rows
-  const reviewClicks = events.filter((e) => e.clicked_review).length;
-  const ctr = uniqueSessions > 0 ? (reviewClicks / uniqueSessions) * 100 : 0;
+  // Unique QR scan sessions = distinct (session_id, qr_code_id) pairs
+  const qrSessionSet = new Set<string>();
+  const visitorSet = new Set<string>();
+  events.forEach((e) => {
+    if (e.session_id && e.qr_code_id) qrSessionSet.add(`${e.session_id}::${e.qr_code_id}`);
+    if (e.session_id) visitorSet.add(e.session_id);
+  });
+  const uniqueQrSessions = qrSessionSet.size || totalScans;
+  const uniqueVisitors = visitorSet.size || totalScans;
+  const destinationClicks = events.filter((e) => e.destination_clicked).length;
+  const destinationCtr = uniqueQrSessions > 0 ? (destinationClicks / uniqueQrSessions) * 100 : 0;
+  const reviewScans = events.filter((e) => e.destination_type === "google_review");
+  const reviewClicks = reviewScans.filter((e) => e.clicked_review).length;
+  const reviewQrSessions = new Set(
+    reviewScans.filter((e) => e.session_id && e.qr_code_id).map((e) => `${e.session_id}::${e.qr_code_id}`),
+  ).size || reviewScans.length;
+  const reviewCtr = reviewQrSessions > 0 ? (reviewClicks / reviewQrSessions) * 100 : 0;
 
   // Chart: scans over time
   const byDay = new Map<string, number>();
@@ -178,31 +193,41 @@ function AnalyticsPage() {
   function exportCsv() {
     const rows = [[
       "scan_date",
+      "qr_code_id",
       "qr_label",
       "business",
       "location",
       "campaign",
+      "destination_type",
       "device",
       "browser",
       "os",
       "timezone",
       "country_code",
-      "review_button_clicked",
-      "review_click_timestamp",
+      "session_id",
+      "destination_clicked",
+      "destination_clicked_at",
+      "clicked_review",
+      "clicked_review_at",
     ]];
     events.forEach((e) => {
       const q = e.qr_code_id ? qrById.get(e.qr_code_id) : null;
       rows.push([
         String(e.created_at ?? ""),
+        String(e.qr_code_id ?? ""),
         String(q?.label ?? ""),
         String(q?.businesses?.name ?? ""),
         String(q?.locations?.name ?? ""),
         String(e.campaign ?? ""),
+        String(e.destination_type ?? ""),
         String(e.device_type ?? ""),
         String(e.browser ?? ""),
         String(e.os ?? ""),
         String(e.timezone ?? ""),
         String(e.country_code ?? ""),
+        String(e.session_id ?? ""),
+        String(e.destination_clicked ?? false),
+        String(e.destination_clicked_at ?? ""),
         String(e.clicked_review ?? false),
         String(e.clicked_review_at ?? ""),
       ]);
@@ -256,9 +281,14 @@ function AnalyticsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Total scans" value={totalScans.toLocaleString()} />
-        <MetricCard label="Unique scan sessions" value={uniqueSessions.toLocaleString()} />
-        <MetricCard label="Review button clicks" value={reviewClicks.toLocaleString()} />
-        <MetricCard label="Review click-through rate" value={`${ctr.toFixed(1)}%`} sublabel="clicks ÷ unique sessions" />
+        <MetricCard label="Unique QR scan sessions" value={uniqueQrSessions.toLocaleString()} sublabel="session × QR pairs" />
+        <MetricCard label="Unique visitors" value={uniqueVisitors.toLocaleString()} sublabel="distinct sessions" />
+        <MetricCard label="Destination clicks" value={destinationClicks.toLocaleString()} />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Destination click-through rate" value={`${destinationCtr.toFixed(1)}%`} sublabel="clicks ÷ unique QR sessions" />
+        <MetricCard label="Google review clicks" value={reviewClicks.toLocaleString()} />
+        <MetricCard label="Google review click-through rate" value={`${reviewCtr.toFixed(1)}%`} sublabel="review clicks ÷ review QR sessions" />
       </div>
 
       <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">

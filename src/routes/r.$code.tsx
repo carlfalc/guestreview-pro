@@ -93,6 +93,7 @@ async function recordScan(qr: QrRow): Promise<string | null> {
         location_id: qr.location_id,
         owner_id: qr.owner_id,
         campaign: qr.campaign,
+        destination_type: qr.destination_type,
         device_type: parsed.device_type,
         os: parsed.os,
         browser: parsed.browser,
@@ -155,8 +156,14 @@ function GuestLanding() {
 
       if (qr.landing_mode === "redirect" && finalUrl) {
         if (id) {
-          await supabase.rpc("mark_scan_clicked", { p_event_id: id }).then(() => {}, () => {});
+          const sid = getOrCreateSessionId();
+          await supabase.rpc("mark_scan_clicked", {
+            p_event_id: id,
+            p_session_id: sid,
+            p_is_review: qr.destination_type === "google_review",
+          }).then(() => {}, () => {});
         }
+        // Redirect after DB update completes (or timeout)
         window.location.href = finalUrl;
       }
     })();
@@ -195,7 +202,12 @@ function ActiveLanding({ qr, eventId }: { qr: QrRow; eventId: string | null }) {
 
   async function goDestination() {
     if (eventId) {
-      await supabase.rpc("mark_scan_clicked", { p_event_id: eventId }).then(() => {}, () => {});
+      const sid = getOrCreateSessionId();
+      await supabase.rpc("mark_scan_clicked", {
+        p_event_id: eventId,
+        p_session_id: sid,
+        p_is_review: dtype === "google_review",
+      }).then(() => {}, () => {});
     }
     if (finalUrl) window.location.href = finalUrl;
   }
