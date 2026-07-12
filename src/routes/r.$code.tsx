@@ -93,6 +93,7 @@ async function recordScan(qr: QrRow): Promise<string | null> {
         location_id: qr.location_id,
         owner_id: qr.owner_id,
         campaign: qr.campaign,
+        destination_type: qr.destination_type,
         device_type: parsed.device_type,
         os: parsed.os,
         browser: parsed.browser,
