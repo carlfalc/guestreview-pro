@@ -229,7 +229,10 @@ export type Database = {
           business_id: string
           campaign: string | null
           clicked_review: boolean
+          clicked_review_at: string | null
           country: string | null
+          country_code: string | null
+          country_name: string | null
           created_at: string
           device_type: string | null
           id: string
@@ -238,6 +241,10 @@ export type Database = {
           owner_id: string
           qr_code_id: string
           referrer: string | null
+          region: string | null
+          session_id: string | null
+          timezone: string | null
+          updated_at: string
           user_agent: string | null
           visitor_hash: string | null
         }
@@ -246,7 +253,10 @@ export type Database = {
           business_id: string
           campaign?: string | null
           clicked_review?: boolean
+          clicked_review_at?: string | null
           country?: string | null
+          country_code?: string | null
+          country_name?: string | null
           created_at?: string
           device_type?: string | null
           id?: string
@@ -255,6 +265,10 @@ export type Database = {
           owner_id: string
           qr_code_id: string
           referrer?: string | null
+          region?: string | null
+          session_id?: string | null
+          timezone?: string | null
+          updated_at?: string
           user_agent?: string | null
           visitor_hash?: string | null
         }
@@ -263,7 +277,10 @@ export type Database = {
           business_id?: string
           campaign?: string | null
           clicked_review?: boolean
+          clicked_review_at?: string | null
           country?: string | null
+          country_code?: string | null
+          country_name?: string | null
           created_at?: string
           device_type?: string | null
           id?: string
@@ -272,6 +289,10 @@ export type Database = {
           owner_id?: string
           qr_code_id?: string
           referrer?: string | null
+          region?: string | null
+          session_id?: string | null
+          timezone?: string | null
+          updated_at?: string
           user_agent?: string | null
           visitor_hash?: string | null
         }
@@ -333,6 +354,7 @@ export type Database = {
         Returns: boolean
       }
       increment_qr_scans: { Args: { p_qr_id: string }; Returns: undefined }
+      mark_scan_clicked: { Args: { p_event_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
