@@ -55,10 +55,12 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Mona Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text",
     "Inter", "Segoe UI", Roboto, sans-serif;
   --font-display:
-    -apple-system, "SF Pro Display", "Inter", "Segoe UI", sans-serif;
+    "Mona Sans", "Hubot Sans", -apple-system, "SF Pro Display", sans-serif;
+  --font-mono:
+    "Hubot Sans", ui-monospace, monospace;
   --shadow-glass: 0 1px 0 0 color-mix(in oklch, var(--foreground) 6%, transparent),
     0 20px 40px -20px color-mix(in oklch, var(--foreground) 12%, transparent);
   --shadow-card: 0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent),
