@@ -77,24 +77,36 @@ function AuthPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-60">
-        <div className="absolute left-1/2 top-[-20%] h-[500px] w-[700px] -translate-x-1/2 rounded-full hero-gradient blur-3xl opacity-30" />
-      </div>
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-12 text-white">
       <div className="w-full max-w-md animate-fade-in-up">
-        <Link to="/" className="mb-8 flex items-center justify-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl hero-gradient text-white">
-            <QrCode className="h-4.5 w-4.5" />
+        <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 backdrop-blur">
+            <QrCode className="h-4 w-4" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">
-            GuestReview Pro
-          </span>
+          <span className="text-[15px] font-semibold tracking-tight">GuestReview Pro</span>
         </Link>
 
-        <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-elevated)]">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl font-semibold tracking-tight">
-              {mode === "reset" ? "Reset password" : "Welcome"}
+        <p className="text-center text-[11px] font-medium uppercase tracking-[0.28em] text-white/60">
+          Branded Google Review QR
+        </p>
+        <h1
+          className="mt-3 text-center text-white"
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 900,
+            fontStretch: '125%',
+            letterSpacing: '-0.04em',
+            lineHeight: 0.9,
+            fontSize: 'clamp(3rem, 8vw, 5rem)',
+          }}
+        >
+          {mode === 'reset' ? 'RESET' : mode === 'signup' ? 'JOIN' : 'WELCOME'}
+        </h1>
+
+        <Card className="mt-8 rounded-3xl border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-center text-base font-medium tracking-tight text-white/80">
+              {mode === "reset" ? "Enter your email to receive a reset link" : mode === "signup" ? "Create your account" : "Sign in to continue"}
             </CardTitle>
           </CardHeader>
           <CardContent>
