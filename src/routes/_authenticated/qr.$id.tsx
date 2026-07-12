@@ -201,6 +201,10 @@ function QrDetail() {
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Button onClick={downloadPng} className="rounded-full"><Download className="mr-1 h-4 w-4"/>PNG</Button>
               <Button variant="outline" onClick={downloadSvg} className="rounded-full"><Download className="mr-1 h-4 w-4"/>SVG</Button>
+              <a href={shortUrl} target="_blank" rel="noreferrer" className="col-span-1">
+                <Button variant="outline" className="w-full rounded-full"><ExternalLink className="mr-1 h-4 w-4"/>Test</Button>
+              </a>
+              <Button variant="outline" onClick={deleteQr} className="rounded-full text-destructive hover:text-destructive"><Trash2 className="mr-1 h-4 w-4"/>Delete</Button>
             </div>
             <div className="mt-4 rounded-2xl bg-accent p-3 text-center text-xs text-accent-foreground">
               <span className="font-semibold">{qr.scans_count}</span> total scans
