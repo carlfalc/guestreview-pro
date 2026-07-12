@@ -155,8 +155,14 @@ function GuestLanding() {
 
       if (qr.landing_mode === "redirect" && finalUrl) {
         if (id) {
-          await supabase.rpc("mark_scan_clicked", { p_event_id: id }).then(() => {}, () => {});
+          const sid = getOrCreateSessionId();
+          await supabase.rpc("mark_scan_clicked", {
+            p_event_id: id,
+            p_session_id: sid,
+            p_is_review: qr.destination_type === "google_review",
+          }).then(() => {}, () => {});
         }
+        // Redirect after DB update completes (or timeout)
         window.location.href = finalUrl;
       }
     })();
