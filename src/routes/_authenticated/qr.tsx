@@ -27,6 +27,7 @@ import { generateShortCode } from "@/lib/short-code";
 import {
   DESTINATION_TYPES,
   destinationLabel,
+  computeEffectiveStatus,
   isValidHttpsUrl,
   statusBadgeVariant,
   statusLabel,
