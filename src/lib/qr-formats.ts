@@ -92,6 +92,11 @@ export const QUICK_PACKS: QuickPack[] = [
     name: "Hotel pack",
     formatIds: ["reception-a5", "compendium-a6", "bedside-dl", "keycard-wallet", "lift-a4"],
   },
+  {
+    id: "retail",
+    name: "Retail pack",
+    formatIds: ["sticker-circle-80", "sticker-sq-90", "a6-portrait", "window-decal-150", "poster-a4-p", "email-signature", "web-review-badge"],
+  },
 ];
 
 export type LayoutTemplate =
