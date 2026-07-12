@@ -13,9 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { QRCodeSVG } from "qrcode.react";
-import { ArrowLeft, Download, Copy, ExternalLink } from "lucide-react";
+import { ArrowLeft, Download, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/qr/$id")({
   component: QrDetail,
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/qr/$id")({
 function QrDetail() {
   const { id } = useParams({ from: "/_authenticated/qr/$id" });
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const svgRef = useRef<HTMLDivElement>(null);
 
   const { data: qr } = useQuery({
