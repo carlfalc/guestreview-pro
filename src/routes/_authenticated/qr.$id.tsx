@@ -231,6 +231,30 @@ function QrDetail() {
     navigate({ to: "/qr" });
   }
 
+  async function convertToMarketingPack() {
+    if (!qr) return;
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return toast.error("Not signed in");
+    const bizName = biz?.name ?? "Untitled";
+    const { data, error } = await supabase.from("marketing_packs").insert({
+      owner_id: userData.user.id,
+      business_id: qr.business_id,
+      qr_code_id: qr.id,
+      project_name: projectName || `${bizName} Marketing Pack`,
+      pack_type: "custom",
+      layout_template: layoutTemplate,
+      headline: content.headline,
+      support_text: content.supportText,
+      cta_text: content.ctaText,
+      selected_formats: selectedFormats as unknown as never,
+      status: "draft",
+    } as never).select("id").single();
+    if (error || !data) return toast.error(error?.message ?? "Convert failed");
+    toast.success("Converted to Marketing Pack");
+    navigate({ to: "/marketing-packs/$id", params: { id: data.id } });
+  }
+
+
   function copyUrl() {
     navigator.clipboard.writeText(shortUrl);
     toast.success("Copied");
