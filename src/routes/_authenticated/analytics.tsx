@@ -193,31 +193,41 @@ function AnalyticsPage() {
   function exportCsv() {
     const rows = [[
       "scan_date",
+      "qr_code_id",
       "qr_label",
       "business",
       "location",
       "campaign",
+      "destination_type",
       "device",
       "browser",
       "os",
       "timezone",
       "country_code",
-      "review_button_clicked",
-      "review_click_timestamp",
+      "session_id",
+      "destination_clicked",
+      "destination_clicked_at",
+      "clicked_review",
+      "clicked_review_at",
     ]];
     events.forEach((e) => {
       const q = e.qr_code_id ? qrById.get(e.qr_code_id) : null;
       rows.push([
         String(e.created_at ?? ""),
+        String(e.qr_code_id ?? ""),
         String(q?.label ?? ""),
         String(q?.businesses?.name ?? ""),
         String(q?.locations?.name ?? ""),
         String(e.campaign ?? ""),
+        String(e.destination_type ?? ""),
         String(e.device_type ?? ""),
         String(e.browser ?? ""),
         String(e.os ?? ""),
         String(e.timezone ?? ""),
         String(e.country_code ?? ""),
+        String(e.session_id ?? ""),
+        String(e.destination_clicked ?? false),
+        String(e.destination_clicked_at ?? ""),
         String(e.clicked_review ?? false),
         String(e.clicked_review_at ?? ""),
       ]);
