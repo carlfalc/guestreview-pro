@@ -271,9 +271,14 @@ function AnalyticsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Total scans" value={totalScans.toLocaleString()} />
-        <MetricCard label="Unique scan sessions" value={uniqueSessions.toLocaleString()} />
-        <MetricCard label="Review button clicks" value={reviewClicks.toLocaleString()} />
-        <MetricCard label="Review click-through rate" value={`${ctr.toFixed(1)}%`} sublabel="clicks ÷ unique sessions" />
+        <MetricCard label="Unique QR scan sessions" value={uniqueQrSessions.toLocaleString()} sublabel="session × QR pairs" />
+        <MetricCard label="Unique visitors" value={uniqueVisitors.toLocaleString()} sublabel="distinct sessions" />
+        <MetricCard label="Destination clicks" value={destinationClicks.toLocaleString()} />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Destination click-through rate" value={`${destinationCtr.toFixed(1)}%`} sublabel="clicks ÷ unique QR sessions" />
+        <MetricCard label="Google review clicks" value={reviewClicks.toLocaleString()} />
+        <MetricCard label="Google review click-through rate" value={`${reviewCtr.toFixed(1)}%`} sublabel="review clicks ÷ review QR sessions" />
       </div>
 
       <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
