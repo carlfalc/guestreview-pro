@@ -161,6 +161,7 @@ export type Database = {
           business_id: string
           campaign: string | null
           created_at: string
+          design: Json
           destination_label: string | null
           destination_type: string
           destination_url: string | null
@@ -184,6 +185,7 @@ export type Database = {
           business_id: string
           campaign?: string | null
           created_at?: string
+          design?: Json
           destination_label?: string | null
           destination_type?: string
           destination_url?: string | null
@@ -207,6 +209,7 @@ export type Database = {
           business_id?: string
           campaign?: string | null
           created_at?: string
+          design?: Json
           destination_label?: string | null
           destination_type?: string
           destination_url?: string | null
