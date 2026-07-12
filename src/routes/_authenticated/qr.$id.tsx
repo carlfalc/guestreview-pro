@@ -117,7 +117,7 @@ function QrDetail() {
 
   async function setStatus(next: "active" | "paused" | "archived") {
     if (!qr) return;
-    const patch: Record<string, string | null> = { status: next };
+    const patch: { status: string; archived_at?: string | null } = { status: next };
     if (next === "archived") patch.archived_at = new Date().toISOString();
     if (next === "active") patch.archived_at = null;
     const { error } = await supabase.from("qr_codes").update(patch).eq("id", qr.id);
