@@ -13,8 +13,14 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBusinessesRouteImport } from './routes/_authenticated/businesses'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/qr.$id'
+import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -35,6 +41,21 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedQrRoute = AuthenticatedQrRouteImport.update({
+  id: '/qr',
+  path: '/qr',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -45,20 +66,48 @@ const AuthenticatedBusinessesRoute = AuthenticatedBusinessesRouteImport.update({
   path: '/businesses',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedQrIdRoute = AuthenticatedQrIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedQrRoute,
+} as any)
+const AuthenticatedBusinessesIdRoute =
+  AuthenticatedBusinessesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedBusinessesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/businesses': typeof AuthenticatedBusinessesRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
+  '/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/qr': typeof AuthenticatedQrRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/r/$code': typeof RCodeRoute
+  '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
+  '/qr/$id': typeof AuthenticatedQrIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/businesses': typeof AuthenticatedBusinessesRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
+  '/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/qr': typeof AuthenticatedQrRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/r/$code': typeof RCodeRoute
+  '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
+  '/qr/$id': typeof AuthenticatedQrIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -66,22 +115,56 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/_authenticated/businesses': typeof AuthenticatedBusinessesRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
+  '/_authenticated/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/r/$code': typeof RCodeRoute
+  '/_authenticated/businesses/$id': typeof AuthenticatedBusinessesIdRoute
+  '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/reset-password' | '/businesses' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/analytics'
+    | '/businesses'
+    | '/dashboard'
+    | '/qr'
+    | '/settings'
+    | '/r/$code'
+    | '/businesses/$id'
+    | '/qr/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/businesses' | '/dashboard'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/analytics'
+    | '/businesses'
+    | '/dashboard'
+    | '/qr'
+    | '/settings'
+    | '/r/$code'
+    | '/businesses/$id'
+    | '/qr/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/analytics'
     | '/_authenticated/businesses'
     | '/_authenticated/dashboard'
+    | '/_authenticated/qr'
+    | '/_authenticated/settings'
+    | '/r/$code'
+    | '/_authenticated/businesses/$id'
+    | '/_authenticated/qr/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -89,6 +172,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RCodeRoute: typeof RCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -121,6 +205,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/qr': {
+      id: '/_authenticated/qr'
+      path: '/qr'
+      fullPath: '/qr'
+      preLoaderRoute: typeof AuthenticatedQrRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -135,17 +240,70 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/qr/$id': {
+      id: '/_authenticated/qr/$id'
+      path: '/$id'
+      fullPath: '/qr/$id'
+      preLoaderRoute: typeof AuthenticatedQrIdRouteImport
+      parentRoute: typeof AuthenticatedQrRoute
+    }
+    '/_authenticated/businesses/$id': {
+      id: '/_authenticated/businesses/$id'
+      path: '/$id'
+      fullPath: '/businesses/$id'
+      preLoaderRoute: typeof AuthenticatedBusinessesIdRouteImport
+      parentRoute: typeof AuthenticatedBusinessesRoute
+    }
   }
 }
 
+interface AuthenticatedBusinessesRouteChildren {
+  AuthenticatedBusinessesIdRoute: typeof AuthenticatedBusinessesIdRoute
+}
+
+const AuthenticatedBusinessesRouteChildren: AuthenticatedBusinessesRouteChildren =
+  {
+    AuthenticatedBusinessesIdRoute: AuthenticatedBusinessesIdRoute,
+  }
+
+const AuthenticatedBusinessesRouteWithChildren =
+  AuthenticatedBusinessesRoute._addFileChildren(
+    AuthenticatedBusinessesRouteChildren,
+  )
+
+interface AuthenticatedQrRouteChildren {
+  AuthenticatedQrIdRoute: typeof AuthenticatedQrIdRoute
+}
+
+const AuthenticatedQrRouteChildren: AuthenticatedQrRouteChildren = {
+  AuthenticatedQrIdRoute: AuthenticatedQrIdRoute,
+}
+
+const AuthenticatedQrRouteWithChildren = AuthenticatedQrRoute._addFileChildren(
+  AuthenticatedQrRouteChildren,
+)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedBusinessesRoute: typeof AuthenticatedBusinessesRoute
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
+  AuthenticatedBusinessesRoute: typeof AuthenticatedBusinessesRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedBusinessesRoute: AuthenticatedBusinessesRoute,
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
+  AuthenticatedBusinessesRoute: AuthenticatedBusinessesRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -156,6 +314,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RCodeRoute: RCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

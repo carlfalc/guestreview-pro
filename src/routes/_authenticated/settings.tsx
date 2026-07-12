@@ -27,9 +27,15 @@ function SettingsPage() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
       const { data } = await supabase.from("profiles").select("*").eq("id", user.user.id).single();
-      setProfile(data ?? {});
+      setProfile({
+        full_name: data?.full_name ?? "",
+        timezone: data?.timezone ?? "UTC",
+        language: data?.language ?? "en",
+        theme: data?.theme ?? "light",
+      });
     })();
   }, []);
+
 
   async function save() {
     setLoading(true);

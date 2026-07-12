@@ -94,14 +94,11 @@ function BusinessDetail() {
 
   async function save() {
     if (!biz) return;
-    const patch: Record<string, string | null> = {};
-    ["name", "google_review_url", "website", "phone", "address", "welcome_message", "brand_primary", "industry"].forEach(
-      (k) => {
-        if (form[k] !== undefined) patch[k] = form[k];
-      },
-    );
-    if (!Object.keys(patch).length) return toast.info("Nothing to save");
-    const { error } = await supabase.from("businesses").update(patch).eq("id", biz.id);
+    if (!Object.keys(form).length) return toast.info("Nothing to save");
+    const { error } = await supabase
+      .from("businesses")
+      .update(form as never)
+      .eq("id", biz.id);
     if (error) return toast.error(error.message);
     toast.success("Saved");
     setForm({});

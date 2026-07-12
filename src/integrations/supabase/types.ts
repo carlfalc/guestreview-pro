@@ -332,6 +332,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_qr_scans: { Args: { p_qr_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
