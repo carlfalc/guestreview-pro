@@ -115,11 +115,23 @@ function AnalyticsPage() {
 
   // Metric computations
   const totalScans = events.length;
-  const sessionSet = new Set<string>();
-  events.forEach((e) => { if (e.session_id) sessionSet.add(e.session_id); });
-  const uniqueSessions = sessionSet.size || totalScans; // fall back for legacy rows
-  const reviewClicks = events.filter((e) => e.clicked_review).length;
-  const ctr = uniqueSessions > 0 ? (reviewClicks / uniqueSessions) * 100 : 0;
+  // Unique QR scan sessions = distinct (session_id, qr_code_id) pairs
+  const qrSessionSet = new Set<string>();
+  const visitorSet = new Set<string>();
+  events.forEach((e) => {
+    if (e.session_id && e.qr_code_id) qrSessionSet.add(`${e.session_id}::${e.qr_code_id}`);
+    if (e.session_id) visitorSet.add(e.session_id);
+  });
+  const uniqueQrSessions = qrSessionSet.size || totalScans;
+  const uniqueVisitors = visitorSet.size || totalScans;
+  const destinationClicks = events.filter((e) => e.destination_clicked).length;
+  const destinationCtr = uniqueQrSessions > 0 ? (destinationClicks / uniqueQrSessions) * 100 : 0;
+  const reviewScans = events.filter((e) => e.destination_type === "google_review");
+  const reviewClicks = reviewScans.filter((e) => e.clicked_review).length;
+  const reviewQrSessions = new Set(
+    reviewScans.filter((e) => e.session_id && e.qr_code_id).map((e) => `${e.session_id}::${e.qr_code_id}`),
+  ).size || reviewScans.length;
+  const reviewCtr = reviewQrSessions > 0 ? (reviewClicks / reviewQrSessions) * 100 : 0;
 
   // Chart: scans over time
   const byDay = new Map<string, number>();
