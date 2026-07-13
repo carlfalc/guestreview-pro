@@ -249,6 +249,20 @@ function MarketingPackEditor() {
     qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
   }
 
+  async function deletePack() {
+    if (!pack) return;
+    // Best-effort: remove stored thumbnail
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      await supabase.storage.from("pack-previews").remove([`${userData.user.id}/${pack.id}.png`]).catch(() => undefined);
+    }
+    const { error } = await supabase.from("marketing_packs").delete().eq("id", pack.id);
+    if (error) return toast.error(error.message);
+    toast.success("Pack deleted");
+    qc.invalidateQueries({ queryKey: ["marketing-packs"] });
+    navigate({ to: "/marketing-packs" });
+  }
+
   async function markReadyToPrint() {
     // Guard: ensure required fields
     if (!headline.trim() || !ctaText.trim()) return toast.error("Headline and CTA are required");
