@@ -316,7 +316,7 @@ function MarketingPackEditor() {
         const c = resolveContent(f);
         out.push(...runFormatValidations({
           format: f, content: c, qrData,
-          destinationUrl: qrRow?.destination_url ?? null,
+          destinationUrl: (qrRow as { destination_url?: string | null } | null)?.destination_url ?? null,
           destinationType: qrRow?.destination_type ?? null,
           reviewUrl: biz?.google_review_url ?? null,
         }));
