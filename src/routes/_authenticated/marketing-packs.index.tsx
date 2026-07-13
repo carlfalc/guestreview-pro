@@ -68,21 +68,32 @@ function MarketingPacksList() {
 
   // Resolve preview_url storage paths to signed URLs so private-bucket thumbnails render.
   const [signedThumbs, setSignedThumbs] = useState<Record<string, string>>({});
+  const [thumbError, setThumbError] = useState<string | null>(null);
+  const [thumbNonce, setThumbNonce] = useState(0);
   useEffect(() => {
     const paths = (packs ?? [])
       .map((p) => p.preview_url)
       .filter((p): p is string => !!p && !p.startsWith("http"));
-    if (paths.length === 0) { setSignedThumbs({}); return; }
+    if (paths.length === 0) { setSignedThumbs({}); setThumbError(null); return; }
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.storage.from("pack-previews").createSignedUrls(paths, 60 * 60);
-      if (cancelled || !data) return;
+      // Prefer new bucket; fall back to legacy bucket for older previews.
+      const primary = await supabase.storage.from("marketing-pack-previews").createSignedUrls(paths, 60 * 60);
+      let resolved = primary.data ?? [];
+      const missing = paths.filter((p) => !resolved.find((r) => r.path === p && r.signedUrl));
+      if (missing.length) {
+        const legacy = await supabase.storage.from("pack-previews").createSignedUrls(missing, 60 * 60);
+        if (legacy.data) resolved = [...resolved, ...legacy.data];
+      }
+      if (cancelled) return;
+      if (primary.error && !resolved.length) setThumbError(primary.error.message);
+      else setThumbError(null);
       const map: Record<string, string> = {};
-      data.forEach((r) => { if (r.path && r.signedUrl) map[r.path] = r.signedUrl; });
+      resolved.forEach((r) => { if (r.path && r.signedUrl) map[r.path] = r.signedUrl; });
       setSignedThumbs(map);
     })();
     return () => { cancelled = true; };
-  }, [packs]);
+  }, [packs, thumbNonce]);
 
   const filtered = useMemo(() => {
     if (!packs) return [];
@@ -143,6 +154,7 @@ function MarketingPacksList() {
   async function deletePack(id: string) {
     const { data: userData } = await supabase.auth.getUser();
     if (userData.user) {
+      await supabase.storage.from("marketing-pack-previews").remove([`${userData.user.id}/${id}.png`]).catch(() => undefined);
       await supabase.storage.from("pack-previews").remove([`${userData.user.id}/${id}.png`]).catch(() => undefined);
     }
     const { error } = await supabase.from("marketing_packs").delete().eq("id", id);
