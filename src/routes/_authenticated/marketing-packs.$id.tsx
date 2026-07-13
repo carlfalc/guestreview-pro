@@ -832,7 +832,9 @@ function MarketingPackEditor() {
                         ids.forEach((fid) => { next[fid] = { ...next[fid], ...o }; });
                         setFormatCustomizations(next);
                       }}
+                      onOpenAdvancedCopy={(o) => setCopyDialogState({ format: f, override: o })}
                     />
+
                   );
                 })}
               </div>
