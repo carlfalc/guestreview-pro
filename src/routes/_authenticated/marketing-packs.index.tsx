@@ -54,7 +54,7 @@ function MarketingPacksList() {
     },
   });
 
-  const { data: packs, isLoading } = useQuery({
+  const { data: packs, isLoading, error, refetch } = useQuery({
     queryKey: ["marketing-packs"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -65,6 +65,24 @@ function MarketingPacksList() {
       return (data ?? []) as unknown as (PackRow & { business_id: string; qr_code_id: string })[];
     },
   });
+
+  // Resolve preview_url storage paths to signed URLs so private-bucket thumbnails render.
+  const [signedThumbs, setSignedThumbs] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const paths = (packs ?? [])
+      .map((p) => p.preview_url)
+      .filter((p): p is string => !!p && !p.startsWith("http"));
+    if (paths.length === 0) { setSignedThumbs({}); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.storage.from("pack-previews").createSignedUrls(paths, 60 * 60);
+      if (cancelled || !data) return;
+      const map: Record<string, string> = {};
+      data.forEach((r) => { if (r.path && r.signedUrl) map[r.path] = r.signedUrl; });
+      setSignedThumbs(map);
+    })();
+    return () => { cancelled = true; };
+  }, [packs]);
 
   const filtered = useMemo(() => {
     if (!packs) return [];
