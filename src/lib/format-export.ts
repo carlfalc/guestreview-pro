@@ -293,6 +293,25 @@ export async function downloadPackZip(
       files.push(notesPath);
     }
 
+    // Circular sticker production extras: transparent PNG + CutContour dieline (SVG),
+    // plus an artwork+dieline variant for print shops that prefer one file.
+    if (f.shape === "circular") {
+      const transparent = await getPngForFormat(f, template, content, qrDesign, qrData, logoUrl, brand, false, 300, { transparentOutside: true });
+      const tPath = `${folder}/png/${f.id}-transparent.png`;
+      zip.file(tPath, new Uint8Array(await transparent.arrayBuffer()));
+      files.push(tPath);
+
+      const dielineSvg = renderDielineSvg(f);
+      const dPath = `${folder}/svg/${f.id}-${DIELINE_LAYER}.svg`;
+      zip.file(dPath, dielineSvg);
+      files.push(dPath);
+
+      const withDieline = await renderFormatSvg(f, template, content, qrDesign, qrData, logoUrl, brand, { includeBleed: true, showBoundaries: false, includeDieline: true });
+      const wPath = `${folder}/svg/${f.id}-with-dieline.svg`;
+      zip.file(wPath, withDieline);
+      files.push(wPath);
+    }
+
     const v = validationsMap.get(f.id);
     manifest.formats.push({
       id: f.id, name: f.name, medium: f.medium, shape: f.shape, category: f.category,
