@@ -47,6 +47,9 @@ import { FoldedFormatEditor } from "@/components/marketing/FoldedFormatEditor";
 import { AutoFixDialog } from "@/components/marketing/AutoFixDialog";
 import { DuplicateWizard, type DuplicateWizardMode } from "@/components/marketing/DuplicateWizard";
 import { CopySettingsDialog } from "@/components/marketing/CopySettingsDialog";
+import { AiCopyDialog, type AiCopyContext, type ApplyPatch } from "@/components/marketing/AiCopyDialog";
+import { placementFromFormat, type BusinessType } from "@/lib/ai-copy";
+import { Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
