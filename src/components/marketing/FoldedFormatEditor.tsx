@@ -338,7 +338,7 @@ function PreviewView(props: {
   }, [mode, JSON.stringify(props.config), props.format.id, props.template, props.qrData, props.brand]);
 
   const opts: { id: typeof mode; label: string }[] = [
-    { id: "mockup", label: "Folded mockup" },
+    { id: "mockup", label: "Folded proof preview" },
     { id: "flat", label: "Flat artwork" },
     { id: "front", label: "Front" },
     { id: "back", label: "Back" },
