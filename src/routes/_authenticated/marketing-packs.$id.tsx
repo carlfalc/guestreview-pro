@@ -23,8 +23,13 @@ import {
 import { renderFormatSvg, svgToPng, type FormatContent } from "@/lib/format-render";
 import {
   downloadFormatPng, downloadFormatSvg, downloadFormatPdf, downloadPackZip,
+  downloadFormatPngTransparent, downloadFormatSvgWithDieline, downloadDielineSvg,
 } from "@/lib/format-export";
 import { mergeDesign, type QrDesign } from "@/lib/qr-design";
+import {
+  runFormatValidations, decodeQrValidation, readyToPrint,
+  type ValidationResult, type ValidationLevel,
+} from "@/lib/format-validation";
 import {
   statusMeta, packTypeById, buildFormatContent, similarFormats,
   FONT_OPTIONS, STAR_STYLES, BORDER_STYLES,
