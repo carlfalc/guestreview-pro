@@ -329,9 +329,20 @@ function MarketingPackEditor() {
         }));
         if (f.folded) {
           const fCfg = formatCustomizations[f.id]?.folded ?? defaultFoldedConfig(contentBase);
-          out.push(...runFoldedValidations({ format: f, config: fCfg, qrDesign, qrData }));
-        }
-        if (opts.decodeQr) {
+          out.push(...runFoldedValidations({
+            format: f, config: fCfg, qrDesign, qrData,
+            businessName: biz?.name ?? "", logoUrl: biz?.logo_url ?? null,
+          }));
+          if (opts.decodeQr) {
+            // Folded formats: decode both assembled faces separately.
+            const fr = await decodeFoldedQrValidation({
+              format: f, template: layoutTemplate, brand,
+              business: { name: biz?.name ?? "", logoUrl: biz?.logo_url ?? null },
+              qrDesign, qrData, qrLogoUrl: rawLogoUrl, config: fCfg,
+            });
+            out.push(...fr.results);
+          }
+        } else if (opts.decodeQr) {
           out.push(await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate));
         }
       }
@@ -339,7 +350,7 @@ function MarketingPackEditor() {
       setValidations(out);
       return out;
     } finally { setValidating(false); }
-  }, [selected, resolveContent, qrData, qrRow, biz, qrDesign, brand, layoutTemplate, formatCustomizations, contentBase]);
+  }, [selected, resolveContent, qrData, qrRow, biz, qrDesign, brand, layoutTemplate, formatCustomizations, contentBase, rawLogoUrl]);
 
   function ackKey(r: ValidationResult): string { return `${r.formatId ?? "pack"}::${r.id}`; }
 
