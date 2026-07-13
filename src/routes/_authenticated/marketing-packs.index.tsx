@@ -68,21 +68,32 @@ function MarketingPacksList() {
 
   // Resolve preview_url storage paths to signed URLs so private-bucket thumbnails render.
   const [signedThumbs, setSignedThumbs] = useState<Record<string, string>>({});
+  const [thumbError, setThumbError] = useState<string | null>(null);
+  const [thumbNonce, setThumbNonce] = useState(0);
   useEffect(() => {
     const paths = (packs ?? [])
       .map((p) => p.preview_url)
       .filter((p): p is string => !!p && !p.startsWith("http"));
-    if (paths.length === 0) { setSignedThumbs({}); return; }
+    if (paths.length === 0) { setSignedThumbs({}); setThumbError(null); return; }
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.storage.from("pack-previews").createSignedUrls(paths, 60 * 60);
-      if (cancelled || !data) return;
+      // Prefer new bucket; fall back to legacy bucket for older previews.
+      const primary = await supabase.storage.from("marketing-pack-previews").createSignedUrls(paths, 60 * 60);
+      let resolved = primary.data ?? [];
+      const missing = paths.filter((p) => !resolved.find((r) => r.path === p && r.signedUrl));
+      if (missing.length) {
+        const legacy = await supabase.storage.from("pack-previews").createSignedUrls(missing, 60 * 60);
+        if (legacy.data) resolved = [...resolved, ...legacy.data];
+      }
+      if (cancelled) return;
+      if (primary.error && !resolved.length) setThumbError(primary.error.message);
+      else setThumbError(null);
       const map: Record<string, string> = {};
-      data.forEach((r) => { if (r.path && r.signedUrl) map[r.path] = r.signedUrl; });
+      resolved.forEach((r) => { if (r.path && r.signedUrl) map[r.path] = r.signedUrl; });
       setSignedThumbs(map);
     })();
     return () => { cancelled = true; };
-  }, [packs]);
+  }, [packs, thumbNonce]);
 
   const filtered = useMemo(() => {
     if (!packs) return [];
@@ -143,6 +154,7 @@ function MarketingPacksList() {
   async function deletePack(id: string) {
     const { data: userData } = await supabase.auth.getUser();
     if (userData.user) {
+      await supabase.storage.from("marketing-pack-previews").remove([`${userData.user.id}/${id}.png`]).catch(() => undefined);
       await supabase.storage.from("pack-previews").remove([`${userData.user.id}/${id}.png`]).catch(() => undefined);
     }
     const { error } = await supabase.from("marketing_packs").delete().eq("id", id);
@@ -202,6 +214,15 @@ function MarketingPacksList() {
 
           {isLoading && <div className="h-32 rounded-2xl bg-muted shimmer"/>}
 
+          {thumbError && (
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs text-amber-500">
+              <AlertTriangle className="h-4 w-4"/>Preview thumbnails failed to load: {thumbError}
+              <Button size="sm" variant="ghost" onClick={() => setThumbNonce((n) => n + 1)} className="ml-auto rounded-full text-xs">
+                <RotateCw className="mr-1 h-3 w-3"/>Retry
+              </Button>
+            </div>
+          )}
+
           {!isLoading && error && (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-12 text-center">
               <AlertTriangle className="h-8 w-8 text-destructive"/>
@@ -236,12 +257,17 @@ function MarketingPacksList() {
               return (
                 <div key={p.id} className="group flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/50">
                   <Link to="/marketing-packs/$id" params={{ id: p.id }} className="block">
-                    <div className="aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-accent/50 to-accent">
+                    <div className="relative aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-accent/50 to-accent">
                       {thumb ? (
-                        <img src={thumb} alt="" className="h-full w-full object-cover"/>
+                        <img src={thumb} alt="" className="h-full w-full object-cover" onError={() => setThumbNonce((n) => n + 1)}/>
                       ) : (
-                        <div className="flex h-full items-center justify-center text-muted-foreground">
+                        <div className="flex h-full flex-col items-center justify-center gap-1 text-muted-foreground">
                           <Package className="h-8 w-8"/>
+                          {p.preview_url && (
+                            <button type="button" onClick={(e) => { e.preventDefault(); setThumbNonce((n) => n + 1); }} className="inline-flex items-center gap-1 text-[10px] underline">
+                              <RotateCw className="h-3 w-3"/>Retry preview
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

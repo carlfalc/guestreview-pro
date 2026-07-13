@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   ArrowLeft, Save, Loader2, Download, FileText, ImageIcon, Package,
   AlertTriangle, CheckCircle2, Copy, Archive, Trash2, Settings2, RotateCw,
+  ImagePlus, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -25,7 +26,8 @@ import {
 } from "@/lib/format-export";
 import { mergeDesign, type QrDesign } from "@/lib/qr-design";
 import {
-  statusMeta, packTypeById, buildFormatContent,
+  statusMeta, packTypeById, buildFormatContent, similarFormats,
+  FONT_OPTIONS, STAR_STYLES, BORDER_STYLES,
   type GlobalSettings, type FormatCustomizations, type FormatOverride, type PackStatus, type ContentBase,
 } from "@/lib/marketing-packs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -36,11 +38,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import jsQR from "jsqr";
 
+const PREVIEW_BUCKET = "marketing-pack-previews";
+
 export const Route = createFileRoute("/_authenticated/marketing-packs/$id")({
   component: MarketingPackEditor,
 });
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+type ThumbState = "idle" | "generating" | "saved" | "failed" | "unavailable";
 
 function MarketingPackEditor() {
   const { id } = useParams({ from: "/_authenticated/marketing-packs/$id" });
@@ -60,7 +65,6 @@ function MarketingPackEditor() {
     },
   });
 
-  // Editor state (initialised from pack)
   const [projectName, setProjectName] = useState("");
   const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>("clean-minimal");
   const [headline, setHeadline] = useState("");
@@ -81,7 +85,9 @@ function MarketingPackEditor() {
   const [dirty, setDirty] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
 
-  // Initialise once loaded
+  const [thumbState, setThumbState] = useState<ThumbState>("idle");
+  const [thumbError, setThumbError] = useState<string | null>(null);
+
   const initialised = useRef(false);
   useEffect(() => {
     if (!pack || initialised.current) return;
@@ -133,29 +139,52 @@ function MarketingPackEditor() {
     [selectedFormats],
   );
 
-  // ---- Autosave ----
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const thumbTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const regenerateThumbnail = useCallback(async () => {
-    if (!pack || !qrRow || selectedFormats.length === 0) return;
-    if (thumbTimer.current) clearTimeout(thumbTimer.current);
-    await new Promise<void>((resolve) => { thumbTimer.current = setTimeout(resolve, 400); });
+  const generatePreviewDataUrl = useCallback(async (): Promise<{ dataUrl: string; blob: Blob } | null> => {
+    if (selectedFormats.length === 0) return null;
+    const first = FORMATS.find((f) => f.id === selectedFormats[0]);
+    if (!first) return null;
+    const c = buildFormatContent(contentBase, globalSettings, formatCustomizations[first.id]);
+    const svg = await renderFormatSvg(first, layoutTemplate, c, qrDesign, qrData, c.logoUrl, brand, { includeBleed: false, showBoundaries: false });
+    const blob = await svgToPng(svg, 480, 480);
+    const dataUrl = await blobToDataUrl(blob);
+    return { dataUrl, blob };
+  }, [selectedFormats, contentBase, globalSettings, formatCustomizations, layoutTemplate, qrDesign, qrData, brand]);
+
+  const regenerateThumbnail = useCallback(async (opts: { debounce?: boolean } = {}): Promise<boolean> => {
+    if (!pack || !qrRow || selectedFormats.length === 0) return false;
+    if (opts.debounce) {
+      if (thumbTimer.current) clearTimeout(thumbTimer.current);
+      await new Promise<void>((resolve) => { thumbTimer.current = setTimeout(resolve, 400); });
+    }
+    setThumbState("generating");
+    setThumbError(null);
     try {
-      const first = FORMATS.find((f) => f.id === selectedFormats[0]);
-      if (!first) return;
-      const c = buildFormatContent(contentBase, globalSettings, formatCustomizations[first.id]);
-      const svg = await renderFormatSvg(first, layoutTemplate, c, qrDesign, qrData, c.logoUrl, brand, { includeBleed: false, showBoundaries: false });
-      const blob = await svgToPng(svg, 480, 480);
+      const gen = await generatePreviewDataUrl();
+      if (!gen) { setThumbState("idle"); return false; }
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
+      if (!userData.user) throw new Error("Not signed in");
       const path = `${userData.user.id}/${pack.id}.png`;
-      const up = await supabase.storage.from("pack-previews").upload(path, blob, { upsert: true, contentType: "image/png" });
-      if (up.error) { console.warn("thumb upload", up.error); return; }
+      const up = await supabase.storage.from(PREVIEW_BUCKET).upload(path, gen.blob, { upsert: true, contentType: "image/png" });
+      if (up.error) {
+        const msg = up.error.message || "Upload failed";
+        setThumbError(msg);
+        setThumbState(/bucket|not found|policy|denied/i.test(msg) ? "unavailable" : "failed");
+        return false;
+      }
       await supabase.from("marketing_packs").update({ preview_url: path }).eq("id", pack.id);
+      setThumbState("saved");
       qc.invalidateQueries({ queryKey: ["marketing-packs"] });
-    } catch (e) { console.warn("thumb gen", e); }
-  }, [pack, qrRow, selectedFormats, contentBase, globalSettings, formatCustomizations, layoutTemplate, qrDesign, qrData, brand, qc]);
+      return true;
+    } catch (e) {
+      const msg = (e as Error).message || "Failed";
+      setThumbError(msg);
+      setThumbState("failed");
+      return false;
+    }
+  }, [pack, qrRow, selectedFormats, generatePreviewDataUrl, qc]);
 
   const doSave = useCallback(async (): Promise<boolean> => {
     if (!pack) return false;
@@ -188,11 +217,10 @@ function MarketingPackEditor() {
     qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
     qc.invalidateQueries({ queryKey: ["marketing-packs"] });
     setTimeout(() => setSaveState((s) => (s === "saved" ? "idle" : s)), 1500);
-    void regenerateThumbnail();
+    void regenerateThumbnail({ debounce: true });
     return true;
   }, [pack, projectName, layoutTemplate, headline, supportText, ctaText, footerText, showBusinessName, showLogo, showStars, showGoogleBadge, selectedFormats, globalSettings, formatCustomizations, status, qc, id, regenerateThumbnail]);
 
-  // Trigger autosave when state changes (after initial load)
   useEffect(() => {
     if (!initialised.current) return;
     setDirty(true);
@@ -202,7 +230,6 @@ function MarketingPackEditor() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectName, layoutTemplate, headline, supportText, ctaText, footerText, showBusinessName, showLogo, showStars, showGoogleBadge, selectedFormats, globalSettings, formatCustomizations, status]);
 
-  // Warn on unload if dirty
   useEffect(() => {
     function onBeforeUnload(e: BeforeUnloadEvent) {
       if (dirty) { e.preventDefault(); e.returnValue = ""; }
@@ -251,10 +278,9 @@ function MarketingPackEditor() {
 
   async function deletePack() {
     if (!pack) return;
-    // Best-effort: remove stored thumbnail
     const { data: userData } = await supabase.auth.getUser();
     if (userData.user) {
-      await supabase.storage.from("pack-previews").remove([`${userData.user.id}/${pack.id}.png`]).catch(() => undefined);
+      await supabase.storage.from(PREVIEW_BUCKET).remove([`${userData.user.id}/${pack.id}.png`]).catch(() => undefined);
     }
     const { error } = await supabase.from("marketing_packs").delete().eq("id", pack.id);
     if (error) return toast.error(error.message);
@@ -264,16 +290,12 @@ function MarketingPackEditor() {
   }
 
   async function markReadyToPrint() {
-    // Guard: ensure required fields
     if (!headline.trim() || !ctaText.trim()) return toast.error("Headline and CTA are required");
     if (selectedFormats.length === 0) return toast.error("Add at least one format");
-    // Run scan validation
     toast.info("Validating QR in every selected format…");
     const results = await validateAllQrs();
     const failed = results.filter((r) => !r.pass);
-    if (failed.length) {
-      return toast.error(`${failed.length} format(s) failed QR validation — fix warnings first`);
-    }
+    if (failed.length) return toast.error(`${failed.length} format(s) failed QR validation — fix warnings first`);
     setStatus("ready");
     toast.success("Marked ready to print");
   }
@@ -282,13 +304,12 @@ function MarketingPackEditor() {
     const out: { formatId: string; pass: boolean; reason?: string }[] = [];
     for (const f of selected) {
       try {
-        const svg = await renderFormatSvg(f, layoutTemplate, resolveContent(f), qrDesign, qrData, resolveContent(f).logoUrl, brand, { showBoundaries: false, includeBleed: false });
-        const target = 600;
-        const blob = await svgToPng(svg, target, target);
+        const c = resolveContent(f);
+        const svg = await renderFormatSvg(f, layoutTemplate, c, qrDesign, qrData, c.logoUrl, brand, { showBoundaries: false, includeBleed: false });
+        const blob = await svgToPng(svg, 600, 600);
         const bitmap = await createImageBitmap(blob);
         const canvas = document.createElement("canvas");
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
+        canvas.width = bitmap.width; canvas.height = bitmap.height;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(bitmap, 0, 0);
         const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -309,14 +330,36 @@ function MarketingPackEditor() {
     if (!list.length) return toast.error("No formats match that group");
     setExporting(`zip-${kind}`);
     try {
+      const validations = await validateAllQrs();
+      const preview = await generatePreviewDataUrl().catch(() => null);
       await downloadPackZip(
         projectName || "marketing-pack", list, layoutTemplate, resolveContent, qrDesign, qrData, rawLogoUrl, brand,
-        { packType: pack?.pack_type, business: biz?.name ?? null, qrCode: qrRow?.short_code ?? null },
+        {
+          projectId: pack?.id ?? null,
+          packType: pack?.pack_type,
+          status,
+          businessId: biz?.id ?? null,
+          business: biz?.name ?? null,
+          qrId: qrRow?.id ?? null,
+          qrCode: qrRow?.short_code ?? null,
+          qrLabel: qrRow?.label ?? null,
+          qrDestinationType: qrRow?.destination_type ?? null,
+          previewDataUrl: preview?.dataUrl ?? null,
+          validations,
+        },
       );
       toast.success("ZIP downloaded");
-      // Mark exported
-      if (status === "draft" || status === "ready") {
-        setStatus("exported");
+      // Persist exported status immediately
+      const nextStatus: PackStatus = status === "archived" ? "archived" : "exported";
+      if (nextStatus !== status && pack) {
+        const { error: uerr } = await supabase.from("marketing_packs").update({
+          status: nextStatus, updated_at: new Date().toISOString(),
+        }).eq("id", pack.id);
+        if (!uerr) {
+          setStatus(nextStatus);
+          qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+          qc.invalidateQueries({ queryKey: ["marketing-packs"] });
+        }
       }
     } catch (e) {
       toast.error(`Export failed: ${(e as Error).message}`);
@@ -350,6 +393,7 @@ function MarketingPackEditor() {
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{projectName || "Untitled pack"}</h1>
             <Badge variant={statusM.badge} className="rounded-full">{statusM.label}</Badge>
             <Badge variant="outline" className="rounded-full text-[10px]">{packTypeLabel}</Badge>
+            <ThumbBadge state={thumbState} error={thumbError} onRetry={() => regenerateThumbnail()}/>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {biz?.name} · {qrRow?.label ?? qrRow?.short_code}
@@ -357,6 +401,9 @@ function MarketingPackEditor() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SaveIndicator state={saveState} onRetry={retrySave} error={saveError}/>
+          <Button variant="outline" size="sm" onClick={() => regenerateThumbnail()} disabled={thumbState === "generating"} className="rounded-full">
+            {thumbState === "generating" ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : <RotateCw className="mr-1 h-4 w-4"/>}Regenerate preview
+          </Button>
           <Button variant="outline" size="sm" onClick={() => doSave()} className="rounded-full">
             <Save className="mr-1 h-4 w-4"/>Save
           </Button>
@@ -387,6 +434,23 @@ function MarketingPackEditor() {
           </AlertDialog>
         </div>
       </div>
+
+      {thumbState === "failed" && thumbError && (
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-2 text-xs text-destructive">
+          <AlertTriangle className="h-4 w-4"/>Preview upload failed: {thumbError}
+          <Button size="sm" variant="ghost" onClick={() => regenerateThumbnail()} className="ml-auto rounded-full text-xs">
+            <RotateCw className="mr-1 h-3 w-3"/>Retry preview
+          </Button>
+        </div>
+      )}
+      {thumbState === "unavailable" && (
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs text-amber-500">
+          <AlertTriangle className="h-4 w-4"/>Preview storage unavailable. Exports still work — retry once storage is restored.
+          <Button size="sm" variant="ghost" onClick={() => regenerateThumbnail()} className="ml-auto rounded-full text-xs">
+            <RotateCw className="mr-1 h-3 w-3"/>Retry
+          </Button>
+        </div>
+      )}
 
       <Tabs defaultValue="content">
         <TabsList className="rounded-full">
@@ -435,10 +499,7 @@ function MarketingPackEditor() {
         </TabsContent>
 
         <TabsContent value="formats" className="mt-4">
-          <FormatsTab
-            selectedFormats={selectedFormats}
-            setSelectedFormats={setSelectedFormats}
-          />
+          <FormatsTab selectedFormats={selectedFormats} setSelectedFormats={setSelectedFormats}/>
         </TabsContent>
 
         <TabsContent value="design" className="mt-4">
@@ -461,16 +522,13 @@ function MarketingPackEditor() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={() => exportZip("print")} disabled={exporting !== null} className="rounded-full">
-                    {exporting === "zip-print" ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <Package className="mr-1 h-3 w-3"/>}
-                    Print ZIP
+                    {exporting === "zip-print" ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <Package className="mr-1 h-3 w-3"/>}Print ZIP
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => exportZip("digital")} disabled={exporting !== null} className="rounded-full">
-                    {exporting === "zip-digital" ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <Package className="mr-1 h-3 w-3"/>}
-                    Digital ZIP
+                    {exporting === "zip-digital" ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <Package className="mr-1 h-3 w-3"/>}Digital ZIP
                   </Button>
                   <Button size="sm" onClick={() => exportZip("all")} disabled={exporting !== null} className="rounded-full">
-                    {exporting === "zip-all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <Download className="mr-1 h-3 w-3"/>}
-                    Full ZIP ({selected.length})
+                    {exporting === "zip-all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <Download className="mr-1 h-3 w-3"/>}Full ZIP ({selected.length})
                   </Button>
                   <Button size="sm" variant={status === "ready" ? "default" : "outline"} onClick={markReadyToPrint} disabled={status === "ready"} className="rounded-full">
                     <CheckCircle2 className="mr-1 h-3 w-3"/>{status === "ready" ? "Ready" : "Mark ready to print"}
@@ -498,10 +556,17 @@ function MarketingPackEditor() {
                       exporting={exporting}
                       setExporting={setExporting}
                       override={formatCustomizations[f.id]}
+                      globalSettings={globalSettings}
+                      selectedFormats={selectedFormats}
                       onOverrideChange={(o) => setFormatCustomizations({ ...formatCustomizations, [f.id]: o })}
                       onOverrideClear={() => {
                         const next = { ...formatCustomizations };
                         delete next[f.id];
+                        setFormatCustomizations(next);
+                      }}
+                      onCopyToFormats={(ids, o) => {
+                        const next = { ...formatCustomizations };
+                        ids.forEach((fid) => { next[fid] = { ...next[fid], ...o }; });
                         setFormatCustomizations(next);
                       }}
                     />
@@ -546,6 +611,14 @@ function SaveIndicator({ state, onRetry, error }: { state: SaveState; onRetry: (
     </span>
   );
   return null;
+}
+
+function ThumbBadge({ state, error, onRetry }: { state: ThumbState; error: string | null; onRetry: () => void }) {
+  if (state === "idle") return null;
+  if (state === "generating") return <Badge variant="outline" className="rounded-full text-[10px]"><Loader2 className="mr-1 h-2.5 w-2.5 animate-spin"/>Generating preview</Badge>;
+  if (state === "saved") return <Badge variant="secondary" className="rounded-full text-[10px]"><CheckCircle2 className="mr-1 h-2.5 w-2.5"/>Preview saved</Badge>;
+  if (state === "unavailable") return <Badge variant="outline" className="rounded-full border-amber-500/50 text-[10px] text-amber-500" title={error ?? ""} onClick={onRetry} role="button"><AlertTriangle className="mr-1 h-2.5 w-2.5"/>Storage unavailable</Badge>;
+  return <Badge variant="destructive" className="rounded-full text-[10px]" title={error ?? ""} onClick={onRetry} role="button"><AlertTriangle className="mr-1 h-2.5 w-2.5"/>Preview failed</Badge>;
 }
 
 function FormatsTab({ selectedFormats, setSelectedFormats }: {
@@ -638,29 +711,33 @@ function DesignTab({ layoutTemplate, setLayoutTemplate, globalSettings, setGloba
   setGlobalSettings: (v: GlobalSettings) => void;
   brand: string;
 }) {
-  function patch(k: keyof GlobalSettings, v: unknown) {
+  function patch<K extends keyof GlobalSettings>(k: K, v: GlobalSettings[K]) {
     setGlobalSettings({ ...globalSettings, [k]: v });
   }
+
+  async function onBackgroundFile(file: File | null) {
+    if (!file) { patch("backgroundImage", null); return; }
+    if (file.size > 4 * 1024 * 1024) return toast.error("Image too large (max 4 MB)");
+    const dataUrl = await fileToDataUrl(file);
+    patch("backgroundImage", dataUrl);
+  }
+
   return (
     <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
-      <CardContent className="space-y-5 p-6">
+      <CardContent className="space-y-6 p-6">
         <div className="space-y-2">
           <Label className="text-xs uppercase tracking-wide text-muted-foreground">Layout template</Label>
           <div className="flex flex-wrap gap-1.5">
             {LAYOUT_TEMPLATES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setLayoutTemplate(t.id)}
-                title={t.description}
-                className={`rounded-full border px-3 py-1 text-xs transition-colors ${layoutTemplate === t.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-accent"}`}
-              >
+              <button key={t.id} type="button" onClick={() => setLayoutTemplate(t.id)} title={t.description}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${layoutTemplate === t.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-accent"}`}>
                 {t.label}
               </button>
             ))}
           </div>
         </div>
 
+        <SectionHeading>Colours</SectionHeading>
         <div className="grid gap-3 sm:grid-cols-2">
           <ColorField label="Brand colour" value={globalSettings.brandColor ?? brand} onChange={(v) => patch("brandColor", v)}/>
           <ColorField label="Background" value={globalSettings.backgroundColor ?? "#ffffff"} onChange={(v) => patch("backgroundColor", v)}/>
@@ -668,50 +745,82 @@ function DesignTab({ layoutTemplate, setLayoutTemplate, globalSettings, setGloba
           <ColorField label="Accent" value={globalSettings.accentColor ?? brand} onChange={(v) => patch("accentColor", v)}/>
         </div>
 
+        <SectionHeading>Typography</SectionHeading>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Font weight</Label>
-            <select
-              value={globalSettings.fontWeight ?? "500"}
-              onChange={(e) => patch("fontWeight", e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-            >
-              <option value="400">Regular</option>
-              <option value="500">Medium</option>
-              <option value="600">Semibold</option>
-              <option value="700">Bold</option>
-            </select>
+          <SelectField label="Font family" value={globalSettings.fontFamily ?? "inter"} onChange={(v) => patch("fontFamily", v)}
+            options={FONT_OPTIONS.map((f) => ({ value: f.id, label: f.label }))}/>
+          <SelectField label="Font weight" value={globalSettings.fontWeight ?? "600"} onChange={(v) => patch("fontWeight", v)}
+            options={[{ value: "400", label: "Regular" }, { value: "500", label: "Medium" }, { value: "600", label: "Semibold" }, { value: "700", label: "Bold" }]}/>
+          <SelectField label="Text alignment" value={globalSettings.textAlign ?? "center"} onChange={(v) => patch("textAlign", v as GlobalSettings["textAlign"])}
+            options={[{ value: "left", label: "Left" }, { value: "center", label: "Center" }, { value: "right", label: "Right" }]}/>
+        </div>
+
+        <SectionHeading>Layout &amp; shapes</SectionHeading>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <SelectField label="QR alignment" value={globalSettings.qrAlign ?? "center"} onChange={(v) => patch("qrAlign", v as GlobalSettings["qrAlign"])}
+            options={[{ value: "left", label: "Left" }, { value: "center", label: "Center" }, { value: "right", label: "Right" }]}/>
+          <SelectField label="Border style" value={globalSettings.borderStyle ?? "none"} onChange={(v) => patch("borderStyle", v as GlobalSettings["borderStyle"])}
+            options={BORDER_STYLES.map((b) => ({ value: b.id, label: b.label }))}/>
+          <SelectField label="Star style" value={globalSettings.starStyle ?? "solid"} onChange={(v) => patch("starStyle", v as GlobalSettings["starStyle"])}
+            options={STAR_STYLES.map((s) => ({ value: s.id, label: s.label }))}/>
+          <SliderField label={`Logo size — ${Math.round((globalSettings.logoSize ?? 0.18) * 100)}%`} value={Math.round((globalSettings.logoSize ?? 0.18) * 100)} min={8} max={35} onChange={(v) => patch("logoSize", v / 100)}/>
+          <SliderField label={`Corner radius — ${globalSettings.cornerRadius ?? 0}`} value={globalSettings.cornerRadius ?? 0} min={0} max={20} onChange={(v) => patch("cornerRadius", v)}/>
+        </div>
+
+        <SectionHeading>Background image</SectionHeading>
+        <div className="grid gap-3 rounded-2xl border border-border/60 p-4 sm:grid-cols-[auto_1fr]">
+          <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-accent/40">
+            {globalSettings.backgroundImage
+              ? <img src={globalSettings.backgroundImage} alt="" className="h-full w-full object-cover"/>
+              : <ImagePlus className="h-6 w-6 text-muted-foreground"/>}
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Text alignment</Label>
-            <select
-              value={globalSettings.textAlign ?? "center"}
-              onChange={(e) => patch("textAlign", e.target.value as GlobalSettings["textAlign"])}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-            >
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">QR alignment</Label>
-            <select
-              value={globalSettings.qrAlign ?? "center"}
-              onChange={(e) => patch("qrAlign", e.target.value as GlobalSettings["qrAlign"])}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-            >
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
-            </select>
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-xs hover:bg-accent">
+                <ImagePlus className="h-3 w-3"/>Upload image
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => onBackgroundFile(e.target.files?.[0] ?? null)}/>
+              </label>
+              {globalSettings.backgroundImage && (
+                <Button size="sm" variant="ghost" onClick={() => patch("backgroundImage", null)} className="rounded-full text-xs text-destructive">
+                  <X className="mr-1 h-3 w-3"/>Remove
+                </Button>
+              )}
+            </div>
+            <SliderField label={`Opacity — ${Math.round((globalSettings.backgroundImageOpacity ?? 1) * 100)}%`} value={Math.round((globalSettings.backgroundImageOpacity ?? 1) * 100)} min={10} max={100} onChange={(v) => patch("backgroundImageOpacity", v / 100)}/>
+            <SelectField label="Fit" value={globalSettings.backgroundImageFit ?? "cover"} onChange={(v) => patch("backgroundImageFit", v as GlobalSettings["backgroundImageFit"])}
+              options={[{ value: "cover", label: "Cover" }, { value: "contain", label: "Contain" }]}/>
           </div>
         </div>
+
         <p className="text-[11px] text-muted-foreground">
-          Layout template drives colours and composition. Extra global overrides apply progressively as templates gain support.
+          Global settings apply to every format. Per-format overrides in Preview &amp; Export take priority.
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{children}</p>;
+}
+
+function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">{label}</Label>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm">
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function SliderField({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">{label}</Label>
+      <Slider value={[value]} min={min} max={max} step={1} onValueChange={([v]) => onChange(v)}/>
+    </div>
   );
 }
 
@@ -753,17 +862,21 @@ function FormatPreviewCard(props: {
   exporting: string | null;
   setExporting: (v: string | null) => void;
   override: FormatOverride | undefined;
+  globalSettings: GlobalSettings;
+  selectedFormats: string[];
   onOverrideChange: (o: FormatOverride) => void;
   onOverrideClear: () => void;
+  onCopyToFormats: (ids: string[], o: FormatOverride) => void;
 }) {
-  const { format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, exporting, setExporting, override, onOverrideChange, onOverrideClear } = props;
+  const { format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, onOverrideChange, onOverrideClear, onCopyToFormats } = props;
   const [svg, setSvg] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
+  const [renderKey, setRenderKey] = useState(0);
   const [scanStatus, setScanStatus] = useState<"idle" | "checking" | "pass" | "fail">("idle");
   const [scanReason, setScanReason] = useState<string | null>(null);
   const [overrideOpen, setOverrideOpen] = useState(false);
 
-  const renderKey = JSON.stringify(content);
+  const contentKey = JSON.stringify(content);
   useEffect(() => {
     let cancelled = false;
     setErr(null);
@@ -772,7 +885,7 @@ function FormatPreviewCard(props: {
       .catch((e) => { if (!cancelled) setErr((e as Error).message); });
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [format.id, layoutTemplate, renderKey, qrDesign, qrData, logoUrl, brand]);
+  }, [format.id, layoutTemplate, contentKey, qrDesign, qrData, logoUrl, brand, renderKey]);
 
   async function validate() {
     setScanStatus("checking"); setScanReason(null);
@@ -819,7 +932,7 @@ function FormatPreviewCard(props: {
       {err && (
         <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2">
           <p className="text-[10px] text-destructive">{err}</p>
-          <Button size="sm" variant="ghost" onClick={() => setErr(null)} className="h-6 rounded-full text-[10px]"><RotateCw className="mr-1 h-3 w-3"/>Retry</Button>
+          <Button size="sm" variant="ghost" onClick={() => { setErr(null); setRenderKey((k) => k + 1); }} className="h-6 rounded-full text-[10px]"><RotateCw className="mr-1 h-3 w-3"/>Retry render</Button>
         </div>
       )}
       <div className="mt-2 grid grid-cols-5 gap-1.5">
@@ -835,7 +948,7 @@ function FormatPreviewCard(props: {
         <Button size="sm" variant="outline" onClick={validate} disabled={scanStatus === "checking"} className="rounded-full text-[10px]" title="Validate QR">
           {scanStatus === "checking" ? <Loader2 className="h-3 w-3 animate-spin"/> : <CheckCircle2 className="h-3 w-3"/>}
         </Button>
-        <Button size="sm" variant={hasOverride ? "default" : "outline"} onClick={() => setOverrideOpen(true)} className="rounded-full text-[10px]" title="Customize this format">
+        <Button size="sm" variant={hasOverride ? "default" : "outline"} onClick={() => setOverrideOpen(true)} className="rounded-full text-[10px]" title="Customise this format">
           <Settings2 className="h-3 w-3"/>
         </Button>
       </div>
@@ -844,20 +957,26 @@ function FormatPreviewCard(props: {
         onOpenChange={setOverrideOpen}
         format={format}
         override={override}
+        globalSettings={globalSettings}
+        selectedFormats={selectedFormats}
         onSave={(o) => { onOverrideChange(o); setOverrideOpen(false); }}
         onClear={() => { onOverrideClear(); setOverrideOpen(false); }}
+        onCopyToFormats={onCopyToFormats}
       />
     </div>
   );
 }
 
-function OverrideDialog({ open, onOpenChange, format, override, onSave, onClear }: {
+function OverrideDialog({ open, onOpenChange, format, override, globalSettings, selectedFormats, onSave, onClear, onCopyToFormats }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   format: BusinessFormat;
   override: FormatOverride | undefined;
+  globalSettings: GlobalSettings;
+  selectedFormats: string[];
   onSave: (o: FormatOverride) => void;
   onClear: () => void;
+  onCopyToFormats: (ids: string[], o: FormatOverride) => void;
 }) {
   const [draft, setDraft] = useState<FormatOverride>({});
   useEffect(() => { if (open) setDraft(override ?? {}); }, [open, override]);
@@ -865,71 +984,203 @@ function OverrideDialog({ open, onOpenChange, format, override, onSave, onClear 
   function patch<K extends keyof FormatOverride>(k: K, v: FormatOverride[K]) {
     setDraft((d) => ({ ...d, [k]: v }));
   }
+  function unset<K extends keyof FormatOverride>(k: K) {
+    setDraft((d) => { const n = { ...d }; delete n[k]; return n; });
+  }
+
+  const similar = useMemo(() => {
+    const all = FORMATS.filter((f) => selectedFormats.includes(f.id));
+    return similarFormats(format, all);
+  }, [format, selectedFormats]);
+
+  const otherSelected = useMemo(() => FORMATS.filter((f) => selectedFormats.includes(f.id) && f.id !== format.id), [format, selectedFormats]);
+
+  const [copyPickerOpen, setCopyPickerOpen] = useState(false);
+  const [copyIds, setCopyIds] = useState<string[]>([]);
+
+  async function onBgFile(file: File | null) {
+    if (!file) { patch("backgroundImage", null); return; }
+    if (file.size > 4 * 1024 * 1024) return toast.error("Image too large (max 4 MB)");
+    patch("backgroundImage", await fileToDataUrl(file));
+  }
+
+  function applyGlobal() {
+    setDraft({
+      textAlign: globalSettings.textAlign,
+      textColor: globalSettings.textColor,
+      backgroundColor: globalSettings.backgroundColor,
+      accentColor: globalSettings.accentColor,
+      borderStyle: globalSettings.borderStyle,
+      cornerRadius: globalSettings.cornerRadius,
+      starStyle: globalSettings.starStyle,
+      logoSize: globalSettings.logoSize,
+      backgroundImage: globalSettings.backgroundImage ?? null,
+      backgroundImageOpacity: globalSettings.backgroundImageOpacity,
+      fontFamily: globalSettings.fontFamily,
+    });
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Customize {format.name}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogHeader><DialogTitle>Customise {format.name}</DialogTitle></DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Headline override</Label>
-            <Input value={draft.headline ?? ""} onChange={(e) => patch("headline", e.target.value || undefined)} className="rounded-xl" placeholder="Use pack default"/>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Support text override</Label>
-            <Textarea value={draft.supportText ?? ""} onChange={(e) => patch("supportText", e.target.value || undefined)} rows={2} className="rounded-xl" placeholder="Use pack default"/>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <SectionHeading>Copy</SectionHeading>
+          <div className="grid gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">CTA text override</Label>
-              <Input value={draft.ctaText ?? ""} onChange={(e) => patch("ctaText", e.target.value || undefined)} className="rounded-xl" placeholder="Use pack default"/>
+              <Label className="text-xs">Headline override</Label>
+              <Input value={draft.headline ?? ""} onChange={(e) => patch("headline", e.target.value || undefined)} className="rounded-xl" placeholder="Use pack default"/>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">QR scale (0.30–0.70)</Label>
-              <div className="flex items-center gap-2">
-                <Slider value={[Math.round((draft.qrScale ?? 0.45) * 100)]} min={30} max={70} step={1} onValueChange={([v]) => patch("qrScale", v / 100)} className="flex-1"/>
-                <span className="w-10 text-right font-mono text-xs">{Math.round((draft.qrScale ?? 0.45) * 100)}%</span>
+              <Label className="text-xs">Support text override</Label>
+              <Textarea value={draft.supportText ?? ""} onChange={(e) => patch("supportText", e.target.value || undefined)} rows={2} className="rounded-xl" placeholder="Use pack default"/>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">CTA override</Label>
+                <Input value={draft.ctaText ?? ""} onChange={(e) => patch("ctaText", e.target.value || undefined)} className="rounded-xl" placeholder="Use pack default"/>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Footer override</Label>
+                <Input value={draft.footerText ?? ""} onChange={(e) => patch("footerText", e.target.value || undefined)} className="rounded-xl" placeholder="Use pack default"/>
               </div>
             </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Background override</Label>
-              <div className="flex items-center gap-2">
-                <input type="color" value={draft.backgroundColor ?? "#ffffff"} onChange={(e) => patch("backgroundColor", e.target.value)} className="h-9 w-12 cursor-pointer rounded-lg border border-border"/>
-                <Input value={draft.backgroundColor ?? ""} onChange={(e) => patch("backgroundColor", e.target.value || undefined)} placeholder="Use pack" className="rounded-xl font-mono text-xs"/>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Accent override</Label>
-              <div className="flex items-center gap-2">
-                <input type="color" value={draft.accentColor ?? "#0071e3"} onChange={(e) => patch("accentColor", e.target.value)} className="h-9 w-12 cursor-pointer rounded-lg border border-border"/>
-                <Input value={draft.accentColor ?? ""} onChange={(e) => patch("accentColor", e.target.value || undefined)} placeholder="Use pack" className="rounded-xl font-mono text-xs"/>
-              </div>
-            </div>
-          </div>
+
+          <SectionHeading>Visibility</SectionHeading>
           <div className="grid gap-2 rounded-xl bg-accent/30 p-3 sm:grid-cols-2">
             <label className="flex items-center gap-2 text-xs">
+              <Checkbox checked={draft.showBusinessName !== false} onCheckedChange={(v) => patch("showBusinessName", v === true)}/> Show business name
+            </label>
+            <label className="flex items-center gap-2 text-xs">
               <Checkbox checked={draft.logoVisible !== false} onCheckedChange={(v) => patch("logoVisible", v === true)}/> Show logo
+            </label>
+            <label className="flex items-center gap-2 text-xs">
+              <Checkbox checked={draft.showGoogleBadge !== false} onCheckedChange={(v) => patch("showGoogleBadge", v === true)}/> Show Google badge
             </label>
             <label className="flex items-center gap-2 text-xs">
               <Checkbox checked={draft.hideStars === true} onCheckedChange={(v) => patch("hideStars", v === true)}/> Hide stars
             </label>
           </div>
+
+          <SectionHeading>Colours</SectionHeading>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <MiniColor label="Background" value={draft.backgroundColor} onChange={(v) => patch("backgroundColor", v)} onClear={() => unset("backgroundColor")}/>
+            <MiniColor label="Text" value={draft.textColor} onChange={(v) => patch("textColor", v)} onClear={() => unset("textColor")}/>
+            <MiniColor label="Accent" value={draft.accentColor} onChange={(v) => patch("accentColor", v)} onClear={() => unset("accentColor")}/>
+          </div>
+
+          <SectionHeading>Typography &amp; layout</SectionHeading>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <SelectField label="Font family" value={draft.fontFamily ?? "inherit"} onChange={(v) => v === "inherit" ? unset("fontFamily") : patch("fontFamily", v)}
+              options={[{ value: "inherit", label: "Use pack" }, ...FONT_OPTIONS.map((f) => ({ value: f.id, label: f.label }))]}/>
+            <SelectField label="Text alignment" value={draft.textAlign ?? "inherit"} onChange={(v) => v === "inherit" ? unset("textAlign") : patch("textAlign", v as FormatOverride["textAlign"])}
+              options={[{ value: "inherit", label: "Use pack" }, { value: "left", label: "Left" }, { value: "center", label: "Center" }, { value: "right", label: "Right" }]}/>
+            <SelectField label="Border style" value={draft.borderStyle ?? "inherit"} onChange={(v) => v === "inherit" ? unset("borderStyle") : patch("borderStyle", v as FormatOverride["borderStyle"])}
+              options={[{ value: "inherit", label: "Use pack" }, ...BORDER_STYLES.map((b) => ({ value: b.id, label: b.label }))]}/>
+            <SelectField label="Star style" value={draft.starStyle ?? "inherit"} onChange={(v) => v === "inherit" ? unset("starStyle") : patch("starStyle", v as FormatOverride["starStyle"])}
+              options={[{ value: "inherit", label: "Use pack" }, ...STAR_STYLES.map((s) => ({ value: s.id, label: s.label }))]}/>
+            <SliderField label={`Corner radius — ${draft.cornerRadius ?? "pack"}`} value={draft.cornerRadius ?? 0} min={0} max={20} onChange={(v) => patch("cornerRadius", v)}/>
+            <SliderField label={`Logo size — ${Math.round((draft.logoSize ?? 0.18) * 100)}%`} value={Math.round((draft.logoSize ?? 0.18) * 100)} min={8} max={35} onChange={(v) => patch("logoSize", v / 100)}/>
+          </div>
+
+          <SectionHeading>QR position</SectionHeading>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <SliderField label={`QR scale — ${Math.round((draft.qrScale ?? 0.45) * 100)}%`} value={Math.round((draft.qrScale ?? 0.45) * 100)} min={30} max={70} onChange={(v) => patch("qrScale", v / 100)}/>
+            <SliderField label={`X offset — ${Math.round((draft.qrOffsetX ?? 0) * 100)}%`} value={Math.round((draft.qrOffsetX ?? 0) * 100)} min={-40} max={40} onChange={(v) => patch("qrOffsetX", v / 100)}/>
+            <SliderField label={`Y offset — ${Math.round((draft.qrOffsetY ?? 0) * 100)}%`} value={Math.round((draft.qrOffsetY ?? 0) * 100)} min={-40} max={40} onChange={(v) => patch("qrOffsetY", v / 100)}/>
+          </div>
+
+          <SectionHeading>Background image</SectionHeading>
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/60 p-3">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg bg-accent/40">
+              {draft.backgroundImage ? <img src={draft.backgroundImage} alt="" className="h-full w-full object-cover"/> : <ImagePlus className="h-5 w-5 text-muted-foreground"/>}
+            </div>
+            <label className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-xs hover:bg-accent">
+              <ImagePlus className="h-3 w-3"/>Upload
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => onBgFile(e.target.files?.[0] ?? null)}/>
+            </label>
+            {draft.backgroundImage && (
+              <Button size="sm" variant="ghost" onClick={() => patch("backgroundImage", null)} className="rounded-full text-xs text-destructive">
+                <X className="mr-1 h-3 w-3"/>Remove
+              </Button>
+            )}
+            <div className="min-w-[160px] flex-1">
+              <SliderField label={`Opacity — ${Math.round((draft.backgroundImageOpacity ?? 1) * 100)}%`} value={Math.round((draft.backgroundImageOpacity ?? 1) * 100)} min={10} max={100} onChange={(v) => patch("backgroundImageOpacity", v / 100)}/>
+            </div>
+          </div>
         </div>
-        <DialogFooter className="gap-2 sm:justify-between">
-          <Button variant="ghost" onClick={onClear} className="rounded-full text-destructive">
-            <Trash2 className="mr-1 h-3 w-3"/>Clear override
-          </Button>
+
+        <DialogFooter className="mt-4 gap-2 sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="ghost" onClick={onClear} className="rounded-full text-destructive">
+              <Trash2 className="mr-1 h-3 w-3"/>Reset this format
+            </Button>
+            <Button variant="outline" onClick={applyGlobal} className="rounded-full text-xs">Apply global settings</Button>
+            {similar.length > 0 && (
+              <Button variant="outline" onClick={() => { onCopyToFormats(similar.map((f) => f.id), draft); toast.success(`Copied to ${similar.length} similar`); }} className="rounded-full text-xs">
+                Copy to similar ({similar.length})
+              </Button>
+            )}
+            {otherSelected.length > 0 && (
+              <Button variant="outline" onClick={() => { setCopyIds([]); setCopyPickerOpen(true); }} className="rounded-full text-xs">Copy to selected…</Button>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-full">Cancel</Button>
             <Button onClick={() => onSave(draft)} className="rounded-full">Save override</Button>
           </div>
         </DialogFooter>
+
+        <Dialog open={copyPickerOpen} onOpenChange={setCopyPickerOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle>Copy override to formats</DialogTitle></DialogHeader>
+            <div className="max-h-[50vh] space-y-1 overflow-y-auto">
+              {otherSelected.map((f) => (
+                <label key={f.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-accent">
+                  <Checkbox checked={copyIds.includes(f.id)} onCheckedChange={(v) => setCopyIds(v ? [...copyIds, f.id] : copyIds.filter((x) => x !== f.id))}/>
+                  {f.name}
+                </label>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCopyPickerOpen(false)} className="rounded-full">Cancel</Button>
+              <Button onClick={() => { onCopyToFormats(copyIds, draft); setCopyPickerOpen(false); toast.success(`Copied to ${copyIds.length} format(s)`); }} className="rounded-full" disabled={copyIds.length === 0}>Copy</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
 }
 
+function MiniColor({ label, value, onChange, onClear }: { label: string; value: string | undefined; onChange: (v: string) => void; onClear: () => void }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">{label}</Label>
+      <div className="flex items-center gap-2">
+        <input type="color" value={value ?? "#ffffff"} onChange={(e) => onChange(e.target.value)} className="h-9 w-12 cursor-pointer rounded-lg border border-border"/>
+        <Input value={value ?? ""} onChange={(e) => onChange(e.target.value)} placeholder="Use pack" className="rounded-xl font-mono text-xs"/>
+        {value && <Button size="sm" variant="ghost" onClick={onClear} className="h-8 rounded-full px-2 text-[10px]">Clear</Button>}
+      </div>
+    </div>
+  );
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result as string);
+    fr.onerror = () => reject(fr.error);
+    fr.readAsDataURL(file);
+  });
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result as string);
+    fr.onerror = () => reject(fr.error);
+    fr.readAsDataURL(blob);
+  });
+}

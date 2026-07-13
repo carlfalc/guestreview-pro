@@ -4,6 +4,10 @@ import { mapCornerDot, mapCornerSquare } from "@/lib/qr-design";
 import type { BusinessFormat, LayoutTemplate } from "@/lib/qr-formats";
 import { safeArea, templateColors } from "@/lib/qr-formats";
 
+export type StarStyle = "solid" | "outline" | "rounded" | "dots" | "hidden";
+export type BorderStyle = "none" | "thin" | "thick" | "double";
+export type BgImageFit = "cover" | "contain";
+
 export type FormatContent = {
   businessName: string;
   logoUrl: string | null;
@@ -16,10 +20,21 @@ export type FormatContent = {
   textAlign?: "left" | "center" | "right";
   qrAlign?: "left" | "center" | "right";
   fontWeight?: string;
+  fontFamily?: string;
+  starStyle?: StarStyle;
+  borderStyle?: BorderStyle;
+  cornerRadius?: number; // px/mm depending on medium; 0..24
+  logoSize?: number; // fraction of format width, 0.08..0.35
+  backgroundImage?: string | null; // data URL or https URL
+  backgroundImageOpacity?: number; // 0..1
+  backgroundImageFit?: BgImageFit;
   /** Global overrides for template colors. Undefined = keep template default. */
   colors?: { bg?: string; fg?: string; accent?: string };
   /** 0.3..0.7 scale of format width; undefined = 0.45 default. */
   qrScale?: number;
+  /** -0.4..0.4 relative to width/height, applied to QR position centre. */
+  qrOffsetX?: number;
+  qrOffsetY?: number;
 };
 
 /** Render a business format as an SVG string. */
@@ -46,6 +61,10 @@ export async function renderFormatSvg(
   const offX = bleed;
   const offY = bleed;
 
+  const fontFamily = content.fontFamily ?? "Inter, -apple-system, system-ui, sans-serif";
+  const fontWeight = content.fontWeight ?? "700";
+  const cornerR = clamp(content.cornerRadius ?? 0, 0, format.medium === "print" ? 20 : 60);
+
   const qrSvg = await renderQrSvg(qrDesign, qrData, logoUrl);
 
   const isCircular = format.shape === "circular";
@@ -59,10 +78,12 @@ export async function renderFormatSvg(
   );
   const qrAlign = content.qrAlign ?? "center";
   const inset = format.medium === "print" ? 4 : 40;
-  const qrX = qrAlign === "left" ? offX + inset
+  const qrOffsetXPx = (content.qrOffsetX ?? 0) * format.width;
+  const qrOffsetYPx = (content.qrOffsetY ?? 0) * displayH;
+  const qrX = (qrAlign === "left" ? offX + inset
     : qrAlign === "right" ? offX + format.width - qrSize - inset
-    : offX + (format.width - qrSize) / 2;
-  const qrY = offY + displayH * (isCircular ? 0.32 : 0.28);
+    : offX + (format.width - qrSize) / 2) + qrOffsetXPx;
+  const qrY = offY + displayH * (isCircular ? 0.32 : 0.28) + qrOffsetYPx;
 
   const cx = offX + format.width / 2;
   const textAlign = content.textAlign ?? "center";
@@ -70,7 +91,6 @@ export async function renderFormatSvg(
     : textAlign === "right" ? offX + format.width - inset
     : cx;
   const textAnchor = textAlign === "left" ? "start" : textAlign === "right" ? "end" : "middle";
-  const fontWeight = content.fontWeight ?? "700";
 
   const parts: string[] = [];
   parts.push(`<?xml version="1.0" encoding="UTF-8"?>`);
@@ -78,19 +98,63 @@ export async function renderFormatSvg(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}${unit}" height="${totalH}${unit}" viewBox="0 0 ${totalW} ${totalH}">`,
   );
 
+  // Defs for clip (circular or rounded) so background image + border honour shape
+  const clipId = `clip-${Math.random().toString(36).slice(2, 8)}`;
+  parts.push(`<defs>`);
+  if (isCircular) {
+    parts.push(`<clipPath id="${clipId}"><circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}"/></clipPath>`);
+  } else {
+    parts.push(`<clipPath id="${clipId}"><rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" rx="${cornerR}" ry="${cornerR}"/></clipPath>`);
+  }
+  parts.push(`</defs>`);
+
   if (isCircular) {
     parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${includeBleed ? bgFill : "none"}"/>`);
     parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}" fill="${bgFill}"/>`);
   } else {
     parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${bgFill}"/>`);
+    parts.push(`<rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" rx="${cornerR}" ry="${cornerR}" fill="${bgFill}"/>`);
     if (isFolded) {
       parts.push(`<line x1="${offX}" y1="${offY + format.height / 2}" x2="${offX + format.width}" y2="${offY + format.height / 2}" stroke="${textColor}" stroke-opacity="0.15" stroke-dasharray="2 2"/>`);
     }
   }
 
+  // Background image (clipped to shape/corner)
+  if (content.backgroundImage) {
+    const opacity = clamp(content.backgroundImageOpacity ?? 1, 0, 1);
+    const preserve = content.backgroundImageFit === "contain" ? "xMidYMid meet" : "xMidYMid slice";
+    parts.push(
+      `<image href="${escapeAttr(content.backgroundImage)}" x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" opacity="${opacity}" preserveAspectRatio="${preserve}" clip-path="url(#${clipId})"/>`,
+    );
+  }
+
+  // Border
+  const borderStyle = content.borderStyle ?? "none";
+  if (borderStyle !== "none") {
+    const strokeW = borderStyle === "thin" ? (format.medium === "print" ? 0.4 : 3)
+      : borderStyle === "thick" ? (format.medium === "print" ? 1.2 : 8)
+      : (format.medium === "print" ? 0.8 : 5); // double
+    if (isCircular) {
+      parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+      if (borderStyle === "double") {
+        const gap = strokeW * 2.2;
+        parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2 - gap}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+      }
+    } else {
+      const rx = Math.max(0, cornerR - strokeW / 2);
+      parts.push(`<rect x="${offX + strokeW / 2}" y="${offY + strokeW / 2}" width="${format.width - strokeW}" height="${format.height - strokeW}" rx="${rx}" ry="${rx}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+      if (borderStyle === "double") {
+        const gap = strokeW * 2.2;
+        const rx2 = Math.max(0, rx - gap);
+        parts.push(`<rect x="${offX + strokeW / 2 + gap}" y="${offY + strokeW / 2 + gap}" width="${format.width - strokeW - gap * 2}" height="${format.height - strokeW - gap * 2}" rx="${rx2}" ry="${rx2}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+      }
+    }
+  }
+
   // Logo
   if (content.logoUrl) {
-    const logoSize = Math.min(format.width * 0.18, displayH * 0.14);
+    const logoScale = clamp(content.logoSize ?? 0.18, 0.08, 0.35);
+    const logoSize = Math.min(format.width * logoScale, displayH * (logoScale * 0.78));
     const logoX = tx - (textAlign === "center" ? logoSize / 2 : textAlign === "right" ? logoSize : 0);
     const logoY = offY + displayH * 0.08;
     parts.push(
@@ -102,7 +166,7 @@ export async function renderFormatSvg(
   if (content.businessName) {
     const nameFont = Math.max(displayH * 0.045, format.medium === "print" ? 4 : 24);
     parts.push(
-      `<text x="${tx}" y="${offY + displayH * 0.22}" fill="${textColor}" font-family="Inter, -apple-system, system-ui, sans-serif" font-size="${nameFont}" font-weight="${fontWeight}" text-anchor="${textAnchor}">${escapeText(content.businessName)}</text>`,
+      `<text x="${tx}" y="${offY + displayH * 0.22}" fill="${textColor}" font-family="${escapeAttr(fontFamily)}" font-size="${nameFont}" font-weight="${fontWeight}" text-anchor="${textAnchor}">${escapeText(content.businessName)}</text>`,
     );
   }
 
@@ -113,23 +177,25 @@ export async function renderFormatSvg(
   );
 
   // Stars
+  const starStyle = content.starStyle ?? (content.showStars === false ? "hidden" : "solid");
+  const showStars = starStyle !== "hidden" && content.showStars !== false;
   const starsY = qrY + qrSize + displayH * 0.05;
   const starSize = Math.max(displayH * 0.03, format.medium === "print" ? 4 : 22);
-  if (content.showStars !== false) {
+  if (showStars) {
     const starGap = starSize * 1.2;
     const starsW = starGap * 5;
     const starStartX = cx - starsW / 2 + starGap / 2;
     for (let i = 0; i < 5; i++) {
-      parts.push(starPath(starStartX + i * starGap, starsY, starSize / 2, accent));
+      parts.push(starGlyph(starStyle, starStartX + i * starGap, starsY, starSize / 2, accent));
     }
   }
 
   // Headline
-  const headlineY = starsY + (content.showStars !== false ? starSize * 1.6 : 0);
+  const headlineY = starsY + (showStars ? starSize * 1.6 : 0);
   const headlineFont = Math.max(displayH * 0.055, format.medium === "print" ? 5 : 28);
   if (content.headline) {
     parts.push(
-      `<text x="${tx}" y="${headlineY}" fill="${textColor}" font-family="Inter, sans-serif" font-size="${headlineFont}" font-weight="${fontWeight}" text-anchor="${textAnchor}">${escapeText(content.headline)}</text>`,
+      `<text x="${tx}" y="${headlineY}" fill="${textColor}" font-family="${escapeAttr(fontFamily)}" font-size="${headlineFont}" font-weight="${fontWeight}" text-anchor="${textAnchor}">${escapeText(content.headline)}</text>`,
     );
   }
 
@@ -137,7 +203,7 @@ export async function renderFormatSvg(
   const supportFont = Math.max(displayH * 0.028, format.medium === "print" ? 2.8 : 16);
   if (content.supportText) {
     parts.push(
-      `<text x="${tx}" y="${headlineY + supportFont * 1.6}" fill="${textColor}" fill-opacity="0.7" font-family="Inter, sans-serif" font-size="${supportFont}" text-anchor="${textAnchor}">${escapeText(content.supportText)}</text>`,
+      `<text x="${tx}" y="${headlineY + supportFont * 1.6}" fill="${textColor}" fill-opacity="0.7" font-family="${escapeAttr(fontFamily)}" font-size="${supportFont}" text-anchor="${textAnchor}">${escapeText(content.supportText)}</text>`,
     );
   }
 
@@ -145,7 +211,7 @@ export async function renderFormatSvg(
   if (content.showGoogleBadge) {
     const gbFont = Math.max(displayH * 0.02, format.medium === "print" ? 2 : 12);
     parts.push(
-      `<text x="${tx}" y="${headlineY + supportFont * 1.6 + gbFont * 2}" fill="${textColor}" fill-opacity="0.55" font-family="Inter, sans-serif" font-size="${gbFont}" text-anchor="${textAnchor}">on Google Reviews</text>`,
+      `<text x="${tx}" y="${headlineY + supportFont * 1.6 + gbFont * 2}" fill="${textColor}" fill-opacity="0.55" font-family="${escapeAttr(fontFamily)}" font-size="${gbFont}" text-anchor="${textAnchor}">on Google Reviews</text>`,
     );
   }
 
@@ -158,19 +224,20 @@ export async function renderFormatSvg(
   const footerFont = Math.max(displayH * 0.022, format.medium === "print" ? 2.2 : 13);
   const footerLine = content.footerText ? footerFont * 1.8 : 0;
   const ctaY = offY + displayH - ctaH - displayH * 0.06 - footerLine;
+  const ctaRadius = cornerR > 0 ? Math.min(ctaH / 2, cornerR * 1.2) : ctaH / 2;
   if (content.ctaText) {
     parts.push(
-      `<rect x="${ctaX}" y="${ctaY}" width="${ctaW}" height="${ctaH}" rx="${ctaH / 2}" fill="${accent}"/>`,
+      `<rect x="${ctaX}" y="${ctaY}" width="${ctaW}" height="${ctaH}" rx="${ctaRadius}" fill="${accent}"/>`,
     );
     parts.push(
-      `<text x="${tx}" y="${ctaY + ctaH / 2 + ctaFont * 0.35}" fill="${pickReadableText(accent)}" font-family="Inter, sans-serif" font-size="${ctaFont}" font-weight="${fontWeight}" text-anchor="${textAnchor}">${escapeText(content.ctaText)}</text>`,
+      `<text x="${tx}" y="${ctaY + ctaH / 2 + ctaFont * 0.35}" fill="${pickReadableText(accent)}" font-family="${escapeAttr(fontFamily)}" font-size="${ctaFont}" font-weight="${fontWeight}" text-anchor="${textAnchor}">${escapeText(content.ctaText)}</text>`,
     );
   }
 
   // Footer
   if (content.footerText) {
     parts.push(
-      `<text x="${tx}" y="${offY + displayH - displayH * 0.03}" fill="${textColor}" fill-opacity="0.55" font-family="Inter, sans-serif" font-size="${footerFont}" text-anchor="${textAnchor}">${escapeText(content.footerText)}</text>`,
+      `<text x="${tx}" y="${offY + displayH - displayH * 0.03}" fill="${textColor}" fill-opacity="0.55" font-family="${escapeAttr(fontFamily)}" font-size="${footerFont}" text-anchor="${textAnchor}">${escapeText(content.footerText)}</text>`,
     );
   }
 
@@ -257,14 +324,24 @@ export function pxFor(format: BusinessFormat, dpi = 300): { w: number; h: number
   return { w: Math.round(format.width * mmToIn * dpi), h: Math.round(format.height * mmToIn * dpi) };
 }
 
-function starPath(cx: number, cy: number, r: number, color: string): string {
+function starGlyph(style: StarStyle, cx: number, cy: number, r: number, color: string): string {
+  if (style === "hidden") return "";
+  if (style === "dots") {
+    return `<circle cx="${cx}" cy="${cy}" r="${r * 0.55}" fill="${color}"/>`;
+  }
   const points: string[] = [];
   const outer = r;
-  const inner = r * 0.5;
+  const inner = style === "rounded" ? r * 0.62 : r * 0.5;
   for (let i = 0; i < 10; i++) {
     const rad = (Math.PI / 5) * i - Math.PI / 2;
     const rr = i % 2 === 0 ? outer : inner;
     points.push(`${cx + rr * Math.cos(rad)},${cy + rr * Math.sin(rad)}`);
+  }
+  if (style === "outline") {
+    return `<polygon points="${points.join(" ")}" fill="none" stroke="${color}" stroke-width="${r * 0.18}" stroke-linejoin="round"/>`;
+  }
+  if (style === "rounded") {
+    return `<polygon points="${points.join(" ")}" fill="${color}" stroke="${color}" stroke-width="${r * 0.28}" stroke-linejoin="round"/>`;
   }
   return `<polygon points="${points.join(" ")}" fill="${color}"/>`;
 }
