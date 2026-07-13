@@ -898,6 +898,8 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 }
 function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
+type PreviewOverlays = { showTrim: boolean; showSafe: boolean; showBleedGuide: boolean; showDieline: boolean };
+
 function FormatPreviewCard(props: {
   format: BusinessFormat;
   layoutTemplate: LayoutTemplate;
@@ -911,11 +913,12 @@ function FormatPreviewCard(props: {
   override: FormatOverride | undefined;
   globalSettings: GlobalSettings;
   selectedFormats: string[];
+  overlays: PreviewOverlays;
   onOverrideChange: (o: FormatOverride) => void;
   onOverrideClear: () => void;
   onCopyToFormats: (ids: string[], o: FormatOverride) => void;
 }) {
-  const { format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, onOverrideChange, onOverrideClear, onCopyToFormats } = props;
+  const { format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, overlays, onOverrideChange, onOverrideClear, onCopyToFormats } = props;
   const [svg, setSvg] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
   const [renderKey, setRenderKey] = useState(0);
@@ -923,16 +926,24 @@ function FormatPreviewCard(props: {
   const [scanReason, setScanReason] = useState<string | null>(null);
   const [overrideOpen, setOverrideOpen] = useState(false);
 
+  const isCircular = format.shape === "circular";
   const contentKey = JSON.stringify(content);
+  const overlaysKey = JSON.stringify(overlays);
   useEffect(() => {
     let cancelled = false;
     setErr(null);
-    renderFormatSvg(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, { showBoundaries: true, includeBleed: format.bleed > 0 })
+    renderFormatSvg(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, {
+      includeBleed: format.bleed > 0,
+      showTrim: overlays.showTrim,
+      showSafe: overlays.showSafe,
+      showBleedGuide: overlays.showBleedGuide,
+      showDieline: overlays.showDieline && isCircular,
+    })
       .then((s) => { if (!cancelled) setSvg(s); })
       .catch((e) => { if (!cancelled) setErr((e as Error).message); });
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [format.id, layoutTemplate, contentKey, qrDesign, qrData, logoUrl, brand, renderKey]);
+  }, [format.id, layoutTemplate, contentKey, qrDesign, qrData, logoUrl, brand, renderKey, overlaysKey]);
 
   async function validate() {
     setScanStatus("checking"); setScanReason(null);
@@ -951,13 +962,16 @@ function FormatPreviewCard(props: {
     } catch (e) { setScanStatus("fail"); setScanReason((e as Error).message); }
   }
 
-  async function run(kind: "png" | "svg" | "pdf") {
+  async function run(kind: "png" | "svg" | "pdf" | "png-transparent" | "svg-dieline" | "dieline") {
     const key = `${format.id}-${kind}`;
     setExporting(key);
     try {
       if (kind === "png") await downloadFormatPng(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
       else if (kind === "svg") await downloadFormatSvg(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
-      else await downloadFormatPdf(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
+      else if (kind === "pdf") await downloadFormatPdf(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
+      else if (kind === "png-transparent") await downloadFormatPngTransparent(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
+      else if (kind === "svg-dieline") await downloadFormatSvgWithDieline(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
+      else await downloadDielineSvg(format);
       toast.success(`${kind.toUpperCase()} downloaded`);
     } catch (e) { toast.error(`Export failed: ${(e as Error).message}`); }
     finally { setExporting(null); }
@@ -989,7 +1003,7 @@ function FormatPreviewCard(props: {
         <Button size="sm" variant="outline" onClick={() => run("svg")} disabled={exporting !== null} className="rounded-full text-[10px]" title="Download SVG">
           {exporting === `${format.id}-svg` ? <Loader2 className="h-3 w-3 animate-spin"/> : <Download className="h-3 w-3"/>}
         </Button>
-        <Button size="sm" variant="outline" onClick={() => run("pdf")} disabled={exporting !== null || format.medium === "digital"} className="rounded-full text-[10px]" title={format.medium === "digital" ? "PDF for print formats only" : "Download PDF"}>
+        <Button size="sm" variant="outline" onClick={() => run("pdf")} disabled={exporting !== null || format.medium === "digital"} className="rounded-full text-[10px]" title={format.medium === "digital" ? "PDF for print formats only" : "Download PDF (circular formats include vector CutContour dieline)"}>
           {exporting === `${format.id}-pdf` ? <Loader2 className="h-3 w-3 animate-spin"/> : <FileText className="h-3 w-3"/>}
         </Button>
         <Button size="sm" variant="outline" onClick={validate} disabled={scanStatus === "checking"} className="rounded-full text-[10px]" title="Validate QR">
@@ -999,6 +1013,19 @@ function FormatPreviewCard(props: {
           <Settings2 className="h-3 w-3"/>
         </Button>
       </div>
+      {isCircular && (
+        <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+          <Button size="sm" variant="outline" onClick={() => run("png-transparent")} disabled={exporting !== null} className="rounded-full text-[9px]" title="Transparent-background PNG (outside trim = transparent)">
+            {exporting === `${format.id}-png-transparent` ? <Loader2 className="h-3 w-3 animate-spin"/> : "PNG·transparent"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => run("svg-dieline")} disabled={exporting !== null} className="rounded-full text-[9px]" title="SVG with embedded CutContour dieline layer">
+            {exporting === `${format.id}-svg-dieline` ? <Loader2 className="h-3 w-3 animate-spin"/> : "SVG·+dieline"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => run("dieline")} disabled={exporting !== null} className="rounded-full text-[9px]" title="Standalone CutContour dieline SVG">
+            {exporting === `${format.id}-dieline` ? <Loader2 className="h-3 w-3 animate-spin"/> : "Dieline"}
+          </Button>
+        </div>
+      )}
       <OverrideDialog
         open={overrideOpen}
         onOpenChange={setOverrideOpen}
@@ -1010,6 +1037,70 @@ function FormatPreviewCard(props: {
         onClear={() => { onOverrideClear(); setOverrideOpen(false); }}
         onCopyToFormats={onCopyToFormats}
       />
+    </div>
+  );
+}
+
+function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange }: {
+  results: ValidationResult[];
+  validating: boolean;
+  onRun: () => void;
+  warningsAck: boolean;
+  onAckChange: (v: boolean) => void;
+}) {
+  const summary = useMemo(() => readyToPrint(results), [results]);
+  const grouped = useMemo(() => {
+    const m: Record<ValidationLevel, ValidationResult[]> = { error: [], warning: [], pass: [] };
+    for (const r of results) m[r.level].push(r);
+    return m;
+  }, [results]);
+
+  return (
+    <div className="space-y-2 rounded-2xl border border-border/70 bg-card/50 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="font-semibold uppercase tracking-wide text-muted-foreground">Validation</span>
+          {results.length > 0 && (
+            <>
+              <Badge variant={summary.blocking > 0 ? "destructive" : "default"} className="rounded-full text-[10px]">
+                {summary.blocking} blocking
+              </Badge>
+              <Badge variant="outline" className="rounded-full border-amber-500/50 text-[10px] text-amber-500">
+                {summary.warnings} warnings
+              </Badge>
+              {summary.ready && summary.warnings === 0 && (
+                <Badge variant="default" className="rounded-full text-[10px]"><CheckCircle2 className="mr-1 h-2.5 w-2.5"/>All checks passed</Badge>
+              )}
+            </>
+          )}
+        </div>
+        <Button size="sm" variant="outline" onClick={onRun} disabled={validating} className="rounded-full text-xs">
+          {validating ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <CheckCircle2 className="mr-1 h-3 w-3"/>}
+          {results.length === 0 ? "Run validation" : "Re-run validation"}
+        </Button>
+      </div>
+      {results.length > 0 && (
+        <div className="max-h-80 space-y-1.5 overflow-y-auto pr-1">
+          {[...grouped.error, ...grouped.warning].map((r, i) => (
+            <div key={`${r.id}-${r.formatId}-${i}`} className={`rounded-xl border p-2.5 text-[11px] ${r.level === "error" ? "border-destructive/40 bg-destructive/5" : "border-amber-500/40 bg-amber-500/5"}`}>
+              <div className="flex items-center gap-2">
+                {r.level === "error" ? <AlertTriangle className="h-3 w-3 text-destructive"/> : <AlertTriangle className="h-3 w-3 text-amber-500"/>}
+                <span className="font-semibold">{r.title}</span>
+                <Badge variant="outline" className="rounded-full text-[9px]">{r.category}</Badge>
+                {r.formatId && <span className="text-[10px] text-muted-foreground">{r.formatId}</span>}
+              </div>
+              <p className="mt-1 text-muted-foreground">{r.message}</p>
+              {r.suggestedFix && <p className="mt-0.5 text-[10px] text-muted-foreground"><span className="font-semibold">Fix:</span> {r.suggestedFix}</p>}
+            </div>
+          ))}
+          {summary.blocking === 0 && summary.warnings > 0 && (
+            <label className="flex items-center gap-2 rounded-xl bg-accent/30 px-3 py-2 text-[11px]">
+              <Checkbox checked={warningsAck} onCheckedChange={(v) => onAckChange(v === true)}/>
+              I acknowledge the warnings above and want to mark this pack ready to print.
+            </label>
+          )}
+        </div>
+      )}
     </div>
   );
 }
