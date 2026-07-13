@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   ArrowLeft, Save, Loader2, Download, FileText, ImageIcon, Package,
   AlertTriangle, CheckCircle2, Copy, Archive, Trash2, Settings2, RotateCw,
-  ImagePlus, X, Layers,
+  ImagePlus, X, Layers, Wand2, Undo2, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -37,10 +37,20 @@ import {
   type GlobalSettings, type FormatCustomizations, type FormatOverride, type PackStatus, type ContentBase,
   type FoldedConfig,
 } from "@/lib/marketing-packs";
+import {
+  buildAutoFixProposals, applyAutoFixes, summariseAutoFixes,
+  type AutoFixProposal, type AutoFixSnapshot,
+} from "@/lib/auto-fix";
 import { renderFoldedFormatSvg, renderFoldedMockupSvg } from "@/lib/folded-render";
 import { buildFoldedPdf, downloadFoldedPng, renderFoldedSvgWithGuides } from "@/lib/folded-export";
 import { FoldedFormatEditor } from "@/components/marketing/FoldedFormatEditor";
+import { AutoFixDialog } from "@/components/marketing/AutoFixDialog";
+import { DuplicateWizard, type DuplicateWizardMode } from "@/components/marketing/DuplicateWizard";
+import { CopySettingsDialog } from "@/components/marketing/CopySettingsDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Slider } from "@/components/ui/slider";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
