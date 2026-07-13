@@ -501,7 +501,7 @@ function MarketingPackEditor() {
         </div>
       )}
 
-      <Tabs defaultValue="content">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="rounded-full">
           <TabsTrigger value="content" className="rounded-full">Content</TabsTrigger>
           <TabsTrigger value="formats" className="rounded-full">Formats</TabsTrigger>
