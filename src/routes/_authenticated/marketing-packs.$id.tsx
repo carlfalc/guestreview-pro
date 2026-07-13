@@ -102,7 +102,9 @@ function MarketingPackEditor() {
   // Validation engine state
   const [validations, setValidations] = useState<ValidationResult[]>([]);
   const [validating, setValidating] = useState(false);
-  const [warningsAck, setWarningsAck] = useState(false);
+  const [warningsAck, setWarningsAck] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState<string>("content");
+
 
   const initialised = useRef(false);
   useEffect(() => {
