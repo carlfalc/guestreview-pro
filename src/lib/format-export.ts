@@ -6,10 +6,6 @@ import { renderFormatSvg, svgToPng, pxFor, type FormatContent } from "@/lib/form
 
 const MM_TO_PT = 2.83464567;
 
-/**
- * Per-format content selector. In a pack with per-format overrides, callers
- * pass a function that returns the merged FormatContent for a given format.
- */
 export type ContentResolver = (format: BusinessFormat) => FormatContent;
 
 async function getPngForFormat(
@@ -80,20 +76,25 @@ export async function buildFormatPdf(format: BusinessFormat, template: LayoutTem
     let y = 800;
     notes.drawText("Print notes", { x: 40, y, size: 20, font: helvBold, color: rgb(0.05, 0.05, 0.05) });
     y -= 30;
-    const lines = [
-      `Format: ${format.name}`,
-      `Physical size: ${format.width} × ${format.height} mm`,
-      `Bleed: ${format.bleed} mm`,
-      `Shape: ${format.shape}`,
-      `Recommended material: ${format.material}`,
-      `Recommended minimum QR size: ${format.minQrSize} mm`,
-      `Artwork resolution: 300 DPI`,
-      `Colour: supplied RGB — request print shop convert to CMYK if required.`,
-      `Crop marks: included on artwork page where bleed is defined.`,
-    ];
+    const lines = printNotesLines(format);
     lines.forEach((l) => { notes.drawText(l, { x: 40, y, size: 11, font: helv, color: rgb(0.15, 0.15, 0.15), maxWidth: w - 80 }); y -= 18; });
   }
   return await doc.save();
+}
+
+function printNotesLines(f: BusinessFormat): string[] {
+  const unit = f.medium === "print" ? "mm" : "px";
+  return [
+    `Format: ${f.name}`,
+    `Physical size: ${f.width} × ${f.height} ${unit}`,
+    `Bleed: ${f.bleed} ${unit}`,
+    `Shape: ${f.shape}`,
+    `Recommended material: ${f.material}`,
+    `Recommended minimum QR size: ${f.minQrSize} ${unit}`,
+    `Artwork resolution: 300 DPI`,
+    `Colour: supplied RGB — request print shop convert to CMYK if required.`,
+    `Crop marks: included on artwork page where bleed is defined.`,
+  ];
 }
 
 export async function downloadFormatPdf(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
@@ -101,13 +102,19 @@ export async function downloadFormatPdf(format: BusinessFormat, template: Layout
   triggerDownload(new Blob([bytes as BlobPart], { type: "application/pdf" }), `${format.id}.pdf`);
 }
 
+export type QrValidationEntry = { formatId: string; pass: boolean; reason?: string };
+
 export type ZipManifest = {
-  version: 1;
-  pack_name: string;
-  pack_type?: string;
+  version: 2;
+  project: {
+    id: string | null;
+    name: string;
+    pack_type: string | null;
+    status: string | null;
+  };
+  business: { id: string | null; name: string | null };
+  qr: { id: string | null; short_code: string | null; label: string | null; destination_type: string | null };
   layout_template: string;
-  business?: string | null;
-  qr_code?: string | null;
   exported_at: string;
   formats: {
     id: string;
@@ -117,16 +124,37 @@ export type ZipManifest = {
     category: string;
     width: number;
     height: number;
+    unit: "mm" | "px";
     bleed: number;
+    material: string;
+    qr_validation?: { pass: boolean; reason?: string };
     files: string[];
   }[];
 };
 
+export type PackZipMeta = {
+  projectId?: string | null;
+  packType?: string;
+  status?: string;
+  businessId?: string | null;
+  business?: string | null;
+  qrId?: string | null;
+  qrCode?: string | null;
+  qrLabel?: string | null;
+  qrDestinationType?: string | null;
+  previewDataUrl?: string | null;
+  validations?: QrValidationEntry[];
+};
+
 /**
- * Build a marketing pack ZIP with per-medium folder structure and manifest.
+ * Build a marketing pack ZIP with per-medium folder structure, project preview,
+ * human-readable print notes, and a rich manifest.
  *
  *   /manifest.json
  *   /readme.txt
+ *   /preview/{project}.png
+ *   /print-notes/{format}.txt
+ *   /print-notes/README.txt
  *   /print/pdf/<id>.pdf
  *   /print/png/<id>.png
  *   /print/svg/<id>.svg
@@ -142,19 +170,46 @@ export async function downloadPackZip(
   qrData: string,
   logoUrl: string | null,
   brand: string,
-  meta: { packType?: string; business?: string | null; qrCode?: string | null } = {},
-): Promise<void> {
+  meta: PackZipMeta = {},
+): Promise<{ manifest: ZipManifest; blob: Blob }> {
   const zip = new JSZip();
+  const validationsMap = new Map<string, QrValidationEntry>();
+  (meta.validations ?? []).forEach((v) => validationsMap.set(v.formatId, v));
+
   const manifest: ZipManifest = {
-    version: 1,
-    pack_name: packName,
-    pack_type: meta.packType,
+    version: 2,
+    project: {
+      id: meta.projectId ?? null,
+      name: packName,
+      pack_type: meta.packType ?? null,
+      status: meta.status ?? null,
+    },
+    business: { id: meta.businessId ?? null, name: meta.business ?? null },
+    qr: {
+      id: meta.qrId ?? null,
+      short_code: meta.qrCode ?? null,
+      label: meta.qrLabel ?? null,
+      destination_type: meta.qrDestinationType ?? null,
+    },
     layout_template: template,
-    business: meta.business ?? null,
-    qr_code: meta.qrCode ?? null,
     exported_at: new Date().toISOString(),
     formats: [],
   };
+
+  const printAny = formats.some((f) => f.medium === "print");
+  if (printAny) {
+    zip.file(
+      "print-notes/README.txt",
+      [
+        `${packName} — print notes`,
+        `Exported ${manifest.exported_at}`,
+        "",
+        "One text file per print format with recommended material, physical size,",
+        "bleed and minimum QR size. Share with your printer alongside the PDFs.",
+      ].join("\n"),
+    );
+  }
+
   for (const f of formats) {
     const content = resolve(f);
     const folder = f.medium === "print" ? "print" : "digital";
@@ -175,13 +230,33 @@ export async function downloadPackZip(
       const pdfPath = `print/pdf/${f.id}.pdf`;
       zip.file(pdfPath, pdf);
       files.push(pdfPath);
+
+      const notesPath = `print-notes/${f.id}.txt`;
+      zip.file(notesPath, printNotesLines(f).join("\n"));
+      files.push(notesPath);
     }
 
+    const v = validationsMap.get(f.id);
     manifest.formats.push({
       id: f.id, name: f.name, medium: f.medium, shape: f.shape, category: f.category,
-      width: f.width, height: f.height, bleed: f.bleed, files,
+      width: f.width, height: f.height,
+      unit: f.medium === "print" ? "mm" : "px",
+      bleed: f.bleed,
+      material: f.material,
+      qr_validation: v ? { pass: v.pass, reason: v.reason } : undefined,
+      files,
     });
   }
+
+  // Project preview thumbnail
+  if (meta.previewDataUrl) {
+    const previewBytes = dataUrlToBytes(meta.previewDataUrl);
+    if (previewBytes) {
+      const path = `preview/${slugify(packName)}.png`;
+      zip.file(path, previewBytes);
+    }
+  }
+
   zip.file("manifest.json", JSON.stringify(manifest, null, 2));
   zip.file(
     "readme.txt",
@@ -191,17 +266,29 @@ export async function downloadPackZip(
       `Layout template: ${template}`,
       "",
       "Folders:",
-      "  print/pdf   Print-ready PDFs with crop marks and bleed",
-      "  print/png   High-resolution PNGs (300 DPI)",
-      "  print/svg   Vector SVGs (no bleed)",
-      "  digital/png Web/social PNGs",
-      "  digital/svg Vector SVGs",
+      "  preview/     Project preview thumbnail",
+      "  print-notes/ Per-format print specifications for your printer",
+      "  print/pdf    Print-ready PDFs with crop marks and bleed",
+      "  print/png    High-resolution PNGs (300 DPI)",
+      "  print/svg    Vector SVGs (no bleed)",
+      "  digital/png  Web/social PNGs",
+      "  digital/svg  Vector SVGs",
       "",
-      "manifest.json lists every included format and its files.",
+      "manifest.json lists every included format, its dimensions and its files.",
     ].join("\n"),
   );
   const blob = await zip.generateAsync({ type: "blob" });
   triggerDownload(blob, `${slugify(packName)}.zip`);
+  return { manifest, blob };
+}
+
+function dataUrlToBytes(dataUrl: string): Uint8Array | null {
+  const m = /^data:[^;]+;base64,(.+)$/.exec(dataUrl);
+  if (!m) return null;
+  const bin = atob(m[1]);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
 }
 
 function slugify(s: string): string {
