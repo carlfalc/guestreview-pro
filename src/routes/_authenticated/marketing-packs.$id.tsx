@@ -380,15 +380,38 @@ function MarketingPackEditor() {
   }
 
 
-  // Legacy per-format QR check kept for export-time validation entries
-  async function validateAllQrs(): Promise<{ formatId: string; pass: boolean; reason?: string }[]> {
-    const out: { formatId: string; pass: boolean; reason?: string }[] = [];
+  // Legacy per-format QR check kept for export-time validation entries.
+  // For folded formats we run true front/back decode.
+  async function validateAllQrs(): Promise<{
+    entries: { formatId: string; pass: boolean; reason?: string }[];
+    folded: Record<string, FoldedDecodeResult>;
+    foldedPanel: Record<string, ValidationResult[]>;
+  }> {
+    const entries: { formatId: string; pass: boolean; reason?: string }[] = [];
+    const folded: Record<string, FoldedDecodeResult> = {};
+    const foldedPanel: Record<string, ValidationResult[]> = {};
     for (const f of selected) {
-      const c = resolveContent(f);
-      const r = await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate);
-      out.push({ formatId: f.id, pass: r.level === "pass", reason: r.level === "pass" ? undefined : r.message });
+      if (f.folded) {
+        const fCfg = formatCustomizations[f.id]?.folded ?? defaultFoldedConfig(contentBase);
+        const fr = await decodeFoldedQrValidation({
+          format: f, template: layoutTemplate, brand,
+          business: { name: biz?.name ?? "", logoUrl: biz?.logo_url ?? null },
+          qrDesign, qrData, qrLogoUrl: rawLogoUrl, config: fCfg,
+        });
+        folded[f.id] = fr;
+        foldedPanel[f.id] = runFoldedValidations({
+          format: f, config: fCfg, qrDesign, qrData,
+          businessName: biz?.name ?? "", logoUrl: biz?.logo_url ?? null,
+        });
+        const pass = fr.front.pass && fr.back.pass;
+        entries.push({ formatId: f.id, pass, reason: pass ? undefined : `Front: ${fr.front.reason ?? "ok"} · Back: ${fr.back.reason ?? "ok"}` });
+      } else {
+        const c = resolveContent(f);
+        const r = await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate);
+        entries.push({ formatId: f.id, pass: r.level === "pass", reason: r.level === "pass" ? undefined : r.message });
+      }
     }
-    return out;
+    return { entries, folded, foldedPanel };
   }
 
   async function exportZip(kind: "all" | "print" | "digital") {
