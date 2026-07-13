@@ -344,30 +344,53 @@ function MarketingPackEditor() {
   }
 
   async function applySelectedAutoFixes(picked: AutoFixProposal[]) {
+    if (!pack) return;
     if (picked.length === 0) return;
     const before = makeAutoFixSnapshot();
     setAutoFixPhase("applying");
     setAutoFixError(null);
     try {
       const nextSnap = applyAutoFixes(before, picked, contentBase);
-      // Persist QR-design mutation directly (qr_codes row).
       const qrPatchChanged = JSON.stringify(before.qrDesign) !== JSON.stringify(nextSnap.qrDesign);
+
+      // 1. Persist QR-design mutation first (source of truth for qr_codes.design).
       if (qrPatchChanged && qrRow) {
         const { error: qerr } = await supabase.from("qr_codes")
           .update({ design: nextSnap.qrDesign as unknown as never })
           .eq("id", qrRow.id);
         if (qerr) throw new Error(`QR design save failed: ${qerr.message}`);
-        qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
       }
+
+      // 2. Persist pack fields immediately — auto-fix is presented as completed.
+      const { error: perr } = await supabase.from("marketing_packs").update({
+        global_settings: nextSnap.globalSettings as unknown as never,
+        format_customizations: nextSnap.formatCustomizations as unknown as never,
+        selected_formats: nextSnap.selectedFormats as unknown as never,
+        updated_at: new Date().toISOString(),
+      }).eq("id", pack.id);
+      if (perr) {
+        // Roll QR back to keep both stores consistent.
+        if (qrPatchChanged && qrRow) {
+          await supabase.from("qr_codes")
+            .update({ design: before.qrDesign as unknown as never })
+            .eq("id", qrRow.id)
+            .then(() => undefined, () => undefined);
+        }
+        throw new Error(`Pack save failed: ${perr.message}`);
+      }
+
+      // 3. Reflect in local state.
       setGlobalSettings(nextSnap.globalSettings);
       setFormatCustomizations(nextSnap.formatCustomizations);
       setSelectedFormats(nextSnap.selectedFormats);
-      setAutoFixUndo(before);
+      setAutoFixUndo({ snapshot: before, qrDesignWasChanged: qrPatchChanged });
+      qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+      qc.invalidateQueries({ queryKey: ["marketing-packs"] });
+
+      // 4. Re-run validation against the explicit next snapshot (no stale closure, no timeout).
       setAutoFixPhase("revalidating");
-      // Give React a tick before re-validation so state has flushed.
-      await new Promise((r) => setTimeout(r, 50));
       const prevIssues = validations.filter((r) => r.level !== "pass").length;
-      const nextResults = await runValidation({ decodeQr: false });
+      const nextResults = await runValidationForSnapshot(nextSnap, { decodeQr: false });
       const nextIssues = nextResults.filter((r) => r.level !== "pass").length;
       const summary = summariseAutoFixes(picked);
       const msg = `Applied ${summary.total} fix(es) — ${prevIssues} → ${nextIssues} issues`;
@@ -382,22 +405,47 @@ function MarketingPackEditor() {
   }
 
   async function undoAutoFix() {
-    if (!autoFixUndo) return;
-    const snap = autoFixUndo;
-    setGlobalSettings(snap.globalSettings);
-    setFormatCustomizations(snap.formatCustomizations);
-    setSelectedFormats(snap.selectedFormats);
-    if (qrRow && JSON.stringify(snap.qrDesign) !== JSON.stringify(qrDesign)) {
+    if (!autoFixUndo || !pack) return;
+    const { snapshot: snap, qrDesignWasChanged } = autoFixUndo;
+
+    // 1. Restore QR row FIRST when the fix included a QR-design mutation.
+    // Do not rely on comparing snap.qrDesign to the possibly stale closure qrDesign.
+    if (qrDesignWasChanged && qrRow) {
       const { error: qerr } = await supabase.from("qr_codes")
         .update({ design: snap.qrDesign as unknown as never })
         .eq("id", qrRow.id);
-      if (qerr) { toast.error(`QR restore failed: ${qerr.message}`); return; }
-      qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+      if (qerr) {
+        toast.error(`QR restore failed: ${qerr.message} — undo kept, try again`);
+        return;
+      }
     }
+
+    // 2. Restore pack row.
+    const { error: perr } = await supabase.from("marketing_packs").update({
+      global_settings: snap.globalSettings as unknown as never,
+      format_customizations: snap.formatCustomizations as unknown as never,
+      selected_formats: snap.selectedFormats as unknown as never,
+      updated_at: new Date().toISOString(),
+    }).eq("id", pack.id);
+    if (perr) {
+      toast.error(`Pack restore failed: ${perr.message} — undo kept, try again`);
+      return;
+    }
+
+    // 3. Restore local state and invalidate.
+    setGlobalSettings(snap.globalSettings);
+    setFormatCustomizations(snap.formatCustomizations);
+    setSelectedFormats(snap.selectedFormats);
+    qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+    qc.invalidateQueries({ queryKey: ["marketing-packs"] });
+
+    // 4. Re-validate against the restored snapshot.
+    await runValidationForSnapshot(snap, { decodeQr: false });
+
+    // 5. Only now clear the undo snapshot.
     setAutoFixUndo(null);
     setAutoFixLastSummary(null);
     toast.success("Auto-fix undone");
-    void runValidation({ decodeQr: false });
   }
 
   function undoCopySettings() {
@@ -407,6 +455,7 @@ function MarketingPackEditor() {
     toast.success("Copied settings undone");
     void runValidation({ decodeQr: false });
   }
+
 
 
   async function archivePack() {
