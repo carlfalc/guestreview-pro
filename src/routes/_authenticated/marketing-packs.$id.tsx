@@ -463,6 +463,23 @@ function MarketingPackEditor() {
     void runValidation({ decodeQr: false });
   }
 
+  function applyAiCopy(patch: ApplyPatch) {
+    setAiUndo({ headline, supportText, ctaText, footerText });
+    if (patch.headline !== undefined) setHeadline(patch.headline);
+    if (patch.supportingText !== undefined) setSupportText(patch.supportingText);
+    if (patch.ctaText !== undefined) setCtaText(patch.ctaText);
+    if (patch.footerText !== undefined) setFooterText(patch.footerText);
+    toast.success("AI copy applied");
+  }
+  function undoAiCopy() {
+    if (!aiUndo) return;
+    setHeadline(aiUndo.headline);
+    setSupportText(aiUndo.supportText);
+    setCtaText(aiUndo.ctaText);
+    setFooterText(aiUndo.footerText);
+    setAiUndo(null);
+    toast.success("AI copy undone");
+  }
 
 
   async function archivePack() {
