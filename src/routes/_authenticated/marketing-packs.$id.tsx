@@ -875,6 +875,26 @@ function MarketingPackEditor() {
           onCreated={(newId) => { setDupMode(null); navigate({ to: "/marketing-packs/$id", params: { id: newId } }); }}
         />
       )}
+
+      {copyDialogState && (
+        <CopySettingsDialog
+          open={copyDialogState != null}
+          onOpenChange={(v) => { if (!v) setCopyDialogState(null); }}
+          sourceFormat={copyDialogState.format}
+          sourceOverride={copyDialogState.override}
+          selectedFormats={selectedFormats}
+          customizations={formatCustomizations}
+          onApply={(next, summary) => {
+            setCopyUndo(formatCustomizations);
+            setFormatCustomizations(next);
+            setCopyDialogState(null);
+            toast.success(`Copied ${summary.mode} to ${summary.copied} format(s)${summary.skipped ? ` · ${summary.skipped} skipped` : ""}`);
+            void runValidation({ decodeQr: false });
+          }}
+          onUndo={undoCopySettings}
+          canUndo={!!copyUndo}
+        />
+      )}
     </div>
   );
 }
