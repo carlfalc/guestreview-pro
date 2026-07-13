@@ -268,9 +268,25 @@ function MarketingPacksList() {
                     <Button size="sm" variant="ghost" onClick={() => archivePack(p.id, p.status !== "archived")} className="flex-1 rounded-full text-[11px]">
                       <Archive className="mr-1 h-3 w-3"/>{p.status === "archived" ? "Restore" : "Archive"}
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => deletePack(p.id)} className="rounded-full text-destructive hover:text-destructive">
-                      <Trash2 className="h-3 w-3"/>
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="ghost" className="rounded-full text-destructive hover:text-destructive">
+                          <Trash2 className="h-3 w-3"/>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete "{p.project_name}"?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This removes the pack, its saved content and its preview thumbnail. This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deletePack(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               );
