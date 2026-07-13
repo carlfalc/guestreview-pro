@@ -351,6 +351,9 @@ function PreviewView(props: {
           <button key={o.id} type="button" onClick={() => setMode(o.id)} className={`rounded-full border px-3 py-1 text-[11px] ${mode === o.id ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}>{o.label}</button>
         ))}
       </div>
+      {mode === "mockup" && (
+        <p className="text-[10px] text-muted-foreground">Shows front and back assembled faces side by side.</p>
+      )}
       <div className="min-h-[280px] rounded-xl border border-border/70 bg-white p-3 [&_svg]:h-auto [&_svg]:max-h-[520px] [&_svg]:w-auto [&_svg]:mx-auto [&_svg]:block">
         {loading ? <div className="flex h-[280px] items-center justify-center text-xs text-muted-foreground"><Loader2 className="mr-1 h-3 w-3 animate-spin"/>Rendering…</div>
           : <div dangerouslySetInnerHTML={{ __html: svg }}/>}
