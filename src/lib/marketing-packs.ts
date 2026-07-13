@@ -93,9 +93,12 @@ export const STAR_STYLES: { id: StarStyle; label: string }[] = [
 
 export const BORDER_STYLES: { id: BorderStyle; label: string }[] = [
   { id: "none", label: "None" },
-  { id: "thin", label: "Thin" },
-  { id: "thick", label: "Thick" },
-  { id: "double", label: "Double" },
+  { id: "thin", label: "Thin ring" },
+  { id: "thick", label: "Thick ring" },
+  { id: "double", label: "Double ring" },
+  { id: "ring-brand", label: "Brand-colour ring" },
+  { id: "keyline-white", label: "White keyline" },
+  { id: "keyline-black", label: "Black keyline" },
 ];
 
 export type GlobalSettings = {

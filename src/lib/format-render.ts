@@ -5,8 +5,26 @@ import type { BusinessFormat, LayoutTemplate } from "@/lib/qr-formats";
 import { safeArea, templateColors } from "@/lib/qr-formats";
 
 export type StarStyle = "solid" | "outline" | "rounded" | "dots" | "hidden";
-export type BorderStyle = "none" | "thin" | "thick" | "double";
+export type BorderStyle =
+  | "none"
+  | "thin"
+  | "thick"
+  | "double"
+  | "ring-brand"
+  | "keyline-white"
+  | "keyline-black";
 export type BgImageFit = "cover" | "contain";
+
+/** Circular safe area radius as fraction of trim radius. Interior = safe. */
+export const CIRCLE_SAFE_RATIO = 0.86;
+/** Dieline colour used across SVG and PDF exports (100% magenta, printer-standard). */
+export const DIELINE_COLOR = "#ff00ff";
+export const DIELINE_LAYER = "CutContour";
+
+/** Radial safe-area radius in mm for a circular format. */
+export function circularSafeRadius(width: number): number {
+  return (width / 2) * CIRCLE_SAFE_RATIO;
+}
 
 export type FormatContent = {
   businessName: string;
@@ -37,6 +55,20 @@ export type FormatContent = {
   qrOffsetY?: number;
 };
 
+export type RenderOpts = {
+  showBoundaries?: boolean;
+  includeBleed?: boolean;
+  /** Print-production overlay toggles (guide layers, not artwork). */
+  showTrim?: boolean;
+  showSafe?: boolean;
+  showBleedGuide?: boolean;
+  showDieline?: boolean;
+  /** For circular formats: leave the area outside the trim circle transparent. */
+  transparentOutside?: boolean;
+  /** Bake the CutContour dieline into the artwork itself (embedded PDF/SVG variant). */
+  includeDieline?: boolean;
+};
+
 /** Render a business format as an SVG string. */
 export async function renderFormatSvg(
   format: BusinessFormat,
@@ -46,7 +78,7 @@ export async function renderFormatSvg(
   qrData: string,
   logoUrl: string | null,
   brand: string,
-  opts: { showBoundaries?: boolean; includeBleed?: boolean } = {},
+  opts: RenderOpts = {},
 ): Promise<string> {
   const tpl = templateColors(template, brand);
   const bgFill = content.colors?.bg ?? tpl.bg;
@@ -108,8 +140,12 @@ export async function renderFormatSvg(
   }
   parts.push(`</defs>`);
 
+  const transparentOutside = opts.transparentOutside === true;
   if (isCircular) {
-    parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${includeBleed ? bgFill : "none"}"/>`);
+    // Outside-of-trim area
+    if (!transparentOutside) {
+      parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${includeBleed ? bgFill : "none"}"/>`);
+    }
     parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}" fill="${bgFill}"/>`);
   } else {
     parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${bgFill}"/>`);
@@ -133,20 +169,24 @@ export async function renderFormatSvg(
   if (borderStyle !== "none") {
     const strokeW = borderStyle === "thin" ? (format.medium === "print" ? 0.4 : 3)
       : borderStyle === "thick" ? (format.medium === "print" ? 1.2 : 8)
-      : (format.medium === "print" ? 0.8 : 5); // double
+      : borderStyle === "keyline-white" || borderStyle === "keyline-black" ? (format.medium === "print" ? 0.3 : 2)
+      : (format.medium === "print" ? 0.8 : 5); // double, ring-brand
+    const strokeColor = borderStyle === "keyline-white" ? "#ffffff"
+      : borderStyle === "keyline-black" ? "#000000"
+      : accent;
     if (isCircular) {
-      parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+      parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
       if (borderStyle === "double") {
         const gap = strokeW * 2.2;
-        parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2 - gap}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+        parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2 - gap}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
       }
     } else {
       const rx = Math.max(0, cornerR - strokeW / 2);
-      parts.push(`<rect x="${offX + strokeW / 2}" y="${offY + strokeW / 2}" width="${format.width - strokeW}" height="${format.height - strokeW}" rx="${rx}" ry="${rx}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+      parts.push(`<rect x="${offX + strokeW / 2}" y="${offY + strokeW / 2}" width="${format.width - strokeW}" height="${format.height - strokeW}" rx="${rx}" ry="${rx}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
       if (borderStyle === "double") {
         const gap = strokeW * 2.2;
         const rx2 = Math.max(0, rx - gap);
-        parts.push(`<rect x="${offX + strokeW / 2 + gap}" y="${offY + strokeW / 2 + gap}" width="${format.width - strokeW - gap * 2}" height="${format.height - strokeW - gap * 2}" rx="${rx2}" ry="${rx2}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+        parts.push(`<rect x="${offX + strokeW / 2 + gap}" y="${offY + strokeW / 2 + gap}" width="${format.width - strokeW - gap * 2}" height="${format.height - strokeW - gap * 2}" rx="${rx2}" ry="${rx2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
       }
     }
   }
@@ -241,21 +281,74 @@ export async function renderFormatSvg(
     );
   }
 
-  if (opts.showBoundaries) {
+  // Guide overlays (trim / safe / bleed) — non-artwork layers
+  const legacy = opts.showBoundaries === true;
+  const showTrim = opts.showTrim ?? legacy;
+  const showSafe = opts.showSafe ?? legacy;
+  const showBleedGuide = opts.showBleedGuide ?? legacy;
+  const cy = offY + format.height / 2;
+  if (showTrim) {
     if (isCircular) {
-      parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`);
+      parts.push(`<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`);
     } else {
       parts.push(`<rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`);
     }
-    if (includeBleed && format.bleed > 0) {
+  }
+  if (showBleedGuide && includeBleed && format.bleed > 0) {
+    if (isCircular) {
+      parts.push(`<circle cx="${cx}" cy="${cy}" r="${format.width / 2 + format.bleed}" fill="none" stroke="#ef4444" stroke-width="0.4" stroke-dasharray="1 1"/>`);
+    } else {
       parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="none" stroke="#ef4444" stroke-width="0.4" stroke-dasharray="1 1"/>`);
     }
-    const sa = safeArea(format);
-    parts.push(`<rect x="${offX + (format.width - sa.w) / 2}" y="${offY + (format.height - sa.h) / 2}" width="${sa.w}" height="${sa.h}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`);
+  }
+  if (showSafe) {
+    if (isCircular) {
+      parts.push(`<circle cx="${cx}" cy="${cy}" r="${circularSafeRadius(format.width)}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`);
+    } else {
+      const sa = safeArea(format);
+      parts.push(`<rect x="${offX + (format.width - sa.w) / 2}" y="${offY + (format.height - sa.h) / 2}" width="${sa.w}" height="${sa.h}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`);
+    }
+  }
+
+  // Dieline (CutContour) — only for circular formats, as vector on its own layer/group.
+  if ((opts.showDieline || opts.includeDieline) && isCircular) {
+    parts.push(`<g id="${DIELINE_LAYER}" data-layer="${DIELINE_LAYER}"><title>${DIELINE_LAYER}</title>`);
+    parts.push(`<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="${DIELINE_COLOR}" stroke-width="0.25"/>`);
+    parts.push(`</g>`);
   }
 
   parts.push(`</svg>`);
   return parts.join("");
+}
+
+/**
+ * Standalone CutContour dieline SVG for a circular format — vector, stroke-only,
+ * 100% magenta on the `CutContour` layer. Suitable for a printer's cutting workflow.
+ */
+export function renderDielineSvg(format: BusinessFormat): string {
+  const unit = format.medium === "print" ? "mm" : "px";
+  const bleed = format.bleed;
+  const totalW = format.width + bleed * 2;
+  const totalH = format.height + bleed * 2;
+  const cx = totalW / 2;
+  const cy = totalH / 2;
+  if (format.shape === "circular") {
+    return [
+      `<?xml version="1.0" encoding="UTF-8"?>`,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}${unit}" height="${totalH}${unit}" viewBox="0 0 ${totalW} ${totalH}">`,
+      `<g id="${DIELINE_LAYER}" data-layer="${DIELINE_LAYER}"><title>${DIELINE_LAYER}</title>`,
+      `<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="${DIELINE_COLOR}" stroke-width="0.25"/>`,
+      `</g></svg>`,
+    ].join("");
+  }
+  // Rectangular fallback: outline of trim
+  return [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}${unit}" height="${totalH}${unit}" viewBox="0 0 ${totalW} ${totalH}">`,
+    `<g id="${DIELINE_LAYER}" data-layer="${DIELINE_LAYER}"><title>${DIELINE_LAYER}</title>`,
+    `<rect x="${bleed}" y="${bleed}" width="${format.width}" height="${format.height}" fill="none" stroke="${DIELINE_COLOR}" stroke-width="0.25"/>`,
+    `</g></svg>`,
+  ].join("");
 }
 
 function extractQrInnerSvg(qrSvg: string): { body: string; vb: number } {

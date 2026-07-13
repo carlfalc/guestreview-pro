@@ -23,8 +23,13 @@ import {
 import { renderFormatSvg, svgToPng, type FormatContent } from "@/lib/format-render";
 import {
   downloadFormatPng, downloadFormatSvg, downloadFormatPdf, downloadPackZip,
+  downloadFormatPngTransparent, downloadFormatSvgWithDieline, downloadDielineSvg,
 } from "@/lib/format-export";
 import { mergeDesign, type QrDesign } from "@/lib/qr-design";
+import {
+  runFormatValidations, decodeQrValidation, readyToPrint,
+  type ValidationResult, type ValidationLevel,
+} from "@/lib/format-validation";
 import {
   statusMeta, packTypeById, buildFormatContent, similarFormats,
   FONT_OPTIONS, STAR_STYLES, BORDER_STYLES,
@@ -88,6 +93,17 @@ function MarketingPackEditor() {
   const [thumbState, setThumbState] = useState<ThumbState>("idle");
   const [thumbError, setThumbError] = useState<string | null>(null);
 
+  // Print-production preview overlays
+  const [showTrim, setShowTrim] = useState(true);
+  const [showSafe, setShowSafe] = useState(true);
+  const [showBleedGuide, setShowBleedGuide] = useState(true);
+  const [showDieline, setShowDieline] = useState(false);
+
+  // Validation engine state
+  const [validations, setValidations] = useState<ValidationResult[]>([]);
+  const [validating, setValidating] = useState(false);
+  const [warningsAck, setWarningsAck] = useState(false);
+
   const initialised = useRef(false);
   useEffect(() => {
     if (!pack || initialised.current) return;
@@ -109,7 +125,7 @@ function MarketingPackEditor() {
   }, [pack]);
 
   const biz = pack?.businesses as { id: string; name: string; brand_primary: string | null; logo_url: string | null; google_review_url: string | null } | null;
-  const qrRow = pack?.qr_codes as { id: string; short_code: string; label: string | null; destination_type: string; design: unknown; logo_url: string | null; fg_color: string | null; bg_color: string | null } | null;
+  const qrRow = pack?.qr_codes as { id: string; short_code: string; label: string | null; destination_type: string; destination_url: string | null; design: unknown; logo_url: string | null; fg_color: string | null; bg_color: string | null } | null;
 
   const qrDesign: QrDesign = useMemo(() => mergeDesign((qrRow?.design as Partial<QrDesign> | null) ?? null), [qrRow]);
   const brand = biz?.brand_primary ?? "#0071e3";
@@ -289,35 +305,47 @@ function MarketingPackEditor() {
     navigate({ to: "/marketing-packs" });
   }
 
+  const runValidation = useCallback(async (opts: { decodeQr?: boolean } = { decodeQr: true }): Promise<ValidationResult[]> => {
+    setValidating(true);
+    try {
+      const out: ValidationResult[] = [];
+      if (selected.length === 0) {
+        out.push({ id: "pack-formats", formatId: null, category: "content", level: "error", title: "No formats selected", message: "Add at least one format.", suggestedFix: "Pick formats in the Formats tab." });
+      }
+      for (const f of selected) {
+        const c = resolveContent(f);
+        out.push(...runFormatValidations({
+          format: f, content: c, qrData,
+          destinationUrl: qrRow?.destination_url ?? null,
+          destinationType: qrRow?.destination_type ?? null,
+          reviewUrl: biz?.google_review_url ?? null,
+        }));
+        if (opts.decodeQr) {
+          out.push(await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate));
+        }
+      }
+      setValidations(out);
+      return out;
+    } finally { setValidating(false); }
+  }, [selected, resolveContent, qrData, qrRow, biz, qrDesign, brand, layoutTemplate]);
+
   async function markReadyToPrint() {
     if (!headline.trim() || !ctaText.trim()) return toast.error("Headline and CTA are required");
-    if (selectedFormats.length === 0) return toast.error("Add at least one format");
-    toast.info("Validating QR in every selected format…");
-    const results = await validateAllQrs();
-    const failed = results.filter((r) => !r.pass);
-    if (failed.length) return toast.error(`${failed.length} format(s) failed QR validation — fix warnings first`);
+    const results = await runValidation({ decodeQr: true });
+    const { ready, blocking, warnings } = readyToPrint(results);
+    if (!ready) return toast.error(`${blocking} blocking issue(s) — resolve them first`);
+    if (warnings > 0 && !warningsAck) return toast.error(`${warnings} warning(s) — acknowledge them below to continue`);
     setStatus("ready");
     toast.success("Marked ready to print");
   }
 
+  // Legacy per-format QR check kept for export-time validation entries
   async function validateAllQrs(): Promise<{ formatId: string; pass: boolean; reason?: string }[]> {
     const out: { formatId: string; pass: boolean; reason?: string }[] = [];
     for (const f of selected) {
-      try {
-        const c = resolveContent(f);
-        const svg = await renderFormatSvg(f, layoutTemplate, c, qrDesign, qrData, c.logoUrl, brand, { showBoundaries: false, includeBleed: false });
-        const blob = await svgToPng(svg, 600, 600);
-        const bitmap = await createImageBitmap(blob);
-        const canvas = document.createElement("canvas");
-        canvas.width = bitmap.width; canvas.height = bitmap.height;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(bitmap, 0, 0);
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(data.data, data.width, data.height);
-        out.push({ formatId: f.id, pass: !!code, reason: code ? undefined : "Could not decode QR" });
-      } catch (e) {
-        out.push({ formatId: f.id, pass: false, reason: (e as Error).message });
-      }
+      const c = resolveContent(f);
+      const r = await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate);
+      out.push({ formatId: f.id, pass: r.level === "pass", reason: r.level === "pass" ? undefined : r.message });
     }
     return out;
   }
@@ -535,6 +563,24 @@ function MarketingPackEditor() {
                   </Button>
                 </div>
               </div>
+              {/* Preview production overlays */}
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-accent/30 px-4 py-2 text-xs">
+                <span className="font-semibold uppercase tracking-wide text-muted-foreground">Guides</span>
+                <label className="inline-flex items-center gap-1"><Checkbox checked={showTrim} onCheckedChange={(v) => setShowTrim(!!v)}/> Trim</label>
+                <label className="inline-flex items-center gap-1"><Checkbox checked={showSafe} onCheckedChange={(v) => setShowSafe(!!v)}/> Safe area</label>
+                <label className="inline-flex items-center gap-1"><Checkbox checked={showBleedGuide} onCheckedChange={(v) => setShowBleedGuide(!!v)}/> Bleed</label>
+                <label className="inline-flex items-center gap-1"><Checkbox checked={showDieline} onCheckedChange={(v) => setShowDieline(!!v)}/> Dieline (circular)</label>
+              </div>
+
+              {/* Validation panel */}
+              <ValidationPanel
+                results={validations}
+                validating={validating}
+                onRun={() => runValidation({ decodeQr: true })}
+                warningsAck={warningsAck}
+                onAckChange={setWarningsAck}
+              />
+
               {selected.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-border/70 p-8 text-center text-xs text-muted-foreground">
                   Add formats in the Formats tab to see previews here.
@@ -558,6 +604,7 @@ function MarketingPackEditor() {
                       override={formatCustomizations[f.id]}
                       globalSettings={globalSettings}
                       selectedFormats={selectedFormats}
+                      overlays={{ showTrim, showSafe, showBleedGuide, showDieline }}
                       onOverrideChange={(o) => setFormatCustomizations({ ...formatCustomizations, [f.id]: o })}
                       onOverrideClear={() => {
                         const next = { ...formatCustomizations };
@@ -851,6 +898,8 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 }
 function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
+type PreviewOverlays = { showTrim: boolean; showSafe: boolean; showBleedGuide: boolean; showDieline: boolean };
+
 function FormatPreviewCard(props: {
   format: BusinessFormat;
   layoutTemplate: LayoutTemplate;
@@ -864,11 +913,12 @@ function FormatPreviewCard(props: {
   override: FormatOverride | undefined;
   globalSettings: GlobalSettings;
   selectedFormats: string[];
+  overlays: PreviewOverlays;
   onOverrideChange: (o: FormatOverride) => void;
   onOverrideClear: () => void;
   onCopyToFormats: (ids: string[], o: FormatOverride) => void;
 }) {
-  const { format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, onOverrideChange, onOverrideClear, onCopyToFormats } = props;
+  const { format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, overlays, onOverrideChange, onOverrideClear, onCopyToFormats } = props;
   const [svg, setSvg] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
   const [renderKey, setRenderKey] = useState(0);
@@ -876,16 +926,24 @@ function FormatPreviewCard(props: {
   const [scanReason, setScanReason] = useState<string | null>(null);
   const [overrideOpen, setOverrideOpen] = useState(false);
 
+  const isCircular = format.shape === "circular";
   const contentKey = JSON.stringify(content);
+  const overlaysKey = JSON.stringify(overlays);
   useEffect(() => {
     let cancelled = false;
     setErr(null);
-    renderFormatSvg(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, { showBoundaries: true, includeBleed: format.bleed > 0 })
+    renderFormatSvg(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, {
+      includeBleed: format.bleed > 0,
+      showTrim: overlays.showTrim,
+      showSafe: overlays.showSafe,
+      showBleedGuide: overlays.showBleedGuide,
+      showDieline: overlays.showDieline && isCircular,
+    })
       .then((s) => { if (!cancelled) setSvg(s); })
       .catch((e) => { if (!cancelled) setErr((e as Error).message); });
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [format.id, layoutTemplate, contentKey, qrDesign, qrData, logoUrl, brand, renderKey]);
+  }, [format.id, layoutTemplate, contentKey, qrDesign, qrData, logoUrl, brand, renderKey, overlaysKey]);
 
   async function validate() {
     setScanStatus("checking"); setScanReason(null);
@@ -904,13 +962,16 @@ function FormatPreviewCard(props: {
     } catch (e) { setScanStatus("fail"); setScanReason((e as Error).message); }
   }
 
-  async function run(kind: "png" | "svg" | "pdf") {
+  async function run(kind: "png" | "svg" | "pdf" | "png-transparent" | "svg-dieline" | "dieline") {
     const key = `${format.id}-${kind}`;
     setExporting(key);
     try {
       if (kind === "png") await downloadFormatPng(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
       else if (kind === "svg") await downloadFormatSvg(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
-      else await downloadFormatPdf(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
+      else if (kind === "pdf") await downloadFormatPdf(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
+      else if (kind === "png-transparent") await downloadFormatPngTransparent(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
+      else if (kind === "svg-dieline") await downloadFormatSvgWithDieline(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
+      else await downloadDielineSvg(format);
       toast.success(`${kind.toUpperCase()} downloaded`);
     } catch (e) { toast.error(`Export failed: ${(e as Error).message}`); }
     finally { setExporting(null); }
@@ -942,7 +1003,7 @@ function FormatPreviewCard(props: {
         <Button size="sm" variant="outline" onClick={() => run("svg")} disabled={exporting !== null} className="rounded-full text-[10px]" title="Download SVG">
           {exporting === `${format.id}-svg` ? <Loader2 className="h-3 w-3 animate-spin"/> : <Download className="h-3 w-3"/>}
         </Button>
-        <Button size="sm" variant="outline" onClick={() => run("pdf")} disabled={exporting !== null || format.medium === "digital"} className="rounded-full text-[10px]" title={format.medium === "digital" ? "PDF for print formats only" : "Download PDF"}>
+        <Button size="sm" variant="outline" onClick={() => run("pdf")} disabled={exporting !== null || format.medium === "digital"} className="rounded-full text-[10px]" title={format.medium === "digital" ? "PDF for print formats only" : "Download PDF (circular formats include vector CutContour dieline)"}>
           {exporting === `${format.id}-pdf` ? <Loader2 className="h-3 w-3 animate-spin"/> : <FileText className="h-3 w-3"/>}
         </Button>
         <Button size="sm" variant="outline" onClick={validate} disabled={scanStatus === "checking"} className="rounded-full text-[10px]" title="Validate QR">
@@ -952,6 +1013,19 @@ function FormatPreviewCard(props: {
           <Settings2 className="h-3 w-3"/>
         </Button>
       </div>
+      {isCircular && (
+        <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+          <Button size="sm" variant="outline" onClick={() => run("png-transparent")} disabled={exporting !== null} className="rounded-full text-[9px]" title="Transparent-background PNG (outside trim = transparent)">
+            {exporting === `${format.id}-png-transparent` ? <Loader2 className="h-3 w-3 animate-spin"/> : "PNG·transparent"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => run("svg-dieline")} disabled={exporting !== null} className="rounded-full text-[9px]" title="SVG with embedded CutContour dieline layer">
+            {exporting === `${format.id}-svg-dieline` ? <Loader2 className="h-3 w-3 animate-spin"/> : "SVG·+dieline"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => run("dieline")} disabled={exporting !== null} className="rounded-full text-[9px]" title="Standalone CutContour dieline SVG">
+            {exporting === `${format.id}-dieline` ? <Loader2 className="h-3 w-3 animate-spin"/> : "Dieline"}
+          </Button>
+        </div>
+      )}
       <OverrideDialog
         open={overrideOpen}
         onOpenChange={setOverrideOpen}
@@ -963,6 +1037,70 @@ function FormatPreviewCard(props: {
         onClear={() => { onOverrideClear(); setOverrideOpen(false); }}
         onCopyToFormats={onCopyToFormats}
       />
+    </div>
+  );
+}
+
+function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange }: {
+  results: ValidationResult[];
+  validating: boolean;
+  onRun: () => void;
+  warningsAck: boolean;
+  onAckChange: (v: boolean) => void;
+}) {
+  const summary = useMemo(() => readyToPrint(results), [results]);
+  const grouped = useMemo(() => {
+    const m: Record<ValidationLevel, ValidationResult[]> = { error: [], warning: [], pass: [] };
+    for (const r of results) m[r.level].push(r);
+    return m;
+  }, [results]);
+
+  return (
+    <div className="space-y-2 rounded-2xl border border-border/70 bg-card/50 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="font-semibold uppercase tracking-wide text-muted-foreground">Validation</span>
+          {results.length > 0 && (
+            <>
+              <Badge variant={summary.blocking > 0 ? "destructive" : "default"} className="rounded-full text-[10px]">
+                {summary.blocking} blocking
+              </Badge>
+              <Badge variant="outline" className="rounded-full border-amber-500/50 text-[10px] text-amber-500">
+                {summary.warnings} warnings
+              </Badge>
+              {summary.ready && summary.warnings === 0 && (
+                <Badge variant="default" className="rounded-full text-[10px]"><CheckCircle2 className="mr-1 h-2.5 w-2.5"/>All checks passed</Badge>
+              )}
+            </>
+          )}
+        </div>
+        <Button size="sm" variant="outline" onClick={onRun} disabled={validating} className="rounded-full text-xs">
+          {validating ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <CheckCircle2 className="mr-1 h-3 w-3"/>}
+          {results.length === 0 ? "Run validation" : "Re-run validation"}
+        </Button>
+      </div>
+      {results.length > 0 && (
+        <div className="max-h-80 space-y-1.5 overflow-y-auto pr-1">
+          {[...grouped.error, ...grouped.warning].map((r, i) => (
+            <div key={`${r.id}-${r.formatId}-${i}`} className={`rounded-xl border p-2.5 text-[11px] ${r.level === "error" ? "border-destructive/40 bg-destructive/5" : "border-amber-500/40 bg-amber-500/5"}`}>
+              <div className="flex items-center gap-2">
+                {r.level === "error" ? <AlertTriangle className="h-3 w-3 text-destructive"/> : <AlertTriangle className="h-3 w-3 text-amber-500"/>}
+                <span className="font-semibold">{r.title}</span>
+                <Badge variant="outline" className="rounded-full text-[9px]">{r.category}</Badge>
+                {r.formatId && <span className="text-[10px] text-muted-foreground">{r.formatId}</span>}
+              </div>
+              <p className="mt-1 text-muted-foreground">{r.message}</p>
+              {r.suggestedFix && <p className="mt-0.5 text-[10px] text-muted-foreground"><span className="font-semibold">Fix:</span> {r.suggestedFix}</p>}
+            </div>
+          ))}
+          {summary.blocking === 0 && summary.warnings > 0 && (
+            <label className="flex items-center gap-2 rounded-xl bg-accent/30 px-3 py-2 text-[11px]">
+              <Checkbox checked={warningsAck} onCheckedChange={(v) => onAckChange(v === true)}/>
+              I acknowledge the warnings above and want to mark this pack ready to print.
+            </label>
+          )}
+        </div>
+      )}
     </div>
   );
 }
