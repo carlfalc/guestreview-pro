@@ -245,10 +245,13 @@ function StructureView({ format }: { format: BusinessFormat }) {
     setPreview(svg);
   }, [layout, g]);
 
+  const hasGlue = !!layout.glue;
+  const structureLabel = !hasGlue && layout.panels.length === 2 ? "Two-panel folded tent" : "Folded structure";
+
   return (
     <div className="grid gap-4 md:grid-cols-[220px_1fr]">
       <div className="space-y-2 text-[11px]">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Dimensions</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{structureLabel}</p>
         <dl className="space-y-1">
           <Row k="Flat artwork" v={`${layout.flatWidth} × ${layout.flatHeight} mm`}/>
           <Row k="Assembled face" v={`${layout.assembledWidth} × ${layout.assembledHeight} mm`}/>
@@ -257,13 +260,13 @@ function StructureView({ format }: { format: BusinessFormat }) {
           <Row k="Panels" v={layout.panels.map((p) => p.label).join(", ")}/>
           <Row k="Fold lines" v={String(layout.segments.filter((s) => s.type === "fold").length)}/>
           <Row k="Score lines" v={String(layout.segments.filter((s) => s.type === "score").length)}/>
-          <Row k="Glue area" v={layout.glue ? "Yes" : "None"}/>
+          {hasGlue && <Row k="Glue area" v="Yes"/>}
         </dl>
         <p className="mt-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Layers</p>
         <ChkRow label="Fold lines" value={g.fold} onChange={(v) => setG({ ...g, fold: v })}/>
         <ChkRow label="Score lines" value={g.score} onChange={(v) => setG({ ...g, score: v })}/>
         <ChkRow label="Cut path" value={g.cut} onChange={(v) => setG({ ...g, cut: v })}/>
-        <ChkRow label="Glue area" value={g.glue} onChange={(v) => setG({ ...g, glue: v })}/>
+        {hasGlue && <ChkRow label="Glue area" value={g.glue} onChange={(v) => setG({ ...g, glue: v })}/>}
         <ChkRow label="Panel labels" value={g.labels} onChange={(v) => setG({ ...g, labels: v })}/>
         <ChkRow label="Safe area" value={g.safe} onChange={(v) => setG({ ...g, safe: v })}/>
       </div>
