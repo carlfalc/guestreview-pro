@@ -984,6 +984,27 @@ function MarketingPackEditor() {
           canUndo={!!copyUndo}
         />
       )}
+
+      {pack && biz && (
+        <AiCopyDialog
+          open={aiOpen}
+          onOpenChange={setAiOpen}
+          ctx={{
+            businessId: biz.id,
+            businessName: biz.name,
+            businessType: (biz as unknown as { industry?: BusinessType }).industry ?? "General business",
+            packId: pack.id,
+            packType: pack.pack_type,
+            formatId: selectedFormats[0] ?? null,
+            placement: placementFromFormat(FORMATS.find((f) => f.id === selectedFormats[0])),
+            existing: { headline, supportingText: supportText, ctaText, footerText },
+            preferences: ((biz as unknown as { ai_copy_preferences?: Record<string, unknown> }).ai_copy_preferences) as AiCopyContext["preferences"] | undefined,
+          }}
+          onApply={applyAiCopy}
+          onUndo={undoAiCopy}
+          canUndo={!!aiUndo}
+        />
+      )}
     </div>
   );
 }
