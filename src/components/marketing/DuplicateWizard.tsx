@@ -342,9 +342,9 @@ function FieldsPicker({ fields, onChange }: { fields: DuplicateFields; onChange:
     { k: "content", label: "Written content", hint: "Headline, support text, CTA, footer, visibility toggles." },
     { k: "design", label: "Global design", hint: "Layout template + global colours, fonts, borders." },
     { k: "formats", label: "Formats", hint: "The list of selected formats." },
-    { k: "customizations", label: "Per-format customisations", hint: "Overrides you've set on individual formats." },
-    { k: "folded", label: "Folded front / back content", hint: "Per-panel content for table tents." },
-    { k: "backgroundImages", label: "Background images", hint: "Uploaded images (global and per-format)." },
+    { k: "customizations", label: "Per-format customisations", hint: "Overrides you've set on individual formats (non-folded fields)." },
+    { k: "folded", label: "Folded front / back content", hint: "Per-panel content for table tents. Copied independently of per-format customisations." },
+    { k: "backgroundImages", label: "Background images", hint: "Uploaded images (global, per-format, and folded front/back)." },
   ];
   return (
     <div className="space-y-1.5">
@@ -358,9 +358,14 @@ function FieldsPicker({ fields, onChange }: { fields: DuplicateFields; onChange:
           </div>
         </label>
       ))}
+      <p className="rounded-lg bg-accent/40 p-2 text-[10px] text-muted-foreground">
+        <span className="font-semibold">Per-format customisations</span> and <span className="font-semibold">Folded content</span> are independent.
+        Enable folded alone to copy only table-tent panel content; enable per-format alone to copy non-folded overrides.
+      </p>
     </div>
   );
 }
+
 
 function BrandStep({ value, onChange }: { value: BrandBehaviour; onChange: (v: BrandBehaviour) => void }) {
   return (
