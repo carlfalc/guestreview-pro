@@ -1209,8 +1209,7 @@ function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange,
   );
 }
 
-  );
-}
+
 
 function OverrideDialog({ open, onOpenChange, format, override, globalSettings, selectedFormats, onSave, onClear, onCopyToFormats }: {
   open: boolean;
