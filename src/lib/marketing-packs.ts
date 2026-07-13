@@ -100,3 +100,63 @@ export type FormatCustomizations = Record<string, FormatOverride>;
 /** Deep-clone-safe empty defaults. */
 export const emptyGlobalSettings: GlobalSettings = {};
 export const emptyFormatCustomizations: FormatCustomizations = {};
+
+export type ContentBase = {
+  businessName: string;
+  logoUrl: string | null;
+  headline: string;
+  supportText: string;
+  ctaText: string;
+  footerText?: string;
+  showBusinessName: boolean;
+  showLogo: boolean;
+  showStars: boolean;
+  showGoogleBadge: boolean;
+};
+
+/**
+ * Merge base pack content + global settings + per-format override into the
+ * FormatContent shape consumed by renderFormatSvg.
+ */
+export function buildFormatContent(
+  base: ContentBase,
+  global: GlobalSettings,
+  override: FormatOverride | undefined,
+): {
+  businessName: string;
+  logoUrl: string | null;
+  headline: string;
+  supportText: string;
+  ctaText: string;
+  footerText?: string;
+  showStars: boolean;
+  showGoogleBadge: boolean;
+  textAlign: "left" | "center" | "right";
+  qrAlign: "left" | "center" | "right";
+  fontWeight: string;
+  colors: { bg?: string; fg?: string; accent?: string };
+  qrScale?: number;
+} {
+  const showLogo = override?.logoVisible ?? base.showLogo;
+  const showStars = override?.hideStars ? false : base.showStars;
+  return {
+    businessName: base.showBusinessName ? base.businessName : "",
+    logoUrl: showLogo ? base.logoUrl : null,
+    headline: override?.headline ?? base.headline,
+    supportText: override?.supportText ?? base.supportText,
+    ctaText: override?.ctaText ?? base.ctaText,
+    footerText: base.footerText,
+    showStars,
+    showGoogleBadge: base.showGoogleBadge,
+    textAlign: global.textAlign ?? "center",
+    qrAlign: global.qrAlign ?? "center",
+    fontWeight: global.fontWeight ?? "600",
+    colors: {
+      bg: override?.backgroundColor ?? global.backgroundColor,
+      fg: global.textColor,
+      accent: override?.accentColor ?? global.accentColor ?? global.brandColor,
+    },
+    qrScale: override?.qrScale,
+  };
+}
+
