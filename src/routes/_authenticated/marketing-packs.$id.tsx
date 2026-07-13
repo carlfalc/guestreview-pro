@@ -311,6 +311,103 @@ function MarketingPackEditor() {
     navigate({ to: "/marketing-packs/$id", params: { id: data.id } });
   }
 
+  // Snapshot the fields auto-fix can mutate so Undo restores the exact prior state.
+  function makeAutoFixSnapshot(): AutoFixSnapshot {
+    return {
+      qrDesign: JSON.parse(JSON.stringify(qrDesign)) as QrDesign,
+      globalSettings: JSON.parse(JSON.stringify(globalSettings)) as GlobalSettings,
+      formatCustomizations: JSON.parse(JSON.stringify(formatCustomizations)) as FormatCustomizations,
+      selectedFormats: [...selectedFormats],
+    };
+  }
+
+  async function runAutoFix() {
+    setAutoFixError(null);
+    setAutoFixPhase("analysing");
+    setAutoFixOpen(true);
+    try {
+      const results = await runValidation({ decodeQr: false });
+      const formatById: Record<string, BusinessFormat> = {};
+      for (const f of selected) formatById[f.id] = f;
+      const proposals = buildAutoFixProposals(results, {
+        formatById,
+        contentBase,
+        snapshot: makeAutoFixSnapshot(),
+      });
+      setAutoFixProposals(proposals);
+      setAutoFixPhase("ready");
+    } catch (e) {
+      setAutoFixError((e as Error).message);
+      setAutoFixPhase("failed");
+    }
+  }
+
+  async function applySelectedAutoFixes(picked: AutoFixProposal[]) {
+    if (picked.length === 0) return;
+    const before = makeAutoFixSnapshot();
+    setAutoFixPhase("applying");
+    setAutoFixError(null);
+    try {
+      const nextSnap = applyAutoFixes(before, picked, contentBase);
+      // Persist QR-design mutation directly (qr_codes row).
+      const qrPatchChanged = JSON.stringify(before.qrDesign) !== JSON.stringify(nextSnap.qrDesign);
+      if (qrPatchChanged && qrRow) {
+        const { error: qerr } = await supabase.from("qr_codes")
+          .update({ design: nextSnap.qrDesign as unknown as never })
+          .eq("id", qrRow.id);
+        if (qerr) throw new Error(`QR design save failed: ${qerr.message}`);
+        qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+      }
+      setGlobalSettings(nextSnap.globalSettings);
+      setFormatCustomizations(nextSnap.formatCustomizations);
+      setSelectedFormats(nextSnap.selectedFormats);
+      setAutoFixUndo(before);
+      setAutoFixPhase("revalidating");
+      // Give React a tick before re-validation so state has flushed.
+      await new Promise((r) => setTimeout(r, 50));
+      const prevIssues = validations.filter((r) => r.level !== "pass").length;
+      const nextResults = await runValidation({ decodeQr: false });
+      const nextIssues = nextResults.filter((r) => r.level !== "pass").length;
+      const summary = summariseAutoFixes(picked);
+      const msg = `Applied ${summary.total} fix(es) — ${prevIssues} → ${nextIssues} issues`;
+      setAutoFixLastSummary(msg);
+      toast.success(msg);
+      setAutoFixPhase("done");
+    } catch (e) {
+      setAutoFixError((e as Error).message);
+      setAutoFixPhase("failed");
+      toast.error(`Auto-fix failed: ${(e as Error).message}`);
+    }
+  }
+
+  async function undoAutoFix() {
+    if (!autoFixUndo) return;
+    const snap = autoFixUndo;
+    setGlobalSettings(snap.globalSettings);
+    setFormatCustomizations(snap.formatCustomizations);
+    setSelectedFormats(snap.selectedFormats);
+    if (qrRow && JSON.stringify(snap.qrDesign) !== JSON.stringify(qrDesign)) {
+      const { error: qerr } = await supabase.from("qr_codes")
+        .update({ design: snap.qrDesign as unknown as never })
+        .eq("id", qrRow.id);
+      if (qerr) { toast.error(`QR restore failed: ${qerr.message}`); return; }
+      qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+    }
+    setAutoFixUndo(null);
+    setAutoFixLastSummary(null);
+    toast.success("Auto-fix undone");
+    void runValidation({ decodeQr: false });
+  }
+
+  function undoCopySettings() {
+    if (!copyUndo) return;
+    setFormatCustomizations(copyUndo);
+    setCopyUndo(null);
+    toast.success("Copied settings undone");
+    void runValidation({ decodeQr: false });
+  }
+
+
   async function archivePack() {
     if (!pack) return;
     const archive = status !== "archived";
