@@ -138,6 +138,10 @@ function MarketingPackEditor() {
   // Duplication wizard state
   const [dupMode, setDupMode] = useState<DuplicateWizardMode | null>(null);
 
+  // AI Copy Assistant state
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiUndo, setAiUndo] = useState<{ headline: string; supportText: string; ctaText: string; footerText: string } | null>(null);
+
 
 
   const initialised = useRef(false);
