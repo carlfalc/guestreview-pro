@@ -30,7 +30,7 @@ import {
   runFormatValidations, decodeQrValidation, readyToPrint,
   type ValidationResult, type ValidationLevel,
 } from "@/lib/format-validation";
-import { runFoldedValidations } from "@/lib/folded-validation";
+import { runFoldedValidations, decodeFoldedQrValidation, type FoldedDecodeResult } from "@/lib/folded-validation";
 import {
   statusMeta, packTypeById, buildFormatContent, similarFormats, defaultFoldedConfig,
   FONT_OPTIONS, STAR_STYLES, BORDER_STYLES,
