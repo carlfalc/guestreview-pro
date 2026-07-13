@@ -305,35 +305,47 @@ function MarketingPackEditor() {
     navigate({ to: "/marketing-packs" });
   }
 
+  const runValidation = useCallback(async (opts: { decodeQr?: boolean } = { decodeQr: true }): Promise<ValidationResult[]> => {
+    setValidating(true);
+    try {
+      const out: ValidationResult[] = [];
+      if (selected.length === 0) {
+        out.push({ id: "pack-formats", formatId: null, category: "content", level: "error", title: "No formats selected", message: "Add at least one format.", suggestedFix: "Pick formats in the Formats tab." });
+      }
+      for (const f of selected) {
+        const c = resolveContent(f);
+        out.push(...runFormatValidations({
+          format: f, content: c, qrData,
+          destinationUrl: qrRow?.destination_url ?? null,
+          destinationType: qrRow?.destination_type ?? null,
+          reviewUrl: biz?.google_review_url ?? null,
+        }));
+        if (opts.decodeQr) {
+          out.push(await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate));
+        }
+      }
+      setValidations(out);
+      return out;
+    } finally { setValidating(false); }
+  }, [selected, resolveContent, qrData, qrRow, biz, qrDesign, brand, layoutTemplate]);
+
   async function markReadyToPrint() {
     if (!headline.trim() || !ctaText.trim()) return toast.error("Headline and CTA are required");
-    if (selectedFormats.length === 0) return toast.error("Add at least one format");
-    toast.info("Validating QR in every selected format…");
-    const results = await validateAllQrs();
-    const failed = results.filter((r) => !r.pass);
-    if (failed.length) return toast.error(`${failed.length} format(s) failed QR validation — fix warnings first`);
+    const results = await runValidation({ decodeQr: true });
+    const { ready, blocking, warnings } = readyToPrint(results);
+    if (!ready) return toast.error(`${blocking} blocking issue(s) — resolve them first`);
+    if (warnings > 0 && !warningsAck) return toast.error(`${warnings} warning(s) — acknowledge them below to continue`);
     setStatus("ready");
     toast.success("Marked ready to print");
   }
 
+  // Legacy per-format QR check kept for export-time validation entries
   async function validateAllQrs(): Promise<{ formatId: string; pass: boolean; reason?: string }[]> {
     const out: { formatId: string; pass: boolean; reason?: string }[] = [];
     for (const f of selected) {
-      try {
-        const c = resolveContent(f);
-        const svg = await renderFormatSvg(f, layoutTemplate, c, qrDesign, qrData, c.logoUrl, brand, { showBoundaries: false, includeBleed: false });
-        const blob = await svgToPng(svg, 600, 600);
-        const bitmap = await createImageBitmap(blob);
-        const canvas = document.createElement("canvas");
-        canvas.width = bitmap.width; canvas.height = bitmap.height;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(bitmap, 0, 0);
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(data.data, data.width, data.height);
-        out.push({ formatId: f.id, pass: !!code, reason: code ? undefined : "Could not decode QR" });
-      } catch (e) {
-        out.push({ formatId: f.id, pass: false, reason: (e as Error).message });
-      }
+      const c = resolveContent(f);
+      const r = await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate);
+      out.push({ formatId: f.id, pass: r.level === "pass", reason: r.level === "pass" ? undefined : r.message });
     }
     return out;
   }
