@@ -317,7 +317,7 @@ function MarketingPackEditor() {
       for (const f of selected) {
         const c = resolveContent(f);
         out.push(...runFormatValidations({
-          format: f, content: c, qrData,
+          format: f, content: c, qrDesign, qrData,
           destinationUrl: qrRow?.destination_url ?? null,
           destinationType: qrRow?.destination_type ?? null,
           reviewUrl: biz?.google_review_url ?? null,
@@ -326,6 +326,7 @@ function MarketingPackEditor() {
           out.push(await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate));
         }
       }
+
       setValidations(out);
       return out;
     } finally { setValidating(false); }
