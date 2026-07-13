@@ -563,6 +563,24 @@ function MarketingPackEditor() {
                   </Button>
                 </div>
               </div>
+              {/* Preview production overlays */}
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-accent/30 px-4 py-2 text-xs">
+                <span className="font-semibold uppercase tracking-wide text-muted-foreground">Guides</span>
+                <label className="inline-flex items-center gap-1"><Checkbox checked={showTrim} onCheckedChange={(v) => setShowTrim(!!v)}/> Trim</label>
+                <label className="inline-flex items-center gap-1"><Checkbox checked={showSafe} onCheckedChange={(v) => setShowSafe(!!v)}/> Safe area</label>
+                <label className="inline-flex items-center gap-1"><Checkbox checked={showBleedGuide} onCheckedChange={(v) => setShowBleedGuide(!!v)}/> Bleed</label>
+                <label className="inline-flex items-center gap-1"><Checkbox checked={showDieline} onCheckedChange={(v) => setShowDieline(!!v)}/> Dieline (circular)</label>
+              </div>
+
+              {/* Validation panel */}
+              <ValidationPanel
+                results={validations}
+                validating={validating}
+                onRun={() => runValidation({ decodeQr: true })}
+                warningsAck={warningsAck}
+                onAckChange={setWarningsAck}
+              />
+
               {selected.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-border/70 p-8 text-center text-xs text-muted-foreground">
                   Add formats in the Formats tab to see previews here.
@@ -586,6 +604,7 @@ function MarketingPackEditor() {
                       override={formatCustomizations[f.id]}
                       globalSettings={globalSettings}
                       selectedFormats={selectedFormats}
+                      overlays={{ showTrim, showSafe, showBleedGuide, showDieline }}
                       onOverrideChange={(o) => setFormatCustomizations({ ...formatCustomizations, [f.id]: o })}
                       onOverrideClear={() => {
                         const next = { ...formatCustomizations };
