@@ -5,8 +5,26 @@ import type { BusinessFormat, LayoutTemplate } from "@/lib/qr-formats";
 import { safeArea, templateColors } from "@/lib/qr-formats";
 
 export type StarStyle = "solid" | "outline" | "rounded" | "dots" | "hidden";
-export type BorderStyle = "none" | "thin" | "thick" | "double";
+export type BorderStyle =
+  | "none"
+  | "thin"
+  | "thick"
+  | "double"
+  | "ring-brand"
+  | "keyline-white"
+  | "keyline-black";
 export type BgImageFit = "cover" | "contain";
+
+/** Circular safe area radius as fraction of trim radius. Interior = safe. */
+export const CIRCLE_SAFE_RATIO = 0.86;
+/** Dieline colour used across SVG and PDF exports (100% magenta, printer-standard). */
+export const DIELINE_COLOR = "#ff00ff";
+export const DIELINE_LAYER = "CutContour";
+
+/** Radial safe-area radius in mm for a circular format. */
+export function circularSafeRadius(width: number): number {
+  return (width / 2) * CIRCLE_SAFE_RATIO;
+}
 
 export type FormatContent = {
   businessName: string;
