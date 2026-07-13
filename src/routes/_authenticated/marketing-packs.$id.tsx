@@ -600,7 +600,12 @@ function MarketingPackEditor() {
                 onRun={() => runValidation({ decodeQr: true })}
                 warningsAck={warningsAck}
                 onAckChange={setWarningsAck}
+                onNavigate={(target) => {
+                  const map: Record<string, string> = { content: "content", formats: "formats", design: "design", preview: "preview", override: "preview", qr: "preview", business: "preview" };
+                  setActiveTab(map[target] ?? "preview");
+                }}
               />
+
 
               {selected.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-border/70 p-8 text-center text-xs text-muted-foreground">
