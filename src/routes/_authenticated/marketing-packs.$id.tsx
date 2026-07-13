@@ -93,6 +93,17 @@ function MarketingPackEditor() {
   const [thumbState, setThumbState] = useState<ThumbState>("idle");
   const [thumbError, setThumbError] = useState<string | null>(null);
 
+  // Print-production preview overlays
+  const [showTrim, setShowTrim] = useState(true);
+  const [showSafe, setShowSafe] = useState(true);
+  const [showBleedGuide, setShowBleedGuide] = useState(true);
+  const [showDieline, setShowDieline] = useState(false);
+
+  // Validation engine state
+  const [validations, setValidations] = useState<ValidationResult[]>([]);
+  const [validating, setValidating] = useState(false);
+  const [warningsAck, setWarningsAck] = useState(false);
+
   const initialised = useRef(false);
   useEffect(() => {
     if (!pack || initialised.current) return;
