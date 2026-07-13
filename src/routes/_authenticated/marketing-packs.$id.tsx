@@ -422,7 +422,7 @@ function MarketingPackEditor() {
     if (!list.length) return toast.error("No formats match that group");
     setExporting(`zip-${kind}`);
     try {
-      const validations = await validateAllQrs();
+      const validation = await validateAllQrs();
       const preview = await generatePreviewDataUrl().catch(() => null);
       await downloadPackZip(
         projectName || "marketing-pack", list, layoutTemplate, resolveContent, qrDesign, qrData, rawLogoUrl, brand,
@@ -437,7 +437,9 @@ function MarketingPackEditor() {
           qrLabel: qrRow?.label ?? null,
           qrDestinationType: qrRow?.destination_type ?? null,
           previewDataUrl: preview?.dataUrl ?? null,
-          validations,
+          validations: validation.entries,
+          foldedDecode: validation.folded,
+          foldedPanelValidations: validation.foldedPanel,
           foldedResolver: (f) => f.folded ? (formatCustomizations[f.id]?.folded ?? defaultFoldedConfig(contentBase)) : null,
           business_name: biz?.name ?? "",
           business_logo_url: biz?.logo_url ?? null,
