@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   ArrowLeft, Save, Loader2, Download, FileText, ImageIcon, Package,
   AlertTriangle, CheckCircle2, Copy, Archive, Trash2, Settings2, RotateCw,
-  ImagePlus, X, Layers,
+  ImagePlus, X, Layers, Wand2, Undo2, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -37,10 +37,20 @@ import {
   type GlobalSettings, type FormatCustomizations, type FormatOverride, type PackStatus, type ContentBase,
   type FoldedConfig,
 } from "@/lib/marketing-packs";
+import {
+  buildAutoFixProposals, applyAutoFixes, summariseAutoFixes,
+  type AutoFixProposal, type AutoFixSnapshot,
+} from "@/lib/auto-fix";
 import { renderFoldedFormatSvg, renderFoldedMockupSvg } from "@/lib/folded-render";
 import { buildFoldedPdf, downloadFoldedPng, renderFoldedSvgWithGuides } from "@/lib/folded-export";
 import { FoldedFormatEditor } from "@/components/marketing/FoldedFormatEditor";
+import { AutoFixDialog } from "@/components/marketing/AutoFixDialog";
+import { DuplicateWizard, type DuplicateWizardMode } from "@/components/marketing/DuplicateWizard";
+import { CopySettingsDialog } from "@/components/marketing/CopySettingsDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Slider } from "@/components/ui/slider";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -109,6 +119,22 @@ function MarketingPackEditor() {
   const [validating, setValidating] = useState(false);
   const [warningsAck, setWarningsAck] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<string>("content");
+
+  // Auto-fix state
+  const [autoFixOpen, setAutoFixOpen] = useState(false);
+  const [autoFixProposals, setAutoFixProposals] = useState<AutoFixProposal[]>([]);
+  const [autoFixPhase, setAutoFixPhase] = useState<"analysing" | "ready" | "applying" | "revalidating" | "done" | "failed">("ready");
+  const [autoFixError, setAutoFixError] = useState<string | null>(null);
+  const [autoFixUndo, setAutoFixUndo] = useState<AutoFixSnapshot | null>(null);
+  const [autoFixLastSummary, setAutoFixLastSummary] = useState<string | null>(null);
+
+  // Copy-settings undo snapshot
+  const [copyUndo, setCopyUndo] = useState<FormatCustomizations | null>(null);
+  const [copyDialogState, setCopyDialogState] = useState<{ format: BusinessFormat; override: FormatOverride } | null>(null);
+
+  // Duplication wizard state
+  const [dupMode, setDupMode] = useState<DuplicateWizardMode | null>(null);
+
 
 
   const initialised = useRef(false);
@@ -285,6 +311,103 @@ function MarketingPackEditor() {
     toast.success("Duplicated");
     navigate({ to: "/marketing-packs/$id", params: { id: data.id } });
   }
+
+  // Snapshot the fields auto-fix can mutate so Undo restores the exact prior state.
+  function makeAutoFixSnapshot(): AutoFixSnapshot {
+    return {
+      qrDesign: JSON.parse(JSON.stringify(qrDesign)) as QrDesign,
+      globalSettings: JSON.parse(JSON.stringify(globalSettings)) as GlobalSettings,
+      formatCustomizations: JSON.parse(JSON.stringify(formatCustomizations)) as FormatCustomizations,
+      selectedFormats: [...selectedFormats],
+    };
+  }
+
+  async function runAutoFix() {
+    setAutoFixError(null);
+    setAutoFixPhase("analysing");
+    setAutoFixOpen(true);
+    try {
+      const results = await runValidation({ decodeQr: false });
+      const formatById: Record<string, BusinessFormat> = {};
+      for (const f of selected) formatById[f.id] = f;
+      const proposals = buildAutoFixProposals(results, {
+        formatById,
+        contentBase,
+        snapshot: makeAutoFixSnapshot(),
+      });
+      setAutoFixProposals(proposals);
+      setAutoFixPhase("ready");
+    } catch (e) {
+      setAutoFixError((e as Error).message);
+      setAutoFixPhase("failed");
+    }
+  }
+
+  async function applySelectedAutoFixes(picked: AutoFixProposal[]) {
+    if (picked.length === 0) return;
+    const before = makeAutoFixSnapshot();
+    setAutoFixPhase("applying");
+    setAutoFixError(null);
+    try {
+      const nextSnap = applyAutoFixes(before, picked, contentBase);
+      // Persist QR-design mutation directly (qr_codes row).
+      const qrPatchChanged = JSON.stringify(before.qrDesign) !== JSON.stringify(nextSnap.qrDesign);
+      if (qrPatchChanged && qrRow) {
+        const { error: qerr } = await supabase.from("qr_codes")
+          .update({ design: nextSnap.qrDesign as unknown as never })
+          .eq("id", qrRow.id);
+        if (qerr) throw new Error(`QR design save failed: ${qerr.message}`);
+        qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+      }
+      setGlobalSettings(nextSnap.globalSettings);
+      setFormatCustomizations(nextSnap.formatCustomizations);
+      setSelectedFormats(nextSnap.selectedFormats);
+      setAutoFixUndo(before);
+      setAutoFixPhase("revalidating");
+      // Give React a tick before re-validation so state has flushed.
+      await new Promise((r) => setTimeout(r, 50));
+      const prevIssues = validations.filter((r) => r.level !== "pass").length;
+      const nextResults = await runValidation({ decodeQr: false });
+      const nextIssues = nextResults.filter((r) => r.level !== "pass").length;
+      const summary = summariseAutoFixes(picked);
+      const msg = `Applied ${summary.total} fix(es) — ${prevIssues} → ${nextIssues} issues`;
+      setAutoFixLastSummary(msg);
+      toast.success(msg);
+      setAutoFixPhase("done");
+    } catch (e) {
+      setAutoFixError((e as Error).message);
+      setAutoFixPhase("failed");
+      toast.error(`Auto-fix failed: ${(e as Error).message}`);
+    }
+  }
+
+  async function undoAutoFix() {
+    if (!autoFixUndo) return;
+    const snap = autoFixUndo;
+    setGlobalSettings(snap.globalSettings);
+    setFormatCustomizations(snap.formatCustomizations);
+    setSelectedFormats(snap.selectedFormats);
+    if (qrRow && JSON.stringify(snap.qrDesign) !== JSON.stringify(qrDesign)) {
+      const { error: qerr } = await supabase.from("qr_codes")
+        .update({ design: snap.qrDesign as unknown as never })
+        .eq("id", qrRow.id);
+      if (qerr) { toast.error(`QR restore failed: ${qerr.message}`); return; }
+      qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+    }
+    setAutoFixUndo(null);
+    setAutoFixLastSummary(null);
+    toast.success("Auto-fix undone");
+    void runValidation({ decodeQr: false });
+  }
+
+  function undoCopySettings() {
+    if (!copyUndo) return;
+    setFormatCustomizations(copyUndo);
+    setCopyUndo(null);
+    toast.success("Copied settings undone");
+    void runValidation({ decodeQr: false });
+  }
+
 
   async function archivePack() {
     if (!pack) return;
@@ -505,9 +628,19 @@ function MarketingPackEditor() {
           <Button variant="outline" size="sm" onClick={() => doSave()} className="rounded-full">
             <Save className="mr-1 h-4 w-4"/>Save
           </Button>
-          <Button variant="outline" size="sm" onClick={duplicatePack} className="rounded-full">
-            <Copy className="mr-1 h-4 w-4"/>Duplicate
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="rounded-full">
+                <Copy className="mr-1 h-4 w-4"/>Duplicate<ChevronDown className="ml-1 h-3 w-3"/>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onSelect={() => duplicatePack()}>Quick duplicate</DropdownMenuItem>
+              <DropdownMenuSeparator/>
+              <DropdownMenuItem onSelect={() => setDupMode("another-qr")}>Duplicate to another QR…</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setDupMode("another-business")}>Duplicate to another business…</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="sm" onClick={archivePack} className="rounded-full">
             <Archive className="mr-1 h-4 w-4"/>{status === "archived" ? "Restore" : "Archive"}
           </Button>
@@ -653,6 +786,12 @@ function MarketingPackEditor() {
                   const map: Record<string, string> = { content: "content", formats: "formats", design: "design", preview: "preview", override: "preview", qr: "preview", business: "preview" };
                   setActiveTab(map[target] ?? "preview");
                 }}
+                onFixAutomatically={runAutoFix}
+                canUndoAutoFix={!!autoFixUndo}
+                onUndoAutoFix={undoAutoFix}
+                autoFixSummary={autoFixLastSummary}
+                canUndoCopy={!!copyUndo}
+                onUndoCopy={undoCopySettings}
               />
 
 
@@ -693,7 +832,9 @@ function MarketingPackEditor() {
                         ids.forEach((fid) => { next[fid] = { ...next[fid], ...o }; });
                         setFormatCustomizations(next);
                       }}
+                      onOpenAdvancedCopy={(o) => setCopyDialogState({ format: f, override: o })}
                     />
+
                   );
                 })}
               </div>
@@ -701,6 +842,59 @@ function MarketingPackEditor() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AutoFixDialog
+        open={autoFixOpen}
+        onOpenChange={(v) => { setAutoFixOpen(v); if (!v) setAutoFixPhase("ready"); }}
+        proposals={autoFixProposals}
+        phase={autoFixPhase}
+        error={autoFixError}
+        onApply={applySelectedAutoFixes}
+        onCancel={() => setAutoFixOpen(false)}
+      />
+
+      {pack && dupMode && (
+        <DuplicateWizard
+          open={dupMode != null}
+          onOpenChange={(v) => { if (!v) setDupMode(null); }}
+          mode={dupMode}
+          currentBusinessId={pack.business_id}
+          sourcePack={{
+            id: pack.id,
+            project_name: projectName,
+            layout_template: layoutTemplate,
+            headline, support_text: supportText, cta_text: ctaText, footer_text: footerText,
+            pack_type: pack.pack_type,
+            show_business_name: showBusinessName, show_logo: showLogo,
+            show_stars: showStars, show_google_badge: showGoogleBadge,
+            selected_formats: selectedFormats,
+            global_settings: globalSettings as unknown as Record<string, unknown>,
+            format_customizations: formatCustomizations as unknown as Record<string, unknown>,
+          }}
+          defaultName={`${projectName} (copy)`}
+          onCreated={(newId) => { setDupMode(null); navigate({ to: "/marketing-packs/$id", params: { id: newId } }); }}
+        />
+      )}
+
+      {copyDialogState && (
+        <CopySettingsDialog
+          open={copyDialogState != null}
+          onOpenChange={(v) => { if (!v) setCopyDialogState(null); }}
+          sourceFormat={copyDialogState.format}
+          sourceOverride={copyDialogState.override}
+          selectedFormats={selectedFormats}
+          customizations={formatCustomizations}
+          onApply={(next, summary) => {
+            setCopyUndo(formatCustomizations);
+            setFormatCustomizations(next);
+            setCopyDialogState(null);
+            toast.success(`Copied ${summary.mode} to ${summary.copied} format(s)${summary.skipped ? ` · ${summary.skipped} skipped` : ""}`);
+            void runValidation({ decodeQr: false });
+          }}
+          onUndo={undoCopySettings}
+          canUndo={!!copyUndo}
+        />
+      )}
     </div>
   );
 }
@@ -996,8 +1190,9 @@ function FormatPreviewCard(props: {
   onOverrideChange: (o: FormatOverride) => void;
   onOverrideClear: () => void;
   onCopyToFormats: (ids: string[], o: FormatOverride) => void;
+  onOpenAdvancedCopy: (o: FormatOverride) => void;
 }) {
-  const { format, layoutTemplate, content, contentBase, qrDesign, qrData, logoUrl, qrLogoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, overlays, onOverrideChange, onOverrideClear, onCopyToFormats } = props;
+  const { format, layoutTemplate, content, contentBase, qrDesign, qrData, logoUrl, qrLogoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, overlays, onOverrideChange, onOverrideClear, onCopyToFormats, onOpenAdvancedCopy } = props;
   const [svg, setSvg] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
   const [renderKey, setRenderKey] = useState(0);
@@ -1183,6 +1378,7 @@ function FormatPreviewCard(props: {
         onSave={(o) => { onOverrideChange(o); setOverrideOpen(false); }}
         onClear={() => { onOverrideClear(); setOverrideOpen(false); }}
         onCopyToFormats={onCopyToFormats}
+        onOpenAdvancedCopy={(o) => { setOverrideOpen(false); onOpenAdvancedCopy(o); }}
       />
       {isFolded && (
         <FoldedFormatEditor
@@ -1219,13 +1415,19 @@ function triggerBlobDownload(blob: Blob, filename: string) {
 
 type PanelFilter = "all" | "blocking" | "warnings" | "qr" | "text" | "image" | "print" | "content";
 
-function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange, onNavigate }: {
+function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange, onNavigate, onFixAutomatically, canUndoAutoFix, onUndoAutoFix, autoFixSummary, canUndoCopy, onUndoCopy }: {
   results: ValidationResult[];
   validating: boolean;
   onRun: () => void;
   warningsAck: Record<string, boolean>;
   onAckChange: (updater: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
   onNavigate: (target: import("@/lib/format-validation").ValidationTarget) => void;
+  onFixAutomatically: () => void;
+  canUndoAutoFix: boolean;
+  onUndoAutoFix: () => void;
+  autoFixSummary: string | null;
+  canUndoCopy: boolean;
+  onUndoCopy: () => void;
 }) {
   const summary = useMemo(() => readyToPrint(results), [results]);
   const [filter, setFilter] = useState<PanelFilter>("all");
@@ -1283,11 +1485,32 @@ function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange,
             </>
           )}
         </div>
-        <Button size="sm" variant="outline" onClick={onRun} disabled={validating} className="rounded-full text-xs">
-          {validating ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <CheckCircle2 className="mr-1 h-3 w-3"/>}
-          {results.length === 0 ? "Run validation" : "Re-run validation"}
-        </Button>
+        <div className="flex flex-wrap gap-1.5">
+          {results.some((r) => r.level !== "pass") && (
+            <Button size="sm" variant="default" onClick={onFixAutomatically} disabled={validating} className="rounded-full text-xs">
+              <Wand2 className="mr-1 h-3 w-3"/>Fix automatically
+            </Button>
+          )}
+          {canUndoAutoFix && (
+            <Button size="sm" variant="outline" onClick={onUndoAutoFix} className="rounded-full text-xs">
+              <Undo2 className="mr-1 h-3 w-3"/>Undo automatic fixes
+            </Button>
+          )}
+          {canUndoCopy && (
+            <Button size="sm" variant="outline" onClick={onUndoCopy} className="rounded-full text-xs">
+              <Undo2 className="mr-1 h-3 w-3"/>Undo copied settings
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={onRun} disabled={validating} className="rounded-full text-xs">
+            {validating ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <CheckCircle2 className="mr-1 h-3 w-3"/>}
+            {results.length === 0 ? "Run validation" : "Re-run validation"}
+          </Button>
+        </div>
       </div>
+      {autoFixSummary && (
+        <p className="rounded-xl bg-emerald-500/10 p-2 text-[10px] text-emerald-500">{autoFixSummary}</p>
+      )}
+
 
       {results.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -1361,7 +1584,7 @@ function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange,
 
 
 
-function OverrideDialog({ open, onOpenChange, format, override, globalSettings, selectedFormats, onSave, onClear, onCopyToFormats }: {
+function OverrideDialog({ open, onOpenChange, format, override, globalSettings, selectedFormats, onSave, onClear, onCopyToFormats, onOpenAdvancedCopy }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   format: BusinessFormat;
@@ -1371,6 +1594,7 @@ function OverrideDialog({ open, onOpenChange, format, override, globalSettings, 
   onSave: (o: FormatOverride) => void;
   onClear: () => void;
   onCopyToFormats: (ids: string[], o: FormatOverride) => void;
+  onOpenAdvancedCopy: (o: FormatOverride) => void;
 }) {
   const [draft, setDraft] = useState<FormatOverride>({});
   useEffect(() => { if (open) setDraft(override ?? {}); }, [open, override]);
@@ -1519,6 +1743,9 @@ function OverrideDialog({ open, onOpenChange, format, override, globalSettings, 
             {otherSelected.length > 0 && (
               <Button variant="outline" onClick={() => { setCopyIds([]); setCopyPickerOpen(true); }} className="rounded-full text-xs">Copy to selected…</Button>
             )}
+            <Button variant="outline" onClick={() => onOpenAdvancedCopy(draft)} className="rounded-full text-xs">
+              <Copy className="mr-1 h-3 w-3"/>Copy settings…
+            </Button>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-full">Cancel</Button>
