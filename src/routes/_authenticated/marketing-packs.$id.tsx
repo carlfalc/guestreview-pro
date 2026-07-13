@@ -1357,13 +1357,19 @@ function triggerBlobDownload(blob: Blob, filename: string) {
 
 type PanelFilter = "all" | "blocking" | "warnings" | "qr" | "text" | "image" | "print" | "content";
 
-function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange, onNavigate }: {
+function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange, onNavigate, onFixAutomatically, canUndoAutoFix, onUndoAutoFix, autoFixSummary, canUndoCopy, onUndoCopy }: {
   results: ValidationResult[];
   validating: boolean;
   onRun: () => void;
   warningsAck: Record<string, boolean>;
   onAckChange: (updater: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
   onNavigate: (target: import("@/lib/format-validation").ValidationTarget) => void;
+  onFixAutomatically: () => void;
+  canUndoAutoFix: boolean;
+  onUndoAutoFix: () => void;
+  autoFixSummary: string | null;
+  canUndoCopy: boolean;
+  onUndoCopy: () => void;
 }) {
   const summary = useMemo(() => readyToPrint(results), [results]);
   const [filter, setFilter] = useState<PanelFilter>("all");
