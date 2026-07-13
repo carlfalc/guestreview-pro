@@ -382,6 +382,8 @@ export async function downloadPackZip(
     }
 
     const v = validationsMap.get(f.id);
+    const foldedCfg = f.folded ? meta.foldedResolver?.(f) ?? null : null;
+    const layout = f.folded ? getFoldedLayout(f) : null;
     manifest.formats.push({
       id: f.id, name: f.name, medium: f.medium, shape: f.shape, category: f.category,
       width: f.width, height: f.height,
@@ -390,6 +392,16 @@ export async function downloadPackZip(
       material: f.material,
       qr_validation: v ? { pass: v.pass, reason: v.reason } : undefined,
       files,
+      folded: layout && foldedCfg ? {
+        mode: foldedCfg.mode,
+        flat: { width: layout.flatWidth, height: layout.flatHeight },
+        assembled: { width: layout.assembledWidth, height: layout.assembledHeight },
+        panels: layout.panels.map((p) => ({ panel: p.panel, x: p.x, y: p.y, w: p.w, h: p.h, rotation: p.rotation, label: p.label })),
+        fold_lines: layout.segments.filter((s) => s.type === "fold"),
+        score_lines: layout.segments.filter((s) => s.type === "score"),
+        cut_lines: layout.segments.filter((s) => s.type === "cut"),
+        glue_area: layout.glue ?? null,
+      } : undefined,
     });
   }
 
