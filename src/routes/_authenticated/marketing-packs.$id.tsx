@@ -352,6 +352,25 @@ function MarketingPackEditor() {
           <Button variant="outline" size="sm" onClick={archivePack} className="rounded-full">
             <Archive className="mr-1 h-4 w-4"/>{status === "archived" ? "Restore" : "Archive"}
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="rounded-full text-destructive hover:text-destructive">
+                <Trash2 className="mr-1 h-4 w-4"/>Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this marketing pack?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently removes the pack, its saved content and its preview thumbnail. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={deletePack} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
