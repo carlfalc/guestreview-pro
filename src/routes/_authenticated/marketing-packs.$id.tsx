@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   ArrowLeft, Save, Loader2, Download, FileText, ImageIcon, Package,
-  AlertTriangle, CheckCircle2, Copy, Archive, Trash2, Pencil, Settings2, RotateCw,
+  AlertTriangle, CheckCircle2, Copy, Archive, Trash2, Settings2, RotateCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -25,8 +25,8 @@ import {
 } from "@/lib/format-export";
 import { mergeDesign, type QrDesign } from "@/lib/qr-design";
 import {
-  PACK_TYPES, statusMeta, packTypeById, buildFormatContent,
-  type GlobalSettings, type FormatCustomizations, type FormatOverride, type PackStatus, type PackType, type ContentBase,
+  statusMeta, packTypeById, buildFormatContent,
+  type GlobalSettings, type FormatCustomizations, type FormatOverride, type PackStatus, type ContentBase,
 } from "@/lib/marketing-packs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
