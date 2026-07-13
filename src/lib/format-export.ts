@@ -6,6 +6,12 @@ import {
   renderFormatSvg, renderDielineSvg, svgToPng, pxFor, circularSafeRadius,
   DIELINE_COLOR, DIELINE_LAYER, type FormatContent,
 } from "@/lib/format-render";
+import type { FoldedConfig } from "@/lib/marketing-packs";
+import { getFoldedLayout } from "@/lib/folded-layouts";
+import {
+  renderFoldedFormatSvg, renderFoldedMockupSvg,
+} from "@/lib/folded-render";
+import { buildFoldedPdf, foldedPrintNotes } from "@/lib/folded-export";
 
 const MM_TO_PT = 2.83464567;
 
@@ -188,6 +194,16 @@ export type ZipManifest = {
     material: string;
     qr_validation?: { pass: boolean; reason?: string };
     files: string[];
+    folded?: {
+      mode: FoldedConfig["mode"];
+      flat: { width: number; height: number };
+      assembled: { width: number; height: number };
+      panels: { panel: string; x: number; y: number; w: number; h: number; rotation: number; label: string }[];
+      fold_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
+      score_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
+      cut_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
+      glue_area: { x: number; y: number; w: number; h: number } | null;
+    };
   }[];
 };
 
@@ -203,6 +219,13 @@ export type PackZipMeta = {
   qrDestinationType?: string | null;
   previewDataUrl?: string | null;
   validations?: QrValidationEntry[];
+  /** Resolve the folded config for a folded format. Non-folded formats return null. */
+  foldedResolver?: (format: BusinessFormat) => FoldedConfig | null;
+  /** Business identity used inside folded renderers. */
+  business_name?: string;
+  business_logo_url?: string | null;
+  /** QR inner-content logo (may differ from artwork logo). */
+  qr_logo_url?: string | null;
 };
 
 /**
@@ -314,7 +337,63 @@ export async function downloadPackZip(
       files.push(wPath);
     }
 
+    // Folded (table-tent) production extras: front / back / flat / SVG-with-guides / mockup / notes.
+    if (f.folded) {
+      const foldedCfg = meta.foldedResolver?.(f);
+      if (foldedCfg) {
+        const foldedInput = {
+          format: f, template, brand,
+          business: { name: meta.business_name ?? "", logoUrl: meta.business_logo_url ?? null },
+          qrDesign, qrData, qrLogoUrl: meta.qr_logo_url ?? logoUrl, config: foldedCfg,
+        };
+        const layout = getFoldedLayout(f);
+
+        // Front / Back / Flat PNGs
+        for (const facing of ["front", "back", "flat"] as const) {
+          const svgStr = await renderFoldedFormatSvg(foldedInput, { facing, includeBleed: facing === "flat" });
+          const isFlat = facing === "flat";
+          const wMm = isFlat ? (layout!.flatWidth + layout!.bleed * 2) : layout!.assembledWidth;
+          const hMm = isFlat ? (layout!.flatHeight + layout!.bleed * 2) : layout!.assembledHeight;
+          const dpi = 300;
+          const px = { w: Math.round(wMm * dpi / 25.4), h: Math.round(hMm * dpi / 25.4) };
+          const blob = await svgToPng(svgStr, px.w, px.h);
+          const key = facing === "flat" ? "flat" : facing;
+          const p = `artwork/${key}/${f.id}.png`;
+          zip.file(p, new Uint8Array(await blob.arrayBuffer()));
+          files.push(p);
+        }
+
+        // Flat SVG with production guides
+        const guidesSvg = await renderFoldedFormatSvg(foldedInput, {
+          includeBleed: true, showCut: true, showFold: true, showScore: true, showPanelLabels: true, showSafe: true,
+        });
+        const guidesPath = `production/svg/${f.id}-guides.svg`;
+        zip.file(guidesPath, guidesSvg);
+        files.push(guidesPath);
+
+        // Print PDF
+        const pdfBytes = await buildFoldedPdf(foldedInput);
+        const pdfPath = `production/pdf/${f.id}-folded.pdf`;
+        zip.file(pdfPath, pdfBytes);
+        files.push(pdfPath);
+
+        // Mockup PNG
+        const mockupSvg = await renderFoldedMockupSvg(foldedInput);
+        const mockupBlob = await svgToPng(mockupSvg, 1600, 1200);
+        const mockupPath = `mockup/${f.id}-mockup.png`;
+        zip.file(mockupPath, new Uint8Array(await mockupBlob.arrayBuffer()));
+        files.push(mockupPath);
+
+        // Print notes for folded
+        const notesPath = `print-notes/${f.id}-folded.txt`;
+        zip.file(notesPath, foldedPrintNotes(foldedInput, layout!).join("\n"));
+        files.push(notesPath);
+      }
+    }
+
     const v = validationsMap.get(f.id);
+    const foldedCfg = f.folded ? meta.foldedResolver?.(f) ?? null : null;
+    const layout = f.folded ? getFoldedLayout(f) : null;
     manifest.formats.push({
       id: f.id, name: f.name, medium: f.medium, shape: f.shape, category: f.category,
       width: f.width, height: f.height,
@@ -323,6 +402,16 @@ export async function downloadPackZip(
       material: f.material,
       qr_validation: v ? { pass: v.pass, reason: v.reason } : undefined,
       files,
+      folded: layout && foldedCfg ? {
+        mode: foldedCfg.mode,
+        flat: { width: layout.flatWidth, height: layout.flatHeight },
+        assembled: { width: layout.assembledWidth, height: layout.assembledHeight },
+        panels: layout.panels.map((p) => ({ panel: p.panel, x: p.x, y: p.y, w: p.w, h: p.h, rotation: p.rotation, label: p.label })),
+        fold_lines: layout.segments.filter((s) => s.type === "fold"),
+        score_lines: layout.segments.filter((s) => s.type === "score"),
+        cut_lines: layout.segments.filter((s) => s.type === "cut"),
+        glue_area: layout.glue ?? null,
+      } : undefined,
     });
   }
 

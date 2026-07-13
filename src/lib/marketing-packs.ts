@@ -142,7 +142,72 @@ export type FormatOverride = {
   backgroundImage?: string | null;
   backgroundImageOpacity?: number;
   fontFamily?: string;
+  /** Folded-format configuration (populated only for folded formats). */
+  folded?: FoldedConfig;
 };
+
+// --- Folded (table-tent) configuration -----------------------------------
+
+export type FoldedMode = "same_both_sides" | "mirrored" | "different_sides";
+
+export type FoldedPanelContent = {
+  headline?: string;
+  supportText?: string;
+  ctaText?: string;
+  footerText?: string;
+  showQr?: boolean;
+  showLogo?: boolean;
+  showBusinessName?: boolean;
+  showStars?: boolean;
+  showGoogleBadge?: boolean;
+  qrScale?: number;
+  qrOffsetX?: number;
+  qrOffsetY?: number;
+  textAlign?: "left" | "center" | "right";
+  backgroundColor?: string | null;
+  textColor?: string | null;
+  accentColor?: string | null;
+  backgroundImage?: string | null;
+  backgroundImageOpacity?: number;
+};
+
+export type FoldedConfig = {
+  mode: FoldedMode;
+  front: FoldedPanelContent;
+  back: FoldedPanelContent;
+};
+
+export const DEFAULT_FOLDED_PANEL: FoldedPanelContent = {
+  showQr: true,
+  showLogo: true,
+  showBusinessName: true,
+  showStars: true,
+  showGoogleBadge: true,
+  qrScale: 0.45,
+  qrOffsetX: 0,
+  qrOffsetY: 0,
+  textAlign: "center",
+  backgroundColor: null,
+  textColor: null,
+  accentColor: null,
+  backgroundImage: null,
+  backgroundImageOpacity: 1,
+};
+
+export function defaultFoldedConfig(base: ContentBase): FoldedConfig {
+  const front: FoldedPanelContent = {
+    ...DEFAULT_FOLDED_PANEL,
+    headline: base.headline,
+    supportText: base.supportText,
+    ctaText: base.ctaText,
+    footerText: base.footerText,
+    showBusinessName: base.showBusinessName,
+    showLogo: base.showLogo,
+    showStars: base.showStars,
+    showGoogleBadge: base.showGoogleBadge,
+  };
+  return { mode: "same_both_sides", front, back: { ...front } };
+}
 
 export type FormatCustomizations = Record<string, FormatOverride>;
 
