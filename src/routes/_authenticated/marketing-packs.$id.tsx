@@ -120,6 +120,21 @@ function MarketingPackEditor() {
   const [warningsAck, setWarningsAck] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<string>("content");
 
+  // Auto-fix state
+  const [autoFixOpen, setAutoFixOpen] = useState(false);
+  const [autoFixProposals, setAutoFixProposals] = useState<AutoFixProposal[]>([]);
+  const [autoFixPhase, setAutoFixPhase] = useState<"analysing" | "ready" | "applying" | "revalidating" | "done" | "failed">("ready");
+  const [autoFixError, setAutoFixError] = useState<string | null>(null);
+  const [autoFixUndo, setAutoFixUndo] = useState<AutoFixSnapshot | null>(null);
+  const [autoFixLastSummary, setAutoFixLastSummary] = useState<string | null>(null);
+
+  // Copy-settings undo snapshot
+  const [copyUndo, setCopyUndo] = useState<FormatCustomizations | null>(null);
+
+  // Duplication wizard state
+  const [dupMode, setDupMode] = useState<DuplicateWizardMode | null>(null);
+
+
 
   const initialised = useRef(false);
   useEffect(() => {
