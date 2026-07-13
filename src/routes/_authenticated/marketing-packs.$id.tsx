@@ -1170,8 +1170,9 @@ function FormatPreviewCard(props: {
   onOverrideChange: (o: FormatOverride) => void;
   onOverrideClear: () => void;
   onCopyToFormats: (ids: string[], o: FormatOverride) => void;
+  onOpenAdvancedCopy: (o: FormatOverride) => void;
 }) {
-  const { format, layoutTemplate, content, contentBase, qrDesign, qrData, logoUrl, qrLogoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, overlays, onOverrideChange, onOverrideClear, onCopyToFormats } = props;
+  const { format, layoutTemplate, content, contentBase, qrDesign, qrData, logoUrl, qrLogoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, overlays, onOverrideChange, onOverrideClear, onCopyToFormats, onOpenAdvancedCopy } = props;
   const [svg, setSvg] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
   const [renderKey, setRenderKey] = useState(0);
