@@ -627,9 +627,19 @@ function MarketingPackEditor() {
           <Button variant="outline" size="sm" onClick={() => doSave()} className="rounded-full">
             <Save className="mr-1 h-4 w-4"/>Save
           </Button>
-          <Button variant="outline" size="sm" onClick={duplicatePack} className="rounded-full">
-            <Copy className="mr-1 h-4 w-4"/>Duplicate
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="rounded-full">
+                <Copy className="mr-1 h-4 w-4"/>Duplicate<ChevronDown className="ml-1 h-3 w-3"/>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onSelect={() => duplicatePack()}>Quick duplicate</DropdownMenuItem>
+              <DropdownMenuSeparator/>
+              <DropdownMenuItem onSelect={() => setDupMode("another-qr")}>Duplicate to another QR…</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setDupMode("another-business")}>Duplicate to another business…</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="sm" onClick={archivePack} className="rounded-full">
             <Archive className="mr-1 h-4 w-4"/>{status === "archived" ? "Restore" : "Archive"}
           </Button>
@@ -775,6 +785,12 @@ function MarketingPackEditor() {
                   const map: Record<string, string> = { content: "content", formats: "formats", design: "design", preview: "preview", override: "preview", qr: "preview", business: "preview" };
                   setActiveTab(map[target] ?? "preview");
                 }}
+                onFixAutomatically={runAutoFix}
+                canUndoAutoFix={!!autoFixUndo}
+                onUndoAutoFix={undoAutoFix}
+                autoFixSummary={autoFixLastSummary}
+                canUndoCopy={!!copyUndo}
+                onUndoCopy={undoCopySettings}
               />
 
 
