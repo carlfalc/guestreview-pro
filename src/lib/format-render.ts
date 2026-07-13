@@ -186,7 +186,7 @@ export async function renderFormatSvg(
       if (borderStyle === "double") {
         const gap = strokeW * 2.2;
         const rx2 = Math.max(0, rx - gap);
-        parts.push(`<rect x="${offX + strokeW / 2 + gap}" y="${offY + strokeW / 2 + gap}" width="${format.width - strokeW - gap * 2}" height="${format.height - strokeW - gap * 2}" rx="${rx2}" ry="${rx2}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+        parts.push(`<rect x="${offX + strokeW / 2 + gap}" y="${offY + strokeW / 2 + gap}" width="${format.width - strokeW - gap * 2}" height="${format.height - strokeW - gap * 2}" rx="${rx2}" ry="${rx2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
       }
     }
   }
