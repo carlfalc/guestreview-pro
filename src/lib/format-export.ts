@@ -194,6 +194,16 @@ export type ZipManifest = {
     material: string;
     qr_validation?: { pass: boolean; reason?: string };
     files: string[];
+    folded?: {
+      mode: FoldedConfig["mode"];
+      flat: { width: number; height: number };
+      assembled: { width: number; height: number };
+      panels: { panel: string; x: number; y: number; w: number; h: number; rotation: number; label: string }[];
+      fold_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
+      score_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
+      cut_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
+      glue_area: { x: number; y: number; w: number; h: number } | null;
+    };
   }[];
 };
 
