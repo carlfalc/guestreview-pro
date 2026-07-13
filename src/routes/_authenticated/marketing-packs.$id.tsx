@@ -484,45 +484,58 @@ function MarketingPackEditor() {
     navigate({ to: "/marketing-packs" });
   }
 
-  const runValidation = useCallback(async (opts: { decodeQr?: boolean } = { decodeQr: true }): Promise<ValidationResult[]> => {
+  // Validation with an explicit snapshot — used by auto-fix / undo so results never
+  // depend on possibly-stale React closure state.
+  const runValidationForSnapshot = useCallback(async (
+    snap: AutoFixSnapshot,
+    opts: { decodeQr?: boolean } = { decodeQr: false },
+  ): Promise<ValidationResult[]> => {
     setValidating(true);
     try {
       const out: ValidationResult[] = [];
-      if (selected.length === 0) {
+      const selectedInSnap = snap.selectedFormats
+        .map((fid) => FORMATS.find((f) => f.id === fid))
+        .filter(Boolean) as BusinessFormat[];
+      if (selectedInSnap.length === 0) {
         out.push({ id: "pack-formats", formatId: null, category: "content", level: "error", title: "No formats selected", message: "Add at least one format.", suggestedFix: "Pick formats in the Formats tab." });
       }
-      for (const f of selected) {
-        const c = resolveContent(f);
+      for (const f of selectedInSnap) {
+        const c = buildFormatContent(contentBase, snap.globalSettings, snap.formatCustomizations[f.id]);
         out.push(...runFormatValidations({
-          format: f, content: c, qrDesign, qrData,
+          format: f, content: c, qrDesign: snap.qrDesign, qrData,
           destinationUrl: qrRow?.destination_url ?? null,
           destinationType: qrRow?.destination_type ?? null,
           reviewUrl: biz?.google_review_url ?? null,
         }));
         if (f.folded) {
-          const fCfg = formatCustomizations[f.id]?.folded ?? defaultFoldedConfig(contentBase);
+          const fCfg = snap.formatCustomizations[f.id]?.folded ?? defaultFoldedConfig(contentBase);
           out.push(...runFoldedValidations({
-            format: f, config: fCfg, qrDesign, qrData,
+            format: f, config: fCfg, qrDesign: snap.qrDesign, qrData,
             businessName: biz?.name ?? "", logoUrl: biz?.logo_url ?? null,
           }));
           if (opts.decodeQr) {
-            // Folded formats: decode both assembled faces separately.
             const fr = await decodeFoldedQrValidation({
               format: f, template: layoutTemplate, brand,
               business: { name: biz?.name ?? "", logoUrl: biz?.logo_url ?? null },
-              qrDesign, qrData, qrLogoUrl: rawLogoUrl, config: fCfg,
+              qrDesign: snap.qrDesign, qrData, qrLogoUrl: rawLogoUrl, config: fCfg,
             });
             out.push(...fr.results);
           }
         } else if (opts.decodeQr) {
-          out.push(await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate));
+          out.push(await decodeQrValidation(f, c, snap.qrDesign, qrData, c.logoUrl, brand, layoutTemplate));
         }
       }
-
       setValidations(out);
       return out;
     } finally { setValidating(false); }
-  }, [selected, resolveContent, qrData, qrRow, biz, qrDesign, brand, layoutTemplate, formatCustomizations, contentBase, rawLogoUrl]);
+  }, [contentBase, qrData, qrRow, biz, brand, layoutTemplate, rawLogoUrl]);
+
+  const runValidation = useCallback(async (opts: { decodeQr?: boolean } = { decodeQr: true }): Promise<ValidationResult[]> => {
+    return runValidationForSnapshot({
+      qrDesign, globalSettings, formatCustomizations, selectedFormats,
+    }, opts);
+  }, [runValidationForSnapshot, qrDesign, globalSettings, formatCustomizations, selectedFormats]);
+
 
   function ackKey(r: ValidationResult): string { return `${r.formatId ?? "pack"}::${r.id}`; }
 
