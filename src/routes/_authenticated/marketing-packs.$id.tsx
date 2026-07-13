@@ -125,7 +125,7 @@ function MarketingPackEditor() {
   const [autoFixProposals, setAutoFixProposals] = useState<AutoFixProposal[]>([]);
   const [autoFixPhase, setAutoFixPhase] = useState<"analysing" | "ready" | "applying" | "revalidating" | "done" | "failed">("ready");
   const [autoFixError, setAutoFixError] = useState<string | null>(null);
-  const [autoFixUndo, setAutoFixUndo] = useState<AutoFixSnapshot | null>(null);
+  const [autoFixUndo, setAutoFixUndo] = useState<{ snapshot: AutoFixSnapshot; qrDesignWasChanged: boolean } | null>(null);
   const [autoFixLastSummary, setAutoFixLastSummary] = useState<string | null>(null);
 
   // Copy-settings undo snapshot
