@@ -125,7 +125,7 @@ function MarketingPackEditor() {
   }, [pack]);
 
   const biz = pack?.businesses as { id: string; name: string; brand_primary: string | null; logo_url: string | null; google_review_url: string | null } | null;
-  const qrRow = pack?.qr_codes as { id: string; short_code: string; label: string | null; destination_type: string; design: unknown; logo_url: string | null; fg_color: string | null; bg_color: string | null } | null;
+  const qrRow = pack?.qr_codes as { id: string; short_code: string; label: string | null; destination_type: string; destination_url: string | null; design: unknown; logo_url: string | null; fg_color: string | null; bg_color: string | null } | null;
 
   const qrDesign: QrDesign = useMemo(() => mergeDesign((qrRow?.design as Partial<QrDesign> | null) ?? null), [qrRow]);
   const brand = biz?.brand_primary ?? "#0071e3";
