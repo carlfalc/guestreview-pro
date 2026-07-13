@@ -147,8 +147,10 @@ function printNotesLines(f: BusinessFormat): string[] {
       `Bleed diameter (finished + bleed): ${f.width + f.bleed * 2} mm`,
       `Safe-area diameter: ${safeD} mm`,
       `Recommended laminate: matte or gloss vinyl laminate (durable, water-resistant)`,
-      `Cut path: named layer "${DIELINE_LAYER}", 100% magenta (${DIELINE_COLOR}), stroke only.`,
-      `Do NOT print the ${DIELINE_LAYER} layer — use for die cutting only.`,
+      `Cut path (SVG): named "${DIELINE_LAYER}" group, 100% magenta (${DIELINE_COLOR}), stroke only.`,
+      `Cut path (PDF): vector "${DIELINE_LAYER}" path, 100% magenta (${DIELINE_COLOR}), stroke only — not a named OCG/spot-colour layer.`,
+      `Do NOT print the ${DIELINE_LAYER} path — use for die cutting only.`,
+
     );
   }
   return lines;
