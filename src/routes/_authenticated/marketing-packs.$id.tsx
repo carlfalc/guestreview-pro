@@ -332,15 +332,33 @@ function MarketingPackEditor() {
     } finally { setValidating(false); }
   }, [selected, resolveContent, qrData, qrRow, biz, qrDesign, brand, layoutTemplate]);
 
+  function ackKey(r: ValidationResult): string { return `${r.formatId ?? "pack"}::${r.id}`; }
+
   async function markReadyToPrint() {
+    if (!pack) return;
     if (!headline.trim() || !ctaText.trim()) return toast.error("Headline and CTA are required");
     const results = await runValidation({ decodeQr: true });
     const { ready, blocking, warnings } = readyToPrint(results);
     if (!ready) return toast.error(`${blocking} blocking issue(s) — resolve them first`);
-    if (warnings > 0 && !warningsAck) return toast.error(`${warnings} warning(s) — acknowledge them below to continue`);
+    if (warnings > 0) {
+      const warnList = results.filter((r) => r.level === "warning");
+      const unacked = warnList.filter((r) => !warningsAck[ackKey(r)]);
+      if (unacked.length > 0) return toast.error(`${unacked.length} warning(s) — acknowledge each below to continue`);
+    }
+    const prev = status;
     setStatus("ready");
+    const { error: upErr } = await supabase.from("marketing_packs")
+      .update({ status: "ready", updated_at: new Date().toISOString() })
+      .eq("id", pack.id);
+    if (upErr) {
+      setStatus(prev);
+      return toast.error(`Could not save Ready to Print: ${upErr.message}`);
+    }
+    qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+    qc.invalidateQueries({ queryKey: ["marketing-packs"] });
     toast.success("Marked ready to print");
   }
+
 
   // Legacy per-format QR check kept for export-time validation entries
   async function validateAllQrs(): Promise<{ formatId: string; pass: boolean; reason?: string }[]> {
