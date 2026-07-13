@@ -21,8 +21,13 @@ async function getPngForFormat(
   brand: string,
   includeBleed: boolean,
   dpi = 300,
+  extras: { transparentOutside?: boolean; includeDieline?: boolean } = {},
 ): Promise<Blob> {
-  const svg = await renderFormatSvg(format, template, content, qrDesign, qrData, logoUrl, brand, { includeBleed, showBoundaries: false });
+  const svg = await renderFormatSvg(format, template, content, qrDesign, qrData, logoUrl, brand, {
+    includeBleed, showBoundaries: false,
+    transparentOutside: extras.transparentOutside,
+    includeDieline: extras.includeDieline,
+  });
   const px = pxFor(format, dpi);
   const totalW = px.w + (includeBleed && format.medium === "print" ? Math.round(format.bleed * dpi / 25.4) * 2 : 0);
   const totalH = px.h + (includeBleed && format.medium === "print" ? Math.round(format.bleed * dpi / 25.4) * 2 : 0);
@@ -34,12 +39,34 @@ export async function downloadFormatPng(format: BusinessFormat, template: Layout
   triggerDownload(blob, `${format.id}.png`);
 }
 
+/** Transparent-background PNG for circular stickers — outside-of-trim stays transparent. */
+export async function downloadFormatPngTransparent(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
+  const blob = await getPngForFormat(format, template, content, qrDesign, qrData, logoUrl, brand, false, 300, { transparentOutside: true });
+  triggerDownload(blob, `${format.id}-transparent.png`);
+}
+
 export async function downloadFormatSvg(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
   const svg = await renderFormatSvg(format, template, content, qrDesign, qrData, logoUrl, brand, { includeBleed: false, showBoundaries: false });
   triggerDownload(new Blob([svg], { type: "image/svg+xml" }), `${format.id}.svg`);
 }
 
-export async function buildFormatPdf(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<Uint8Array> {
+/** SVG with CutContour dieline embedded on its own layer (for circular formats). */
+export async function downloadFormatSvgWithDieline(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
+  const svg = await renderFormatSvg(format, template, content, qrDesign, qrData, logoUrl, brand, { includeBleed: true, showBoundaries: false, includeDieline: true });
+  triggerDownload(new Blob([svg], { type: "image/svg+xml" }), `${format.id}-with-dieline.svg`);
+}
+
+/** Standalone CutContour dieline SVG. */
+export async function downloadDielineSvg(format: BusinessFormat): Promise<void> {
+  const svg = renderDielineSvg(format);
+  triggerDownload(new Blob([svg], { type: "image/svg+xml" }), `${format.id}-${DIELINE_LAYER}.svg`);
+}
+
+export async function buildFormatPdf(
+  format: BusinessFormat, template: LayoutTemplate, content: FormatContent,
+  qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string,
+  opts: { includeDieline?: boolean } = {},
+): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   const helv = await doc.embedFont(StandardFonts.Helvetica);
   const helvBold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -47,6 +74,8 @@ export async function buildFormatPdf(format: BusinessFormat, template: LayoutTem
   const bleed = isPrint ? format.bleed : 0;
   const pageW = (format.width + bleed * 2) * (isPrint ? MM_TO_PT : 0.75);
   const pageH = (format.height + bleed * 2) * (isPrint ? MM_TO_PT : 0.75);
+  const isCircular = format.shape === "circular";
+  const includeDieline = opts.includeDieline !== false && isCircular; // default ON for circular
 
   const png = await getPngForFormat(format, template, content, qrDesign, qrData, logoUrl, brand, isPrint, 300);
   const pngBytes = new Uint8Array(await png.arrayBuffer());
@@ -73,6 +102,17 @@ export async function buildFormatPdf(format: BusinessFormat, template: LayoutTem
     marks.forEach(([x1, y1, x2, y2]) => page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: thick, color: stroke }));
   }
 
+  // Vector CutContour dieline for circular formats. Drawn as a true vector on top of
+  // the artwork so the printer sees a spot-style cut path — not a rasterised line.
+  if (includeDieline) {
+    const magenta = rgb(1, 0, 1);
+    const cx = pageW / 2;
+    const cy = pageH / 2;
+    const rMm = format.width / 2;
+    const rPt = rMm * MM_TO_PT;
+    page.drawEllipse({ x: cx, y: cy, xScale: rPt, yScale: rPt, borderColor: magenta, borderWidth: 0.25, opacity: 0, borderOpacity: 1 });
+  }
+
   if (isPrint) {
     const notes = doc.addPage([595, 842]);
     const w = 595;
@@ -80,14 +120,14 @@ export async function buildFormatPdf(format: BusinessFormat, template: LayoutTem
     notes.drawText("Print notes", { x: 40, y, size: 20, font: helvBold, color: rgb(0.05, 0.05, 0.05) });
     y -= 30;
     const lines = printNotesLines(format);
-    lines.forEach((l) => { notes.drawText(l, { x: 40, y, size: 11, font: helv, color: rgb(0.15, 0.15, 0.15), maxWidth: w - 80 }); y -= 18; });
+    lines.forEach((l) => { notes.drawText(l, { x: 40, y, size: 11, font: helv, color: rgb(0.15, 0.15, 0.15), maxWidth: w - 80 }); y -= 16; });
   }
   return await doc.save();
 }
 
 function printNotesLines(f: BusinessFormat): string[] {
   const unit = f.medium === "print" ? "mm" : "px";
-  return [
+  const lines: string[] = [
     `Format: ${f.name}`,
     `Physical size: ${f.width} × ${f.height} ${unit}`,
     `Bleed: ${f.bleed} ${unit}`,
@@ -98,6 +138,20 @@ function printNotesLines(f: BusinessFormat): string[] {
     `Colour: supplied RGB — request print shop convert to CMYK if required.`,
     `Crop marks: included on artwork page where bleed is defined.`,
   ];
+  if (f.shape === "circular" && f.medium === "print") {
+    const safeD = Math.round(circularSafeRadius(f.width) * 2 * 10) / 10;
+    lines.push(
+      "",
+      `— Circular sticker production —`,
+      `Final trim diameter: ${f.width} mm`,
+      `Bleed diameter (finished + bleed): ${f.width + f.bleed * 2} mm`,
+      `Safe-area diameter: ${safeD} mm`,
+      `Recommended laminate: matte or gloss vinyl laminate (durable, water-resistant)`,
+      `Cut path: named layer "${DIELINE_LAYER}", 100% magenta (${DIELINE_COLOR}), stroke only.`,
+      `Do NOT print the ${DIELINE_LAYER} layer — use for die cutting only.`,
+    );
+  }
+  return lines;
 }
 
 export async function downloadFormatPdf(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
