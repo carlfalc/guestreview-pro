@@ -140,8 +140,12 @@ export async function renderFormatSvg(
   }
   parts.push(`</defs>`);
 
+  const transparentOutside = opts.transparentOutside === true;
   if (isCircular) {
-    parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${includeBleed ? bgFill : "none"}"/>`);
+    // Outside-of-trim area
+    if (!transparentOutside) {
+      parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${includeBleed ? bgFill : "none"}"/>`);
+    }
     parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}" fill="${bgFill}"/>`);
   } else {
     parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${bgFill}"/>`);
@@ -165,16 +169,20 @@ export async function renderFormatSvg(
   if (borderStyle !== "none") {
     const strokeW = borderStyle === "thin" ? (format.medium === "print" ? 0.4 : 3)
       : borderStyle === "thick" ? (format.medium === "print" ? 1.2 : 8)
-      : (format.medium === "print" ? 0.8 : 5); // double
+      : borderStyle === "keyline-white" || borderStyle === "keyline-black" ? (format.medium === "print" ? 0.3 : 2)
+      : (format.medium === "print" ? 0.8 : 5); // double, ring-brand
+    const strokeColor = borderStyle === "keyline-white" ? "#ffffff"
+      : borderStyle === "keyline-black" ? "#000000"
+      : accent;
     if (isCircular) {
-      parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+      parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
       if (borderStyle === "double") {
         const gap = strokeW * 2.2;
-        parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2 - gap}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+        parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2 - gap}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
       }
     } else {
       const rx = Math.max(0, cornerR - strokeW / 2);
-      parts.push(`<rect x="${offX + strokeW / 2}" y="${offY + strokeW / 2}" width="${format.width - strokeW}" height="${format.height - strokeW}" rx="${rx}" ry="${rx}" fill="none" stroke="${accent}" stroke-width="${strokeW}"/>`);
+      parts.push(`<rect x="${offX + strokeW / 2}" y="${offY + strokeW / 2}" width="${format.width - strokeW}" height="${format.height - strokeW}" rx="${rx}" ry="${rx}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
       if (borderStyle === "double") {
         const gap = strokeW * 2.2;
         const rx2 = Math.max(0, rx - gap);
