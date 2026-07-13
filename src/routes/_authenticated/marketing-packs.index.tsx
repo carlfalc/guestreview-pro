@@ -202,7 +202,18 @@ function MarketingPacksList() {
 
           {isLoading && <div className="h-32 rounded-2xl bg-muted shimmer"/>}
 
-          {!isLoading && filtered.length === 0 && (
+          {!isLoading && error && (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-12 text-center">
+              <AlertTriangle className="h-8 w-8 text-destructive"/>
+              <p className="text-sm font-medium text-destructive">Couldn't load your packs</p>
+              <p className="max-w-sm text-xs text-muted-foreground">{(error as Error).message}</p>
+              <Button onClick={() => refetch()} className="mt-1 rounded-full" variant="outline">
+                <RotateCw className="mr-1 h-4 w-4"/>Retry
+              </Button>
+            </div>
+          )}
+
+          {!isLoading && !error && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/70 p-12 text-center">
               <Package className="h-10 w-10 text-muted-foreground"/>
               <p className="text-sm font-medium">No marketing packs yet</p>
