@@ -7,6 +7,8 @@ import {
   DIELINE_COLOR, DIELINE_LAYER, type FormatContent,
 } from "@/lib/format-render";
 import type { FoldedConfig } from "@/lib/marketing-packs";
+import type { FoldedDecodeResult } from "@/lib/folded-validation";
+import type { ValidationResult } from "@/lib/format-validation";
 import { getFoldedLayout } from "@/lib/folded-layouts";
 import {
   renderFoldedFormatSvg, renderFoldedMockupSvg,
@@ -199,10 +201,19 @@ export type ZipManifest = {
       flat: { width: number; height: number };
       assembled: { width: number; height: number };
       panels: { panel: string; x: number; y: number; w: number; h: number; rotation: number; label: string }[];
+      production_rotation: { front: number; back: number };
       fold_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
       score_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
       cut_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
-      glue_area: { x: number; y: number; w: number; h: number } | null;
+      glue_area?: { x: number; y: number; w: number; h: number };
+      qr_decode?: {
+        front: { pass: boolean; reason?: string };
+        back: { pass: boolean; reason?: string };
+      };
+      panel_validation?: {
+        front: { level: string; title: string; message: string; element?: string; suggestedFix?: string }[];
+        back: { level: string; title: string; message: string; element?: string; suggestedFix?: string }[];
+      };
     };
   }[];
 };
@@ -219,6 +230,10 @@ export type PackZipMeta = {
   qrDestinationType?: string | null;
   previewDataUrl?: string | null;
   validations?: QrValidationEntry[];
+  /** Folded per-format assembled front/back decode results. */
+  foldedDecode?: Record<string, FoldedDecodeResult>;
+  /** Folded per-format panel validation results (front + back combined). */
+  foldedPanelValidations?: Record<string, ValidationResult[]>;
   /** Resolve the folded config for a folded format. Non-folded formats return null. */
   foldedResolver?: (format: BusinessFormat) => FoldedConfig | null;
   /** Business identity used inside folded renderers. */
@@ -402,16 +417,35 @@ export async function downloadPackZip(
       material: f.material,
       qr_validation: v ? { pass: v.pass, reason: v.reason } : undefined,
       files,
-      folded: layout && foldedCfg ? {
-        mode: foldedCfg.mode,
-        flat: { width: layout.flatWidth, height: layout.flatHeight },
-        assembled: { width: layout.assembledWidth, height: layout.assembledHeight },
-        panels: layout.panels.map((p) => ({ panel: p.panel, x: p.x, y: p.y, w: p.w, h: p.h, rotation: p.rotation, label: p.label })),
-        fold_lines: layout.segments.filter((s) => s.type === "fold"),
-        score_lines: layout.segments.filter((s) => s.type === "score"),
-        cut_lines: layout.segments.filter((s) => s.type === "cut"),
-        glue_area: layout.glue ?? null,
-      } : undefined,
+      folded: layout && foldedCfg ? (() => {
+        const frontP = layout.panels.find((p) => p.panel === "front");
+        const backP = layout.panels.find((p) => p.panel === "back");
+        const decode = meta.foldedDecode?.[f.id];
+        const panelVs = meta.foldedPanelValidations?.[f.id];
+        const splitPanel = (results: ValidationResult[] | undefined, key: "Front" | "Back") =>
+          (results ?? [])
+            .filter((r) => (r.formatName ?? "").endsWith(`· ${key}`))
+            .map((r) => ({ level: r.level, title: r.title, message: r.message, element: r.element, suggestedFix: r.suggestedFix }));
+        return {
+          mode: foldedCfg.mode,
+          flat: { width: layout.flatWidth, height: layout.flatHeight },
+          assembled: { width: layout.assembledWidth, height: layout.assembledHeight },
+          panels: layout.panels.map((p) => ({ panel: p.panel, x: p.x, y: p.y, w: p.w, h: p.h, rotation: p.rotation, label: p.label })),
+          production_rotation: { front: frontP?.rotation ?? 0, back: backP?.rotation ?? 0 },
+          fold_lines: layout.segments.filter((s) => s.type === "fold"),
+          score_lines: layout.segments.filter((s) => s.type === "score"),
+          cut_lines: layout.segments.filter((s) => s.type === "cut"),
+          ...(layout.glue ? { glue_area: { x: layout.glue.x, y: layout.glue.y, w: layout.glue.w, h: layout.glue.h } } : {}),
+          ...(decode ? { qr_decode: {
+            front: { pass: decode.front.pass, reason: decode.front.reason },
+            back: { pass: decode.back.pass, reason: decode.back.reason },
+          } } : {}),
+          ...(panelVs ? { panel_validation: {
+            front: splitPanel(panelVs, "Front"),
+            back: splitPanel(panelVs, "Back"),
+          } } : {}),
+        };
+      })() : undefined,
     });
   }
 
