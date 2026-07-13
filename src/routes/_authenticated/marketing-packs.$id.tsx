@@ -404,6 +404,10 @@ function MarketingPackEditor() {
           qrDestinationType: qrRow?.destination_type ?? null,
           previewDataUrl: preview?.dataUrl ?? null,
           validations,
+          foldedResolver: (f) => f.folded ? (formatCustomizations[f.id]?.folded ?? defaultFoldedConfig(contentBase)) : null,
+          business_name: biz?.name ?? "",
+          business_logo_url: biz?.logo_url ?? null,
+          qr_logo_url: rawLogoUrl,
         },
       );
       toast.success("ZIP downloaded");
