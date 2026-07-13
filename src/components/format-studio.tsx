@@ -94,7 +94,7 @@ export function FormatStudio(props: Props) {
     if (!selected.length) return toast.error("Select at least one format");
     setExporting("zip");
     try {
-      await downloadPackZip(projectName || "format-pack", selected, layoutTemplate, content, qrDesign, qrData, logoUrl, brand);
+      await downloadPackZip(projectName || "format-pack", selected, layoutTemplate, () => content, qrDesign, qrData, logoUrl, brand);
       toast.success("ZIP downloaded");
     } catch (e) {
       toast.error(`Export failed: ${(e as Error).message}`);

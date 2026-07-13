@@ -9,11 +9,15 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Plus, Copy, Archive, Trash2, Package, Search,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Plus, Copy, Archive, Trash2, Package, Search, RotateCw, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
-import { PACK_TYPES, statusMeta, type PackStatus, type PackType } from "@/lib/marketing-packs";
+import { useEffect, useMemo, useState } from "react";
+import { PACK_TYPES, statusMeta, type PackStatus } from "@/lib/marketing-packs";
 
 export const Route = createFileRoute("/_authenticated/marketing-packs/")({
   component: MarketingPacksList,
@@ -50,7 +54,7 @@ function MarketingPacksList() {
     },
   });
 
-  const { data: packs, isLoading } = useQuery({
+  const { data: packs, isLoading, error, refetch } = useQuery({
     queryKey: ["marketing-packs"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -61,6 +65,24 @@ function MarketingPacksList() {
       return (data ?? []) as unknown as (PackRow & { business_id: string; qr_code_id: string })[];
     },
   });
+
+  // Resolve preview_url storage paths to signed URLs so private-bucket thumbnails render.
+  const [signedThumbs, setSignedThumbs] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const paths = (packs ?? [])
+      .map((p) => p.preview_url)
+      .filter((p): p is string => !!p && !p.startsWith("http"));
+    if (paths.length === 0) { setSignedThumbs({}); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.storage.from("pack-previews").createSignedUrls(paths, 60 * 60);
+      if (cancelled || !data) return;
+      const map: Record<string, string> = {};
+      data.forEach((r) => { if (r.path && r.signedUrl) map[r.path] = r.signedUrl; });
+      setSignedThumbs(map);
+    })();
+    return () => { cancelled = true; };
+  }, [packs]);
 
   const filtered = useMemo(() => {
     if (!packs) return [];
@@ -119,7 +141,10 @@ function MarketingPacksList() {
   }
 
   async function deletePack(id: string) {
-    if (!confirm("Delete this marketing pack? This cannot be undone.")) return;
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      await supabase.storage.from("pack-previews").remove([`${userData.user.id}/${id}.png`]).catch(() => undefined);
+    }
     const { error } = await supabase.from("marketing_packs").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Deleted");
@@ -177,7 +202,18 @@ function MarketingPacksList() {
 
           {isLoading && <div className="h-32 rounded-2xl bg-muted shimmer"/>}
 
-          {!isLoading && filtered.length === 0 && (
+          {!isLoading && error && (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-12 text-center">
+              <AlertTriangle className="h-8 w-8 text-destructive"/>
+              <p className="text-sm font-medium text-destructive">Couldn't load your packs</p>
+              <p className="max-w-sm text-xs text-muted-foreground">{(error as Error).message}</p>
+              <Button onClick={() => refetch()} className="mt-1 rounded-full" variant="outline">
+                <RotateCw className="mr-1 h-4 w-4"/>Retry
+              </Button>
+            </div>
+          )}
+
+          {!isLoading && !error && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/70 p-12 text-center">
               <Package className="h-10 w-10 text-muted-foreground"/>
               <p className="text-sm font-medium">No marketing packs yet</p>
@@ -194,12 +230,15 @@ function MarketingPacksList() {
             {filtered.map((p) => {
               const formats = Array.isArray(p.selected_formats) ? (p.selected_formats as string[]) : [];
               const meta = statusMeta(p.status as PackStatus);
+              const thumb = p.preview_url
+                ? (p.preview_url.startsWith("http") ? p.preview_url : signedThumbs[p.preview_url])
+                : null;
               return (
                 <div key={p.id} className="group flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/50">
                   <Link to="/marketing-packs/$id" params={{ id: p.id }} className="block">
                     <div className="aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-accent/50 to-accent">
-                      {p.preview_url ? (
-                        <img src={p.preview_url} alt="" className="h-full w-full object-cover"/>
+                      {thumb ? (
+                        <img src={thumb} alt="" className="h-full w-full object-cover"/>
                       ) : (
                         <div className="flex h-full items-center justify-center text-muted-foreground">
                           <Package className="h-8 w-8"/>
@@ -229,9 +268,25 @@ function MarketingPacksList() {
                     <Button size="sm" variant="ghost" onClick={() => archivePack(p.id, p.status !== "archived")} className="flex-1 rounded-full text-[11px]">
                       <Archive className="mr-1 h-3 w-3"/>{p.status === "archived" ? "Restore" : "Archive"}
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => deletePack(p.id)} className="rounded-full text-destructive hover:text-destructive">
-                      <Trash2 className="h-3 w-3"/>
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="ghost" className="rounded-full text-destructive hover:text-destructive">
+                          <Trash2 className="h-3 w-3"/>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete "{p.project_name}"?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This removes the pack, its saved content and its preview thumbnail. This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deletePack(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               );
