@@ -14,9 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_copy_favourites: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          cta_text: string | null
+          footer_text: string | null
+          headline: string | null
+          id: string
+          name: string
+          owner_id: string
+          placement: string | null
+          support_text: string | null
+          tone: string | null
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          cta_text?: string | null
+          footer_text?: string | null
+          headline?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          placement?: string | null
+          support_text?: string | null
+          tone?: string | null
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          cta_text?: string | null
+          footer_text?: string | null
+          headline?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          placement?: string | null
+          support_text?: string | null
+          tone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_copy_favourites_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_copy_generations: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          format_id: string | null
+          generated_output: Json
+          id: string
+          input_summary: string | null
+          language: string | null
+          marketing_pack_id: string | null
+          owner_id: string
+          placement: string | null
+          selected_alternative: number | null
+          tone: string | null
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          format_id?: string | null
+          generated_output?: Json
+          id?: string
+          input_summary?: string | null
+          language?: string | null
+          marketing_pack_id?: string | null
+          owner_id: string
+          placement?: string | null
+          selected_alternative?: number | null
+          tone?: string | null
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          format_id?: string | null
+          generated_output?: Json
+          id?: string
+          input_summary?: string | null
+          language?: string | null
+          marketing_pack_id?: string | null
+          owner_id?: string
+          placement?: string | null
+          selected_alternative?: number | null
+          tone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_copy_generations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_copy_generations_marketing_pack_id_fkey"
+            columns: ["marketing_pack_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           address: string | null
+          ai_copy_preferences: Json
           brand_primary: string | null
           brand_secondary: string | null
           cover_image_url: string | null
@@ -35,6 +146,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          ai_copy_preferences?: Json
           brand_primary?: string | null
           brand_secondary?: string | null
           cover_image_url?: string | null
@@ -53,6 +165,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          ai_copy_preferences?: Json
           brand_primary?: string | null
           brand_secondary?: string | null
           cover_image_url?: string | null
