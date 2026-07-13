@@ -80,7 +80,7 @@ function MarketingPackEditor() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("marketing_packs")
-        .select("*, businesses(id, name, brand_primary, logo_url, google_review_url), qr_codes(id, short_code, label, destination_type, destination_url, design, logo_url, fg_color, bg_color)")
+        .select("*, businesses(id, name, brand_primary, logo_url, google_review_url, industry, ai_copy_preferences), qr_codes(id, short_code, label, destination_type, destination_url, design, logo_url, fg_color, bg_color)")
         .eq("id", id)
         .single();
       if (error) throw error;
