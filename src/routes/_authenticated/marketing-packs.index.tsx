@@ -214,6 +214,15 @@ function MarketingPacksList() {
 
           {isLoading && <div className="h-32 rounded-2xl bg-muted shimmer"/>}
 
+          {thumbError && (
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs text-amber-500">
+              <AlertTriangle className="h-4 w-4"/>Preview thumbnails failed to load: {thumbError}
+              <Button size="sm" variant="ghost" onClick={() => setThumbNonce((n) => n + 1)} className="ml-auto rounded-full text-xs">
+                <RotateCw className="mr-1 h-3 w-3"/>Retry
+              </Button>
+            </div>
+          )}
+
           {!isLoading && error && (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-12 text-center">
               <AlertTriangle className="h-8 w-8 text-destructive"/>
@@ -248,12 +257,17 @@ function MarketingPacksList() {
               return (
                 <div key={p.id} className="group flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/50">
                   <Link to="/marketing-packs/$id" params={{ id: p.id }} className="block">
-                    <div className="aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-accent/50 to-accent">
+                    <div className="relative aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-accent/50 to-accent">
                       {thumb ? (
-                        <img src={thumb} alt="" className="h-full w-full object-cover"/>
+                        <img src={thumb} alt="" className="h-full w-full object-cover" onError={() => setThumbNonce((n) => n + 1)}/>
                       ) : (
-                        <div className="flex h-full items-center justify-center text-muted-foreground">
+                        <div className="flex h-full flex-col items-center justify-center gap-1 text-muted-foreground">
                           <Package className="h-8 w-8"/>
+                          {p.preview_url && (
+                            <button type="button" onClick={(e) => { e.preventDefault(); setThumbNonce((n) => n + 1); }} className="inline-flex items-center gap-1 text-[10px] underline">
+                              <RotateCw className="h-3 w-3"/>Retry preview
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
