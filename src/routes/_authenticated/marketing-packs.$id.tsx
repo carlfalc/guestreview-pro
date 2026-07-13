@@ -708,6 +708,9 @@ function MarketingPackEditor() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SaveIndicator state={saveState} onRetry={retrySave} error={saveError}/>
+          <Button variant="outline" size="sm" onClick={() => setAiOpen(true)} className="rounded-full">
+            <Sparkles className="mr-1 h-4 w-4"/>AI copy
+          </Button>
           <Button variant="outline" size="sm" onClick={() => regenerateThumbnail()} disabled={thumbState === "generating"} className="rounded-full">
             {thumbState === "generating" ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : <RotateCw className="mr-1 h-4 w-4"/>}Regenerate preview
           </Button>
