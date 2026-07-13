@@ -281,21 +281,74 @@ export async function renderFormatSvg(
     );
   }
 
-  if (opts.showBoundaries) {
+  // Guide overlays (trim / safe / bleed) — non-artwork layers
+  const legacy = opts.showBoundaries === true;
+  const showTrim = opts.showTrim ?? legacy;
+  const showSafe = opts.showSafe ?? legacy;
+  const showBleedGuide = opts.showBleedGuide ?? legacy;
+  const cy = offY + format.height / 2;
+  if (showTrim) {
     if (isCircular) {
-      parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`);
+      parts.push(`<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`);
     } else {
       parts.push(`<rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`);
     }
-    if (includeBleed && format.bleed > 0) {
+  }
+  if (showBleedGuide && includeBleed && format.bleed > 0) {
+    if (isCircular) {
+      parts.push(`<circle cx="${cx}" cy="${cy}" r="${format.width / 2 + format.bleed}" fill="none" stroke="#ef4444" stroke-width="0.4" stroke-dasharray="1 1"/>`);
+    } else {
       parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="none" stroke="#ef4444" stroke-width="0.4" stroke-dasharray="1 1"/>`);
     }
-    const sa = safeArea(format);
-    parts.push(`<rect x="${offX + (format.width - sa.w) / 2}" y="${offY + (format.height - sa.h) / 2}" width="${sa.w}" height="${sa.h}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`);
+  }
+  if (showSafe) {
+    if (isCircular) {
+      parts.push(`<circle cx="${cx}" cy="${cy}" r="${circularSafeRadius(format.width)}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`);
+    } else {
+      const sa = safeArea(format);
+      parts.push(`<rect x="${offX + (format.width - sa.w) / 2}" y="${offY + (format.height - sa.h) / 2}" width="${sa.w}" height="${sa.h}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`);
+    }
+  }
+
+  // Dieline (CutContour) — only for circular formats, as vector on its own layer/group.
+  if ((opts.showDieline || opts.includeDieline) && isCircular) {
+    parts.push(`<g id="${DIELINE_LAYER}" data-layer="${DIELINE_LAYER}"><title>${DIELINE_LAYER}</title>`);
+    parts.push(`<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="${DIELINE_COLOR}" stroke-width="0.25"/>`);
+    parts.push(`</g>`);
   }
 
   parts.push(`</svg>`);
   return parts.join("");
+}
+
+/**
+ * Standalone CutContour dieline SVG for a circular format — vector, stroke-only,
+ * 100% magenta on the `CutContour` layer. Suitable for a printer's cutting workflow.
+ */
+export function renderDielineSvg(format: BusinessFormat): string {
+  const unit = format.medium === "print" ? "mm" : "px";
+  const bleed = format.bleed;
+  const totalW = format.width + bleed * 2;
+  const totalH = format.height + bleed * 2;
+  const cx = totalW / 2;
+  const cy = totalH / 2;
+  if (format.shape === "circular") {
+    return [
+      `<?xml version="1.0" encoding="UTF-8"?>`,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}${unit}" height="${totalH}${unit}" viewBox="0 0 ${totalW} ${totalH}">`,
+      `<g id="${DIELINE_LAYER}" data-layer="${DIELINE_LAYER}"><title>${DIELINE_LAYER}</title>`,
+      `<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="${DIELINE_COLOR}" stroke-width="0.25"/>`,
+      `</g></svg>`,
+    ].join("");
+  }
+  // Rectangular fallback: outline of trim
+  return [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}${unit}" height="${totalH}${unit}" viewBox="0 0 ${totalW} ${totalH}">`,
+    `<g id="${DIELINE_LAYER}" data-layer="${DIELINE_LAYER}"><title>${DIELINE_LAYER}</title>`,
+    `<rect x="${bleed}" y="${bleed}" width="${format.width}" height="${format.height}" fill="none" stroke="${DIELINE_COLOR}" stroke-width="0.25"/>`,
+    `</g></svg>`,
+  ].join("");
 }
 
 function extractQrInnerSvg(qrSvg: string): { body: string; vb: number } {
