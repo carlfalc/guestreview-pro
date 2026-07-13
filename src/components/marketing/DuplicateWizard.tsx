@@ -113,16 +113,30 @@ export function DuplicateWizard({
 
   async function create() {
     if (!qrId) return toast.error("Pick a QR code");
+    const destBusinessId = mode === "another-business" ? businessId : currentBusinessId;
+    // Application-level ownership check (RLS remains authoritative).
+    const chosenQr = qrs.find((q) => q.id === qrId);
+    if (!chosenQr) return toast.error("Selected QR is not accessible");
+    if (chosenQr.business_id !== destBusinessId) {
+      return toast.error("QR does not belong to the destination business");
+    }
     setBusy("create");
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not signed in");
+      // Re-verify with a targeted server read the current user is allowed to see.
+      const { data: verified, error: verr } = await supabase
+        .from("qr_codes").select("id, business_id")
+        .eq("id", qrId).maybeSingle();
+      if (verr) throw new Error(verr.message);
+      if (!verified || (verified as { business_id: string }).business_id !== destBusinessId) {
+        throw new Error("Destination QR failed ownership check");
+      }
 
-      // Build the payload based on selected fields.
       const src = sourcePack;
       const payload: Record<string, unknown> = {
         owner_id: userData.user.id,
-        business_id: mode === "another-business" ? businessId : src && currentBusinessId,
+        business_id: destBusinessId,
         qr_code_id: qrId,
         project_name: projectName.trim() || "Duplicated pack",
         pack_type: src.pack_type,
@@ -142,31 +156,67 @@ export function DuplicateWizard({
         payload.show_google_badge = src.show_google_badge;
       }
 
-      // Global settings — respect design + branding rules
-      let global = (fields.design ? { ...(src.global_settings ?? {}) } : {}) as Record<string, unknown>;
+      // ---- Global settings (deep-cloned; source pack is never mutated) ----
+      let global: Record<string, unknown> = fields.design
+        ? (JSON.parse(JSON.stringify(src.global_settings ?? {})) as Record<string, unknown>)
+        : {};
       if (mode === "another-business" && activeBiz) {
         if (brandMode === "replace") {
-          global = {}; // fully use business branding
-        } else if (brandMode === "logo-only") {
-          // Preserve design colours; business logo comes from business record automatically.
+          global = {}; // fully use destination business branding
         }
+        // "preserve" and "logo-only" keep the cloned design values.
       }
       if (!fields.backgroundImages) {
         delete global.backgroundImage;
+        delete global.backgroundImageOpacity;
+        delete global.backgroundImageFit;
       }
       payload.global_settings = global as unknown as never;
 
-      // Per-format customizations
-      let customizations = fields.customizations ? { ...(src.format_customizations ?? {}) } : {};
-      if (!fields.backgroundImages || !fields.folded) {
-        customizations = Object.fromEntries(Object.entries(customizations).map(([k, v]) => {
-          const o = { ...(v as Record<string, unknown>) };
-          if (!fields.backgroundImages) delete o.backgroundImage;
-          if (!fields.folded) delete o.folded;
-          return [k, o];
-        }));
+      // ---- Per-format customizations ----
+      // Toggle semantics:
+      //   - customizations OFF + folded ON  → keep ONLY folded config per format
+      //   - customizations ON  + folded OFF → keep overrides but drop folded config
+      //   - customizations OFF + folded OFF → empty object
+      //   - both ON                         → keep full overrides
+      const cloned = JSON.parse(JSON.stringify(src.format_customizations ?? {})) as Record<string, Record<string, unknown>>;
+      const out: Record<string, Record<string, unknown>> = {};
+      for (const [fid, rawOverride] of Object.entries(cloned)) {
+        const o = { ...rawOverride };
+
+        // Strip background images at every level when the toggle is off.
+        if (!fields.backgroundImages) {
+          delete o.backgroundImage;
+          delete o.backgroundImageOpacity;
+          delete o.backgroundImageFit;
+          const folded = o.folded as
+            | { front?: Record<string, unknown>; back?: Record<string, unknown> }
+            | undefined;
+          if (folded) {
+            if (folded.front) {
+              delete folded.front.backgroundImage;
+              delete folded.front.backgroundImageOpacity;
+              delete folded.front.backgroundImageFit;
+            }
+            if (folded.back) {
+              delete folded.back.backgroundImage;
+              delete folded.back.backgroundImageOpacity;
+              delete folded.back.backgroundImageFit;
+            }
+          }
+        }
+
+        if (fields.customizations && fields.folded) {
+          out[fid] = o;
+        } else if (fields.customizations && !fields.folded) {
+          delete o.folded;
+          out[fid] = o;
+        } else if (!fields.customizations && fields.folded) {
+          if (o.folded !== undefined) out[fid] = { folded: o.folded };
+        }
+        // else: both off → skip this format entirely.
       }
-      payload.format_customizations = customizations as unknown as never;
+      payload.format_customizations = out as unknown as never;
 
       const { data, error } = await supabase.from("marketing_packs").insert(payload as never).select("id").single();
       if (error || !data) throw new Error(error?.message ?? "Insert failed");
@@ -179,6 +229,7 @@ export function DuplicateWizard({
       setBusy(null);
     }
   }
+
 
   const title = mode === "another-qr" ? "Duplicate to another QR" : "Duplicate to another business";
 
@@ -291,9 +342,9 @@ function FieldsPicker({ fields, onChange }: { fields: DuplicateFields; onChange:
     { k: "content", label: "Written content", hint: "Headline, support text, CTA, footer, visibility toggles." },
     { k: "design", label: "Global design", hint: "Layout template + global colours, fonts, borders." },
     { k: "formats", label: "Formats", hint: "The list of selected formats." },
-    { k: "customizations", label: "Per-format customisations", hint: "Overrides you've set on individual formats." },
-    { k: "folded", label: "Folded front / back content", hint: "Per-panel content for table tents." },
-    { k: "backgroundImages", label: "Background images", hint: "Uploaded images (global and per-format)." },
+    { k: "customizations", label: "Per-format customisations", hint: "Overrides you've set on individual formats (non-folded fields)." },
+    { k: "folded", label: "Folded front / back content", hint: "Per-panel content for table tents. Copied independently of per-format customisations." },
+    { k: "backgroundImages", label: "Background images", hint: "Uploaded images (global, per-format, and folded front/back)." },
   ];
   return (
     <div className="space-y-1.5">
@@ -307,9 +358,14 @@ function FieldsPicker({ fields, onChange }: { fields: DuplicateFields; onChange:
           </div>
         </label>
       ))}
+      <p className="rounded-lg bg-accent/40 p-2 text-[10px] text-muted-foreground">
+        <span className="font-semibold">Per-format customisations</span> and <span className="font-semibold">Folded content</span> are independent.
+        Enable folded alone to copy only table-tent panel content; enable per-format alone to copy non-folded overrides.
+      </p>
     </div>
   );
 }
+
 
 function BrandStep({ value, onChange }: { value: BrandBehaviour; onChange: (v: BrandBehaviour) => void }) {
   return (
