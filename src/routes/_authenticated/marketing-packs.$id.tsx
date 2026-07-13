@@ -130,6 +130,7 @@ function MarketingPackEditor() {
 
   // Copy-settings undo snapshot
   const [copyUndo, setCopyUndo] = useState<FormatCustomizations | null>(null);
+  const [copyDialogState, setCopyDialogState] = useState<{ format: BusinessFormat; override: FormatOverride } | null>(null);
 
   // Duplication wizard state
   const [dupMode, setDupMode] = useState<DuplicateWizardMode | null>(null);
