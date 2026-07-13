@@ -1723,6 +1723,12 @@ function OverrideDialog({ open, onOpenChange, format, override, globalSettings, 
             {otherSelected.length > 0 && (
               <Button variant="outline" onClick={() => { setCopyIds([]); setCopyPickerOpen(true); }} className="rounded-full text-xs">Copy to selected…</Button>
             )}
+            <Button variant="outline" onClick={() => onOpenAdvancedCopy(draft)} className="rounded-full text-xs">
+              <Copy className="mr-1 h-3 w-3"/>Copy settings…
+            </Button>
+            {false && (
+              <span/>
+            )}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-full">Cancel</Button>
