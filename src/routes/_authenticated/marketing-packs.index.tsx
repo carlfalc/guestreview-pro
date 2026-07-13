@@ -230,12 +230,15 @@ function MarketingPacksList() {
             {filtered.map((p) => {
               const formats = Array.isArray(p.selected_formats) ? (p.selected_formats as string[]) : [];
               const meta = statusMeta(p.status as PackStatus);
+              const thumb = p.preview_url
+                ? (p.preview_url.startsWith("http") ? p.preview_url : signedThumbs[p.preview_url])
+                : null;
               return (
                 <div key={p.id} className="group flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/50">
                   <Link to="/marketing-packs/$id" params={{ id: p.id }} className="block">
                     <div className="aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-accent/50 to-accent">
-                      {p.preview_url ? (
-                        <img src={p.preview_url} alt="" className="h-full w-full object-cover"/>
+                      {thumb ? (
+                        <img src={thumb} alt="" className="h-full w-full object-cover"/>
                       ) : (
                         <div className="flex h-full items-center justify-center text-muted-foreground">
                           <Package className="h-8 w-8"/>
