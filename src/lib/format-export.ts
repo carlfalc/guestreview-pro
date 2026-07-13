@@ -201,10 +201,19 @@ export type ZipManifest = {
       flat: { width: number; height: number };
       assembled: { width: number; height: number };
       panels: { panel: string; x: number; y: number; w: number; h: number; rotation: number; label: string }[];
+      production_rotation: { front: number; back: number };
       fold_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
       score_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
       cut_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
-      glue_area: { x: number; y: number; w: number; h: number } | null;
+      glue_area?: { x: number; y: number; w: number; h: number };
+      qr_decode?: {
+        front: { pass: boolean; reason?: string };
+        back: { pass: boolean; reason?: string };
+      };
+      panel_validation?: {
+        front: { level: string; title: string; message: string; element?: string; suggestedFix?: string }[];
+        back: { level: string; title: string; message: string; element?: string; suggestedFix?: string }[];
+      };
     };
   }[];
 };
@@ -221,6 +230,10 @@ export type PackZipMeta = {
   qrDestinationType?: string | null;
   previewDataUrl?: string | null;
   validations?: QrValidationEntry[];
+  /** Folded per-format assembled front/back decode results. */
+  foldedDecode?: Record<string, FoldedDecodeResult>;
+  /** Folded per-format panel validation results (front + back combined). */
+  foldedPanelValidations?: Record<string, ValidationResult[]>;
   /** Resolve the folded config for a folded format. Non-folded formats return null. */
   foldedResolver?: (format: BusinessFormat) => FoldedConfig | null;
   /** Business identity used inside folded renderers. */
