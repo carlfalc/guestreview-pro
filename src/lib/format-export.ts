@@ -7,6 +7,8 @@ import {
   DIELINE_COLOR, DIELINE_LAYER, type FormatContent,
 } from "@/lib/format-render";
 import type { FoldedConfig } from "@/lib/marketing-packs";
+import type { FoldedDecodeResult } from "@/lib/folded-validation";
+import type { ValidationResult } from "@/lib/format-validation";
 import { getFoldedLayout } from "@/lib/folded-layouts";
 import {
   renderFoldedFormatSvg, renderFoldedMockupSvg,
