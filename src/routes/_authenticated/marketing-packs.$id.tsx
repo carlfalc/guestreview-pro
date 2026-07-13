@@ -1358,6 +1358,7 @@ function FormatPreviewCard(props: {
         onSave={(o) => { onOverrideChange(o); setOverrideOpen(false); }}
         onClear={() => { onOverrideClear(); setOverrideOpen(false); }}
         onCopyToFormats={onCopyToFormats}
+        onOpenAdvancedCopy={(o) => { setOverrideOpen(false); onOpenAdvancedCopy(o); }}
       />
       {isFolded && (
         <FoldedFormatEditor
