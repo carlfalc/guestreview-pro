@@ -141,7 +141,10 @@ function MarketingPacksList() {
   }
 
   async function deletePack(id: string) {
-    if (!confirm("Delete this marketing pack? This cannot be undone.")) return;
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      await supabase.storage.from("pack-previews").remove([`${userData.user.id}/${id}.png`]).catch(() => undefined);
+    }
     const { error } = await supabase.from("marketing_packs").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Deleted");
