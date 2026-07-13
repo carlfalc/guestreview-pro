@@ -55,6 +55,20 @@ export type FormatContent = {
   qrOffsetY?: number;
 };
 
+export type RenderOpts = {
+  showBoundaries?: boolean;
+  includeBleed?: boolean;
+  /** Print-production overlay toggles (guide layers, not artwork). */
+  showTrim?: boolean;
+  showSafe?: boolean;
+  showBleedGuide?: boolean;
+  showDieline?: boolean;
+  /** For circular formats: leave the area outside the trim circle transparent. */
+  transparentOutside?: boolean;
+  /** Bake the CutContour dieline into the artwork itself (embedded PDF/SVG variant). */
+  includeDieline?: boolean;
+};
+
 /** Render a business format as an SVG string. */
 export async function renderFormatSvg(
   format: BusinessFormat,
@@ -64,7 +78,7 @@ export async function renderFormatSvg(
   qrData: string,
   logoUrl: string | null,
   brand: string,
-  opts: { showBoundaries?: boolean; includeBleed?: boolean } = {},
+  opts: RenderOpts = {},
 ): Promise<string> {
   const tpl = templateColors(template, brand);
   const bgFill = content.colors?.bg ?? tpl.bg;
