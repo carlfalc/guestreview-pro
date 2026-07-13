@@ -47,6 +47,9 @@ import { FoldedFormatEditor } from "@/components/marketing/FoldedFormatEditor";
 import { AutoFixDialog } from "@/components/marketing/AutoFixDialog";
 import { DuplicateWizard, type DuplicateWizardMode } from "@/components/marketing/DuplicateWizard";
 import { CopySettingsDialog } from "@/components/marketing/CopySettingsDialog";
+import { AiCopyDialog, type AiCopyContext, type ApplyPatch } from "@/components/marketing/AiCopyDialog";
+import { placementFromFormat, type BusinessType } from "@/lib/ai-copy";
+import { Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
@@ -77,7 +80,7 @@ function MarketingPackEditor() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("marketing_packs")
-        .select("*, businesses(id, name, brand_primary, logo_url, google_review_url), qr_codes(id, short_code, label, destination_type, destination_url, design, logo_url, fg_color, bg_color)")
+        .select("*, businesses(id, name, brand_primary, logo_url, google_review_url, industry, ai_copy_preferences), qr_codes(id, short_code, label, destination_type, destination_url, design, logo_url, fg_color, bg_color)")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -134,6 +137,10 @@ function MarketingPackEditor() {
 
   // Duplication wizard state
   const [dupMode, setDupMode] = useState<DuplicateWizardMode | null>(null);
+
+  // AI Copy Assistant state
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiUndo, setAiUndo] = useState<{ headline: string; supportText: string; ctaText: string; footerText: string } | null>(null);
 
 
 
@@ -456,6 +463,23 @@ function MarketingPackEditor() {
     void runValidation({ decodeQr: false });
   }
 
+  function applyAiCopy(patch: ApplyPatch) {
+    setAiUndo({ headline, supportText, ctaText, footerText });
+    if (patch.headline !== undefined) setHeadline(patch.headline);
+    if (patch.supportingText !== undefined) setSupportText(patch.supportingText);
+    if (patch.ctaText !== undefined) setCtaText(patch.ctaText);
+    if (patch.footerText !== undefined) setFooterText(patch.footerText);
+    toast.success("AI copy applied");
+  }
+  function undoAiCopy() {
+    if (!aiUndo) return;
+    setHeadline(aiUndo.headline);
+    setSupportText(aiUndo.supportText);
+    setCtaText(aiUndo.ctaText);
+    setFooterText(aiUndo.footerText);
+    setAiUndo(null);
+    toast.success("AI copy undone");
+  }
 
 
   async function archivePack() {
@@ -684,6 +708,9 @@ function MarketingPackEditor() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SaveIndicator state={saveState} onRetry={retrySave} error={saveError}/>
+          <Button variant="outline" size="sm" onClick={() => setAiOpen(true)} className="rounded-full">
+            <Sparkles className="mr-1 h-4 w-4"/>AI copy
+          </Button>
           <Button variant="outline" size="sm" onClick={() => regenerateThumbnail()} disabled={thumbState === "generating"} className="rounded-full">
             {thumbState === "generating" ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : <RotateCw className="mr-1 h-4 w-4"/>}Regenerate preview
           </Button>
@@ -955,6 +982,27 @@ function MarketingPackEditor() {
           }}
           onUndo={undoCopySettings}
           canUndo={!!copyUndo}
+        />
+      )}
+
+      {pack && biz && (
+        <AiCopyDialog
+          open={aiOpen}
+          onOpenChange={setAiOpen}
+          ctx={{
+            businessId: biz.id,
+            businessName: biz.name,
+            businessType: (biz as unknown as { industry?: BusinessType }).industry ?? "General business",
+            packId: pack.id,
+            packType: pack.pack_type,
+            formatId: selectedFormats[0] ?? null,
+            placement: placementFromFormat(FORMATS.find((f) => f.id === selectedFormats[0])),
+            existing: { headline, supportingText: supportText, ctaText, footerText },
+            preferences: ((biz as unknown as { ai_copy_preferences?: Record<string, unknown> }).ai_copy_preferences) as AiCopyContext["preferences"] | undefined,
+          }}
+          onApply={applyAiCopy}
+          onUndo={undoAiCopy}
+          canUndo={!!aiUndo}
         />
       )}
     </div>
