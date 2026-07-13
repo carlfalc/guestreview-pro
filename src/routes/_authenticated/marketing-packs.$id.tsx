@@ -1427,11 +1427,32 @@ function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange,
             </>
           )}
         </div>
-        <Button size="sm" variant="outline" onClick={onRun} disabled={validating} className="rounded-full text-xs">
-          {validating ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <CheckCircle2 className="mr-1 h-3 w-3"/>}
-          {results.length === 0 ? "Run validation" : "Re-run validation"}
-        </Button>
+        <div className="flex flex-wrap gap-1.5">
+          {results.some((r) => r.level !== "pass") && (
+            <Button size="sm" variant="default" onClick={onFixAutomatically} disabled={validating} className="rounded-full text-xs">
+              <Wand2 className="mr-1 h-3 w-3"/>Fix automatically
+            </Button>
+          )}
+          {canUndoAutoFix && (
+            <Button size="sm" variant="outline" onClick={onUndoAutoFix} className="rounded-full text-xs">
+              <Undo2 className="mr-1 h-3 w-3"/>Undo automatic fixes
+            </Button>
+          )}
+          {canUndoCopy && (
+            <Button size="sm" variant="outline" onClick={onUndoCopy} className="rounded-full text-xs">
+              <Undo2 className="mr-1 h-3 w-3"/>Undo copied settings
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={onRun} disabled={validating} className="rounded-full text-xs">
+            {validating ? <Loader2 className="mr-1 h-3 w-3 animate-spin"/> : <CheckCircle2 className="mr-1 h-3 w-3"/>}
+            {results.length === 0 ? "Run validation" : "Re-run validation"}
+          </Button>
+        </div>
       </div>
+      {autoFixSummary && (
+        <p className="rounded-xl bg-emerald-500/10 p-2 text-[10px] text-emerald-500">{autoFixSummary}</p>
+      )}
+
 
       {results.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
