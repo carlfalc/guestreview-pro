@@ -102,7 +102,9 @@ function MarketingPackEditor() {
   // Validation engine state
   const [validations, setValidations] = useState<ValidationResult[]>([]);
   const [validating, setValidating] = useState(false);
-  const [warningsAck, setWarningsAck] = useState(false);
+  const [warningsAck, setWarningsAck] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState<string>("content");
+
 
   const initialised = useRef(false);
   useEffect(() => {
@@ -315,7 +317,7 @@ function MarketingPackEditor() {
       for (const f of selected) {
         const c = resolveContent(f);
         out.push(...runFormatValidations({
-          format: f, content: c, qrData,
+          format: f, content: c, qrDesign, qrData,
           destinationUrl: qrRow?.destination_url ?? null,
           destinationType: qrRow?.destination_type ?? null,
           reviewUrl: biz?.google_review_url ?? null,
@@ -324,20 +326,39 @@ function MarketingPackEditor() {
           out.push(await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate));
         }
       }
+
       setValidations(out);
       return out;
     } finally { setValidating(false); }
   }, [selected, resolveContent, qrData, qrRow, biz, qrDesign, brand, layoutTemplate]);
 
+  function ackKey(r: ValidationResult): string { return `${r.formatId ?? "pack"}::${r.id}`; }
+
   async function markReadyToPrint() {
+    if (!pack) return;
     if (!headline.trim() || !ctaText.trim()) return toast.error("Headline and CTA are required");
     const results = await runValidation({ decodeQr: true });
     const { ready, blocking, warnings } = readyToPrint(results);
     if (!ready) return toast.error(`${blocking} blocking issue(s) — resolve them first`);
-    if (warnings > 0 && !warningsAck) return toast.error(`${warnings} warning(s) — acknowledge them below to continue`);
+    if (warnings > 0) {
+      const warnList = results.filter((r) => r.level === "warning");
+      const unacked = warnList.filter((r) => !warningsAck[ackKey(r)]);
+      if (unacked.length > 0) return toast.error(`${unacked.length} warning(s) — acknowledge each below to continue`);
+    }
+    const prev = status;
     setStatus("ready");
+    const { error: upErr } = await supabase.from("marketing_packs")
+      .update({ status: "ready", updated_at: new Date().toISOString() })
+      .eq("id", pack.id);
+    if (upErr) {
+      setStatus(prev);
+      return toast.error(`Could not save Ready to Print: ${upErr.message}`);
+    }
+    qc.invalidateQueries({ queryKey: ["marketing-pack", id] });
+    qc.invalidateQueries({ queryKey: ["marketing-packs"] });
     toast.success("Marked ready to print");
   }
+
 
   // Legacy per-format QR check kept for export-time validation entries
   async function validateAllQrs(): Promise<{ formatId: string; pass: boolean; reason?: string }[]> {
@@ -480,7 +501,7 @@ function MarketingPackEditor() {
         </div>
       )}
 
-      <Tabs defaultValue="content">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="rounded-full">
           <TabsTrigger value="content" className="rounded-full">Content</TabsTrigger>
           <TabsTrigger value="formats" className="rounded-full">Formats</TabsTrigger>
@@ -579,7 +600,12 @@ function MarketingPackEditor() {
                 onRun={() => runValidation({ decodeQr: true })}
                 warningsAck={warningsAck}
                 onAckChange={setWarningsAck}
+                onNavigate={(target) => {
+                  const map: Record<string, string> = { content: "content", formats: "formats", design: "design", preview: "preview", override: "preview", qr: "preview", business: "preview" };
+                  setActiveTab(map[target] ?? "preview");
+                }}
               />
+
 
               {selected.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-border/70 p-8 text-center text-xs text-muted-foreground">
@@ -1041,35 +1067,68 @@ function FormatPreviewCard(props: {
   );
 }
 
-function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange }: {
+type PanelFilter = "all" | "blocking" | "warnings" | "qr" | "text" | "image" | "print" | "content";
+
+function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange, onNavigate }: {
   results: ValidationResult[];
   validating: boolean;
   onRun: () => void;
-  warningsAck: boolean;
-  onAckChange: (v: boolean) => void;
+  warningsAck: Record<string, boolean>;
+  onAckChange: (updater: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
+  onNavigate: (target: import("@/lib/format-validation").ValidationTarget) => void;
 }) {
   const summary = useMemo(() => readyToPrint(results), [results]);
-  const grouped = useMemo(() => {
-    const m: Record<ValidationLevel, ValidationResult[]> = { error: [], warning: [], pass: [] };
-    for (const r of results) m[r.level].push(r);
-    return m;
-  }, [results]);
+  const [filter, setFilter] = useState<PanelFilter>("all");
+
+  const filtered = useMemo(() => {
+    const actionable = results.filter((r) => r.level !== "pass");
+    return actionable.filter((r) => {
+      if (filter === "all") return true;
+      if (filter === "blocking") return r.level === "error";
+      if (filter === "warnings") return r.level === "warning";
+      return r.category === filter;
+    });
+  }, [results, filter]);
+
+  const byFormat = useMemo(() => {
+    const m = new Map<string, { name: string; items: ValidationResult[] }>();
+    for (const r of filtered) {
+      const key = r.formatId ?? "__pack__";
+      const name = r.formatName ?? (r.formatId ? r.formatId : "Pack-wide");
+      if (!m.has(key)) m.set(key, { name, items: [] });
+      m.get(key)!.items.push(r);
+    }
+    return Array.from(m.entries());
+  }, [filtered]);
+
+  const warnings = results.filter((r) => r.level === "warning");
+  const unackedCount = warnings.filter((r) => !warningsAck[`${r.formatId ?? "pack"}::${r.id}`]).length;
+
+  const filters: { id: PanelFilter; label: string }[] = [
+    { id: "all", label: "All" },
+    { id: "blocking", label: "Blocking" },
+    { id: "warnings", label: "Warnings" },
+    { id: "qr", label: "QR" },
+    { id: "text", label: "Text" },
+    { id: "image", label: "Images" },
+    { id: "print", label: "Print" },
+    { id: "content", label: "Content" },
+  ];
 
   return (
-    <div className="space-y-2 rounded-2xl border border-border/70 bg-card/50 p-4">
+    <div className="space-y-3 rounded-2xl border border-border/70 bg-card/50 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="font-semibold uppercase tracking-wide text-muted-foreground">Validation</span>
           {results.length > 0 && (
             <>
-              <Badge variant={summary.blocking > 0 ? "destructive" : "default"} className="rounded-full text-[10px]">
-                {summary.blocking} blocking
-              </Badge>
-              <Badge variant="outline" className="rounded-full border-amber-500/50 text-[10px] text-amber-500">
-                {summary.warnings} warnings
-              </Badge>
+              <Badge variant={summary.blocking > 0 ? "destructive" : "default"} className="rounded-full text-[10px]">{summary.blocking} blocking</Badge>
+              <Badge variant="outline" className="rounded-full border-amber-500/50 text-[10px] text-amber-500">{summary.warnings} warnings</Badge>
               {summary.ready && summary.warnings === 0 && (
                 <Badge variant="default" className="rounded-full text-[10px]"><CheckCircle2 className="mr-1 h-2.5 w-2.5"/>All checks passed</Badge>
+              )}
+              {summary.warnings > 0 && (
+                <Badge variant="outline" className="rounded-full text-[10px]">{summary.warnings - unackedCount}/{summary.warnings} acknowledged</Badge>
               )}
             </>
           )}
@@ -1079,31 +1138,78 @@ function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange 
           {results.length === 0 ? "Run validation" : "Re-run validation"}
         </Button>
       </div>
+
       {results.length > 0 && (
-        <div className="max-h-80 space-y-1.5 overflow-y-auto pr-1">
-          {[...grouped.error, ...grouped.warning].map((r, i) => (
-            <div key={`${r.id}-${r.formatId}-${i}`} className={`rounded-xl border p-2.5 text-[11px] ${r.level === "error" ? "border-destructive/40 bg-destructive/5" : "border-amber-500/40 bg-amber-500/5"}`}>
-              <div className="flex items-center gap-2">
-                {r.level === "error" ? <AlertTriangle className="h-3 w-3 text-destructive"/> : <AlertTriangle className="h-3 w-3 text-amber-500"/>}
-                <span className="font-semibold">{r.title}</span>
-                <Badge variant="outline" className="rounded-full text-[9px]">{r.category}</Badge>
-                {r.formatId && <span className="text-[10px] text-muted-foreground">{r.formatId}</span>}
-              </div>
-              <p className="mt-1 text-muted-foreground">{r.message}</p>
-              {r.suggestedFix && <p className="mt-0.5 text-[10px] text-muted-foreground"><span className="font-semibold">Fix:</span> {r.suggestedFix}</p>}
+        <div className="flex flex-wrap gap-1.5">
+          {filters.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setFilter(f.id)}
+              className={`rounded-full border px-2.5 py-0.5 text-[10px] transition-colors ${filter === f.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-accent"}`}
+            >{f.label}</button>
+          ))}
+        </div>
+      )}
+
+      {results.length > 0 && filtered.length === 0 && (
+        <p className="rounded-xl bg-accent/30 p-3 text-center text-[11px] text-muted-foreground">No issues match this filter.</p>
+      )}
+
+      {byFormat.length > 0 && (
+        <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
+          {byFormat.map(([key, group]) => (
+            <div key={key} className="space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{group.name}</p>
+              {group.items.map((r, i) => {
+                const ak = `${r.formatId ?? "pack"}::${r.id}`;
+                const acked = warningsAck[ak];
+                const isErr = r.level === "error";
+                return (
+                  <div key={`${r.id}-${i}`} className={`rounded-xl border p-2.5 text-[11px] ${isErr ? "border-destructive/40 bg-destructive/5" : "border-amber-500/40 bg-amber-500/5"}`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <AlertTriangle className={`h-3 w-3 ${isErr ? "text-destructive" : "text-amber-500"}`}/>
+                      <span className="font-semibold">{r.title}</span>
+                      <Badge variant="outline" className="rounded-full text-[9px]">{r.category}</Badge>
+                      {r.element && <Badge variant="outline" className="rounded-full text-[9px]">{r.element}</Badge>}
+                    </div>
+                    <p className="mt-1 text-muted-foreground">{r.message}</p>
+                    {r.suggestedFix && <p className="mt-0.5 text-[10px] text-muted-foreground"><span className="font-semibold">Fix:</span> {r.suggestedFix}</p>}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      {r.target && (
+                        <Button size="sm" variant="ghost" onClick={() => onNavigate(r.target!)} className="h-6 rounded-full px-2 text-[10px]">
+                          Go to setting →
+                        </Button>
+                      )}
+                      {!isErr && (
+                        <label className="ml-auto inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <Checkbox
+                            checked={!!acked}
+                            onCheckedChange={(v) => onAckChange((prev) => ({ ...prev, [ak]: v === true }))}
+                          />
+                          Acknowledge
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ))}
-          {summary.blocking === 0 && summary.warnings > 0 && (
-            <label className="flex items-center gap-2 rounded-xl bg-accent/30 px-3 py-2 text-[11px]">
-              <Checkbox checked={warningsAck} onCheckedChange={(v) => onAckChange(v === true)}/>
-              I acknowledge the warnings above and want to mark this pack ready to print.
-            </label>
-          )}
         </div>
+      )}
+
+      {summary.blocking > 0 && (
+        <p className="rounded-xl bg-destructive/10 p-2 text-[10px] text-destructive">Ready to Print is blocked until every blocking error is resolved.</p>
+      )}
+      {summary.blocking === 0 && summary.warnings > 0 && unackedCount > 0 && (
+        <p className="rounded-xl bg-amber-500/10 p-2 text-[10px] text-amber-500">Acknowledge {unackedCount} warning(s) to enable Ready to Print.</p>
       )}
     </div>
   );
 }
+
+
 
 function OverrideDialog({ open, onOpenChange, format, override, globalSettings, selectedFormats, onSave, onClear, onCopyToFormats }: {
   open: boolean;
