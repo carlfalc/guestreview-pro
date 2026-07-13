@@ -2,7 +2,10 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import JSZip from "jszip";
 import type { BusinessFormat, LayoutTemplate } from "@/lib/qr-formats";
 import type { QrDesign } from "@/lib/qr-design";
-import { renderFormatSvg, svgToPng, pxFor, type FormatContent } from "@/lib/format-render";
+import {
+  renderFormatSvg, renderDielineSvg, svgToPng, pxFor, circularSafeRadius,
+  DIELINE_COLOR, DIELINE_LAYER, type FormatContent,
+} from "@/lib/format-render";
 
 const MM_TO_PT = 2.83464567;
 
