@@ -6,6 +6,12 @@ import {
   renderFormatSvg, renderDielineSvg, svgToPng, pxFor, circularSafeRadius,
   DIELINE_COLOR, DIELINE_LAYER, type FormatContent,
 } from "@/lib/format-render";
+import type { FoldedConfig } from "@/lib/marketing-packs";
+import { getFoldedLayout } from "@/lib/folded-layouts";
+import {
+  renderFoldedFormatSvg, renderFoldedMockupSvg,
+} from "@/lib/folded-render";
+import { buildFoldedPdf, foldedPrintNotes } from "@/lib/folded-export";
 
 const MM_TO_PT = 2.83464567;
 
@@ -203,6 +209,13 @@ export type PackZipMeta = {
   qrDestinationType?: string | null;
   previewDataUrl?: string | null;
   validations?: QrValidationEntry[];
+  /** Resolve the folded config for a folded format. Non-folded formats return null. */
+  foldedResolver?: (format: BusinessFormat) => FoldedConfig | null;
+  /** Business identity used inside folded renderers. */
+  business_name?: string;
+  business_logo_url?: string | null;
+  /** QR inner-content logo (may differ from artwork logo). */
+  qr_logo_url?: string | null;
 };
 
 /**
@@ -312,6 +325,60 @@ export async function downloadPackZip(
       const wPath = `${folder}/svg/${f.id}-with-dieline.svg`;
       zip.file(wPath, withDieline);
       files.push(wPath);
+    }
+
+    // Folded (table-tent) production extras: front / back / flat / SVG-with-guides / mockup / notes.
+    if (f.folded) {
+      const foldedCfg = meta.foldedResolver?.(f);
+      if (foldedCfg) {
+        const foldedInput = {
+          format: f, template, brand,
+          business: { name: meta.business_name ?? "", logoUrl: meta.business_logo_url ?? null },
+          qrDesign, qrData, qrLogoUrl: meta.qr_logo_url ?? logoUrl, config: foldedCfg,
+        };
+        const layout = getFoldedLayout(f);
+
+        // Front / Back / Flat PNGs
+        for (const facing of ["front", "back", "flat"] as const) {
+          const svgStr = await renderFoldedFormatSvg(foldedInput, { facing, includeBleed: facing === "flat" });
+          const isFlat = facing === "flat";
+          const wMm = isFlat ? (layout!.flatWidth + layout!.bleed * 2) : layout!.assembledWidth;
+          const hMm = isFlat ? (layout!.flatHeight + layout!.bleed * 2) : layout!.assembledHeight;
+          const dpi = 300;
+          const px = { w: Math.round(wMm * dpi / 25.4), h: Math.round(hMm * dpi / 25.4) };
+          const blob = await svgToPng(svgStr, px.w, px.h);
+          const key = facing === "flat" ? "flat" : facing;
+          const p = `artwork/${key}/${f.id}.png`;
+          zip.file(p, new Uint8Array(await blob.arrayBuffer()));
+          files.push(p);
+        }
+
+        // Flat SVG with production guides
+        const guidesSvg = await renderFoldedFormatSvg(foldedInput, {
+          includeBleed: true, showCut: true, showFold: true, showScore: true, showPanelLabels: true, showSafe: true,
+        });
+        const guidesPath = `production/svg/${f.id}-guides.svg`;
+        zip.file(guidesPath, guidesSvg);
+        files.push(guidesPath);
+
+        // Print PDF
+        const pdfBytes = await buildFoldedPdf(foldedInput);
+        const pdfPath = `production/pdf/${f.id}-folded.pdf`;
+        zip.file(pdfPath, pdfBytes);
+        files.push(pdfPath);
+
+        // Mockup PNG
+        const mockupSvg = await renderFoldedMockupSvg(foldedInput);
+        const mockupBlob = await svgToPng(mockupSvg, 1600, 1200);
+        const mockupPath = `mockup/${f.id}-mockup.png`;
+        zip.file(mockupPath, new Uint8Array(await mockupBlob.arrayBuffer()));
+        files.push(mockupPath);
+
+        // Print notes for folded
+        const notesPath = `print-notes/${f.id}-folded.txt`;
+        zip.file(notesPath, foldedPrintNotes(foldedInput, layout!).join("\n"));
+        files.push(notesPath);
+      }
     }
 
     const v = validationsMap.get(f.id);

@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   ArrowLeft, Save, Loader2, Download, FileText, ImageIcon, Package,
   AlertTriangle, CheckCircle2, Copy, Archive, Trash2, Settings2, RotateCw,
-  ImagePlus, X,
+  ImagePlus, X, Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -30,11 +30,16 @@ import {
   runFormatValidations, decodeQrValidation, readyToPrint,
   type ValidationResult, type ValidationLevel,
 } from "@/lib/format-validation";
+import { runFoldedValidations } from "@/lib/folded-validation";
 import {
-  statusMeta, packTypeById, buildFormatContent, similarFormats,
+  statusMeta, packTypeById, buildFormatContent, similarFormats, defaultFoldedConfig,
   FONT_OPTIONS, STAR_STYLES, BORDER_STYLES,
   type GlobalSettings, type FormatCustomizations, type FormatOverride, type PackStatus, type ContentBase,
+  type FoldedConfig,
 } from "@/lib/marketing-packs";
+import { renderFoldedFormatSvg, renderFoldedMockupSvg } from "@/lib/folded-render";
+import { buildFoldedPdf, downloadFoldedPng, renderFoldedSvgWithGuides } from "@/lib/folded-export";
+import { FoldedFormatEditor } from "@/components/marketing/FoldedFormatEditor";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -322,6 +327,10 @@ function MarketingPackEditor() {
           destinationType: qrRow?.destination_type ?? null,
           reviewUrl: biz?.google_review_url ?? null,
         }));
+        if (f.folded) {
+          const fCfg = formatCustomizations[f.id]?.folded ?? defaultFoldedConfig(contentBase);
+          out.push(...runFoldedValidations({ format: f, config: fCfg, qrDesign, qrData }));
+        }
         if (opts.decodeQr) {
           out.push(await decodeQrValidation(f, c, qrDesign, qrData, c.logoUrl, brand, layoutTemplate));
         }
@@ -330,7 +339,7 @@ function MarketingPackEditor() {
       setValidations(out);
       return out;
     } finally { setValidating(false); }
-  }, [selected, resolveContent, qrData, qrRow, biz, qrDesign, brand, layoutTemplate]);
+  }, [selected, resolveContent, qrData, qrRow, biz, qrDesign, brand, layoutTemplate, formatCustomizations, contentBase]);
 
   function ackKey(r: ValidationResult): string { return `${r.formatId ?? "pack"}::${r.id}`; }
 
@@ -621,9 +630,11 @@ function MarketingPackEditor() {
                       format={f}
                       layoutTemplate={layoutTemplate}
                       content={c}
+                      contentBase={contentBase}
                       qrDesign={qrDesign}
                       qrData={qrData}
                       logoUrl={c.logoUrl}
+                      qrLogoUrl={rawLogoUrl}
                       brand={brand}
                       exporting={exporting}
                       setExporting={setExporting}
@@ -930,9 +941,11 @@ function FormatPreviewCard(props: {
   format: BusinessFormat;
   layoutTemplate: LayoutTemplate;
   content: FormatContent;
+  contentBase: ContentBase;
   qrDesign: QrDesign;
   qrData: string;
   logoUrl: string | null;
+  qrLogoUrl: string | null;
   brand: string;
   exporting: string | null;
   setExporting: (v: string | null) => void;
@@ -944,32 +957,50 @@ function FormatPreviewCard(props: {
   onOverrideClear: () => void;
   onCopyToFormats: (ids: string[], o: FormatOverride) => void;
 }) {
-  const { format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, overlays, onOverrideChange, onOverrideClear, onCopyToFormats } = props;
+  const { format, layoutTemplate, content, contentBase, qrDesign, qrData, logoUrl, qrLogoUrl, brand, exporting, setExporting, override, globalSettings, selectedFormats, overlays, onOverrideChange, onOverrideClear, onCopyToFormats } = props;
   const [svg, setSvg] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
   const [renderKey, setRenderKey] = useState(0);
   const [scanStatus, setScanStatus] = useState<"idle" | "checking" | "pass" | "fail">("idle");
   const [scanReason, setScanReason] = useState<string | null>(null);
   const [overrideOpen, setOverrideOpen] = useState(false);
+  const [foldedOpen, setFoldedOpen] = useState(false);
 
   const isCircular = format.shape === "circular";
+  const isFolded = format.folded === true;
+  const foldedConfig: FoldedConfig = override?.folded ?? defaultFoldedConfig(contentBase);
   const contentKey = JSON.stringify(content);
+  const foldedKey = JSON.stringify(foldedConfig);
   const overlaysKey = JSON.stringify(overlays);
+
   useEffect(() => {
     let cancelled = false;
     setErr(null);
-    renderFormatSvg(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, {
-      includeBleed: format.bleed > 0,
-      showTrim: overlays.showTrim,
-      showSafe: overlays.showSafe,
-      showBleedGuide: overlays.showBleedGuide,
-      showDieline: overlays.showDieline && isCircular,
-    })
-      .then((s) => { if (!cancelled) setSvg(s); })
+    const p = isFolded
+      ? renderFoldedFormatSvg({
+          format, template: layoutTemplate, brand,
+          business: { name: contentBase.businessName, logoUrl: contentBase.logoUrl },
+          qrDesign, qrData, qrLogoUrl, config: foldedConfig,
+        }, {
+          includeBleed: format.bleed > 0,
+          showFold: overlays.showTrim,
+          showCut: overlays.showTrim,
+          showScore: overlays.showTrim,
+          showSafe: overlays.showSafe,
+          showPanelLabels: overlays.showTrim,
+        })
+      : renderFormatSvg(format, layoutTemplate, content, qrDesign, qrData, logoUrl, brand, {
+          includeBleed: format.bleed > 0,
+          showTrim: overlays.showTrim,
+          showSafe: overlays.showSafe,
+          showBleedGuide: overlays.showBleedGuide,
+          showDieline: overlays.showDieline && isCircular,
+        });
+    p.then((s) => { if (!cancelled) setSvg(s); })
       .catch((e) => { if (!cancelled) setErr((e as Error).message); });
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [format.id, layoutTemplate, contentKey, qrDesign, qrData, logoUrl, brand, renderKey, overlaysKey]);
+  }, [format.id, layoutTemplate, contentKey, foldedKey, qrDesign, qrData, logoUrl, qrLogoUrl, brand, renderKey, overlaysKey, isFolded]);
 
   async function validate() {
     setScanStatus("checking"); setScanReason(null);
@@ -1003,14 +1034,48 @@ function FormatPreviewCard(props: {
     finally { setExporting(null); }
   }
 
+  async function runFolded(kind: "front-png" | "back-png" | "flat-png" | "pdf" | "svg-guides" | "mockup") {
+    const key = `${format.id}-folded-${kind}`;
+    setExporting(key);
+    try {
+      const x = {
+        format, template: layoutTemplate, brand,
+        business: { name: contentBase.businessName, logoUrl: contentBase.logoUrl },
+        qrDesign, qrData, qrLogoUrl, config: foldedConfig,
+      };
+      if (kind === "front-png" || kind === "back-png" || kind === "flat-png") {
+        const facing = kind === "front-png" ? "front" : kind === "back-png" ? "back" : "flat";
+        const blob = await downloadFoldedPng(x, facing);
+        triggerBlobDownload(blob, `${format.id}-${facing}.png`);
+      } else if (kind === "pdf") {
+        const bytes = await buildFoldedPdf(x);
+        triggerBlobDownload(new Blob([bytes as BlobPart], { type: "application/pdf" }), `${format.id}-folded.pdf`);
+      } else if (kind === "svg-guides") {
+        const s = await renderFoldedSvgWithGuides(x);
+        triggerBlobDownload(new Blob([s], { type: "image/svg+xml" }), `${format.id}-folded-guides.svg`);
+      } else {
+        const s = await renderFoldedMockupSvg(x);
+        const blob = await svgToPng(s, 1200, 900);
+        triggerBlobDownload(blob, `${format.id}-mockup.png`);
+      }
+      toast.success("Downloaded");
+    } catch (e) { toast.error(`Export failed: ${(e as Error).message}`); }
+    finally { setExporting(null); }
+  }
+
   const hasOverride = !!override && Object.keys(override).length > 0;
+  const hasFoldedConfig = !!override?.folded;
 
   return (
     <div className="rounded-2xl border border-border/70 bg-card p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <p className="truncate text-xs font-semibold">{format.name}</p>
         <div className="flex items-center gap-1">
-          {hasOverride && <Badge variant="secondary" className="rounded-full text-[9px]">Custom</Badge>}
+          {isFolded && <Badge variant="outline" className="rounded-full text-[9px]">Folded</Badge>}
+          {hasFoldedConfig && <Badge variant="secondary" className="rounded-full text-[9px]">
+            {foldedConfig.mode === "same_both_sides" ? "Both" : foldedConfig.mode === "mirrored" ? "Mirrored" : "Split"}
+          </Badge>}
+          {hasOverride && !hasFoldedConfig && <Badge variant="secondary" className="rounded-full text-[9px]">Custom</Badge>}
           {scanStatus === "pass" && <Badge variant="default" className="rounded-full text-[10px]"><CheckCircle2 className="mr-1 h-2.5 w-2.5"/>Scannable</Badge>}
           {scanStatus === "fail" && <Badge variant="destructive" className="rounded-full text-[10px]" title={scanReason ?? ""}><AlertTriangle className="mr-1 h-2.5 w-2.5"/>QR issue</Badge>}
         </div>
@@ -1029,14 +1094,14 @@ function FormatPreviewCard(props: {
         <Button size="sm" variant="outline" onClick={() => run("svg")} disabled={exporting !== null} className="rounded-full text-[10px]" title="Download SVG">
           {exporting === `${format.id}-svg` ? <Loader2 className="h-3 w-3 animate-spin"/> : <Download className="h-3 w-3"/>}
         </Button>
-        <Button size="sm" variant="outline" onClick={() => run("pdf")} disabled={exporting !== null || format.medium === "digital"} className="rounded-full text-[10px]" title={format.medium === "digital" ? "PDF for print formats only" : "Download PDF (circular formats include vector CutContour dieline)"}>
-          {exporting === `${format.id}-pdf` ? <Loader2 className="h-3 w-3 animate-spin"/> : <FileText className="h-3 w-3"/>}
+        <Button size="sm" variant="outline" onClick={() => isFolded ? runFolded("pdf") : run("pdf")} disabled={exporting !== null || format.medium === "digital"} className="rounded-full text-[10px]" title={isFolded ? "Folded print PDF (flat + proofs + notes)" : (format.medium === "digital" ? "PDF for print formats only" : "Download PDF")}>
+          {exporting?.startsWith(`${format.id}-`) && exporting.includes("pdf") ? <Loader2 className="h-3 w-3 animate-spin"/> : <FileText className="h-3 w-3"/>}
         </Button>
         <Button size="sm" variant="outline" onClick={validate} disabled={scanStatus === "checking"} className="rounded-full text-[10px]" title="Validate QR">
           {scanStatus === "checking" ? <Loader2 className="h-3 w-3 animate-spin"/> : <CheckCircle2 className="h-3 w-3"/>}
         </Button>
-        <Button size="sm" variant={hasOverride ? "default" : "outline"} onClick={() => setOverrideOpen(true)} className="rounded-full text-[10px]" title="Customise this format">
-          <Settings2 className="h-3 w-3"/>
+        <Button size="sm" variant={hasOverride ? "default" : "outline"} onClick={() => isFolded ? setFoldedOpen(true) : setOverrideOpen(true)} className="rounded-full text-[10px]" title={isFolded ? "Open folded editor" : "Customise this format"}>
+          {isFolded ? <Layers className="h-3 w-3"/> : <Settings2 className="h-3 w-3"/>}
         </Button>
       </div>
       {isCircular && (
@@ -1052,6 +1117,22 @@ function FormatPreviewCard(props: {
           </Button>
         </div>
       )}
+      {isFolded && (
+        <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+          <Button size="sm" variant="outline" onClick={() => runFolded("front-png")} disabled={exporting !== null} className="rounded-full text-[9px]" title="Front-face PNG">
+            {exporting === `${format.id}-folded-front-png` ? <Loader2 className="h-3 w-3 animate-spin"/> : "Front"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => runFolded("back-png")} disabled={exporting !== null} className="rounded-full text-[9px]" title="Back-face PNG">
+            {exporting === `${format.id}-folded-back-png` ? <Loader2 className="h-3 w-3 animate-spin"/> : "Back"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => runFolded("svg-guides")} disabled={exporting !== null} className="rounded-full text-[9px]" title="Flat SVG with production paths">
+            {exporting === `${format.id}-folded-svg-guides` ? <Loader2 className="h-3 w-3 animate-spin"/> : "SVG·guides"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => runFolded("mockup")} disabled={exporting !== null} className="rounded-full text-[9px]" title="Folded mockup PNG">
+            {exporting === `${format.id}-folded-mockup` ? <Loader2 className="h-3 w-3 animate-spin"/> : "Mockup"}
+          </Button>
+        </div>
+      )}
       <OverrideDialog
         open={overrideOpen}
         onOpenChange={setOverrideOpen}
@@ -1063,8 +1144,37 @@ function FormatPreviewCard(props: {
         onClear={() => { onOverrideClear(); setOverrideOpen(false); }}
         onCopyToFormats={onCopyToFormats}
       />
+      {isFolded && (
+        <FoldedFormatEditor
+          open={foldedOpen}
+          onOpenChange={setFoldedOpen}
+          format={format}
+          contentBase={contentBase}
+          layoutTemplate={layoutTemplate}
+          brand={brand}
+          qrDesign={qrDesign}
+          qrData={qrData}
+          qrLogoUrl={qrLogoUrl}
+          config={override?.folded}
+          onSave={(c) => onOverrideChange({ ...(override ?? {}), folded: c })}
+          onClear={() => {
+            const next = { ...(override ?? {}) };
+            delete next.folded;
+            if (Object.keys(next).length === 0) onOverrideClear();
+            else onOverrideChange(next);
+          }}
+        />
+      )}
     </div>
   );
+}
+
+function triggerBlobDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 type PanelFilter = "all" | "blocking" | "warnings" | "qr" | "text" | "image" | "print" | "content";
