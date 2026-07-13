@@ -1564,7 +1564,7 @@ function ValidationPanel({ results, validating, onRun, warningsAck, onAckChange,
 
 
 
-function OverrideDialog({ open, onOpenChange, format, override, globalSettings, selectedFormats, onSave, onClear, onCopyToFormats }: {
+function OverrideDialog({ open, onOpenChange, format, override, globalSettings, selectedFormats, onSave, onClear, onCopyToFormats, onOpenAdvancedCopy }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   format: BusinessFormat;
@@ -1574,6 +1574,7 @@ function OverrideDialog({ open, onOpenChange, format, override, globalSettings, 
   onSave: (o: FormatOverride) => void;
   onClear: () => void;
   onCopyToFormats: (ids: string[], o: FormatOverride) => void;
+  onOpenAdvancedCopy: (o: FormatOverride) => void;
 }) {
   const [draft, setDraft] = useState<FormatOverride>({});
   useEffect(() => { if (open) setDraft(override ?? {}); }, [open, override]);
