@@ -839,6 +839,39 @@ function MarketingPackEditor() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AutoFixDialog
+        open={autoFixOpen}
+        onOpenChange={(v) => { setAutoFixOpen(v); if (!v) setAutoFixPhase("ready"); }}
+        proposals={autoFixProposals}
+        phase={autoFixPhase}
+        error={autoFixError}
+        onApply={applySelectedAutoFixes}
+        onCancel={() => setAutoFixOpen(false)}
+      />
+
+      {pack && dupMode && (
+        <DuplicateWizard
+          open={dupMode != null}
+          onOpenChange={(v) => { if (!v) setDupMode(null); }}
+          mode={dupMode}
+          currentBusinessId={pack.business_id}
+          sourcePack={{
+            id: pack.id,
+            project_name: projectName,
+            layout_template: layoutTemplate,
+            headline, support_text: supportText, cta_text: ctaText, footer_text: footerText,
+            pack_type: pack.pack_type,
+            show_business_name: showBusinessName, show_logo: showLogo,
+            show_stars: showStars, show_google_badge: showGoogleBadge,
+            selected_formats: selectedFormats,
+            global_settings: globalSettings as unknown as Record<string, unknown>,
+            format_customizations: formatCustomizations as unknown as Record<string, unknown>,
+          }}
+          defaultName={`${projectName} (copy)`}
+          onCreated={(newId) => { setDupMode(null); navigate({ to: "/marketing-packs/$id", params: { id: newId } }); }}
+        />
+      )}
     </div>
   );
 }
