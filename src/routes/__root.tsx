@@ -86,14 +86,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "GuestReview Pro helps hotels, restaurants and retail brands generate branded Google review QR codes, track scans by location, and delight every guest.",
       },
       { name: "author", content: "GuestReview Pro" },
-      { property: "og:title", content: "GuestReview Pro" },
+      { property: "og:title", content: "GuestReview Pro — Grow Google reviews with beautiful QR" },
       {
         property: "og:description",
         content:
-          "Branded Google review QR codes and per-location analytics for hospitality and retail.",
+          "GuestReview Pro helps hotels, restaurants and retail brands generate branded Google review QR codes, track scans by location, and delight every guest.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "GuestReview Pro — Grow Google reviews with beautiful QR" },
+      { name: "twitter:description", content: "GuestReview Pro helps hotels, restaurants and retail brands generate branded Google review QR codes, track scans by location, and delight every guest." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/82792254-d575-4af6-9da7-7519f2c8ea17/id-preview-824daf51--b8a4e22d-5aa2-4598-b96c-d47d9b7e94e5.lovable.app-1783945846691.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/82792254-d575-4af6-9da7-7519f2c8ea17/id-preview-824daf51--b8a4e22d-5aa2-4598-b96c-d47d9b7e94e5.lovable.app-1783945846691.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
