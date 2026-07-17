@@ -120,6 +120,7 @@ function AuthedLayout() {
               <Menu className="h-4 w-4" />
             </button>
             <div className="flex-1" />
+            <BillingRegionBadge region={region ?? null} />
           </header>
           <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-8">
             <Outlet />
