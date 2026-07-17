@@ -44,7 +44,8 @@ type State =
   | { kind: "paused"; qr: QrRow }
   | { kind: "expired"; qr: QrRow }
   | { kind: "archived"; qr: QrRow }
-  | { kind: "active"; qr: QrRow };
+  | { kind: "invalidDestination"; qr: QrRow }
+  | { kind: "active"; qr: QrRow; finalUrl: string };
 
 function sessionStorageKey(qrId: string) {
   return `grp:scan:${qrId}`;
