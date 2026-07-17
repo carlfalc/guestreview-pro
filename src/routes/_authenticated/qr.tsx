@@ -343,22 +343,40 @@ function CreateQrDialog({
   }, [open]);
 
   const isGoogleReview = destinationType === "google_review";
-  const missingReviewUrl = isGoogleReview && !!business && !business.google_review_url;
-  const urlToValidate = isGoogleReview ? business?.google_review_url ?? "" : destinationUrl;
-  const urlValid = isValidHttpsUrl(urlToValidate);
+  const trimmedDestinationUrl = destinationUrl.trim();
+  const resolvedPreview = resolveQrDestination({
+    destinationType,
+    destinationUrl: trimmedDestinationUrl,
+    businessGoogleReviewUrl: business?.google_review_url,
+  });
+  const missingReviewUrl = isGoogleReview && !!business && !resolvedPreview.url;
+  const urlValid = !!resolvedPreview.url;
 
   async function submit() {
     if (!business) return toast.error("Select a business");
-    if (missingReviewUrl) {
-      return toast.error("This business has no Google review URL. Add one first or pick a different destination type.");
-    }
-    if (!urlValid) {
-      return toast.error("Enter a valid https:// URL for the destination.");
+    if (isGoogleReview) {
+      // For a google_review QR: either QR-specific override is valid, or business URL must be valid.
+      if (trimmedDestinationUrl && !isValidDestinationUrl(trimmedDestinationUrl)) {
+        return toast.error("QR-specific review URL is not a valid https:// URL.");
+      }
+      if (!resolvedPreview.url) {
+        return toast.error("No valid Google review URL. Add one on the business or enter a QR-specific override.");
+      }
+    } else {
+      if (!isValidDestinationUrl(trimmedDestinationUrl)) {
+        return toast.error("Enter a valid https:// destination URL.");
+      }
     }
     setSaving(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not signed in");
+      // Persist QR-specific override when the user entered one; otherwise leave null so it falls back to business.
+      const qrDestinationUrl = isGoogleReview
+        ? (trimmedDestinationUrl && trimmedDestinationUrl !== (business.google_review_url ?? "").trim()
+            ? trimmedDestinationUrl
+            : null)
+        : trimmedDestinationUrl;
       const { data, error } = await supabase
         .from("qr_codes")
         .insert({
@@ -369,7 +387,7 @@ function CreateQrDialog({
           label: label.trim() || "Untitled QR",
           campaign: campaign.trim() || null,
           destination_type: destinationType,
-          destination_url: isGoogleReview ? business.google_review_url : destinationUrl.trim(),
+          destination_url: qrDestinationUrl,
           destination_label: destinationLabelValue.trim() || null,
           expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
           status,
