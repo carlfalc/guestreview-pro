@@ -599,8 +599,12 @@ function EditQrDialog({
 
   async function save() {
     if (!qr) return;
-    if (values.destination_url && !isValidHttpsUrl(values.destination_url)) {
+    const trimmed = values.destination_url.trim();
+    if (trimmed && !isValidDestinationUrl(trimmed)) {
       return toast.error("Enter a valid https:// URL");
+    }
+    if (values.destination_type !== "google_review" && !trimmed) {
+      return toast.error("Destination URL is required for this destination type");
     }
     setSaving(true);
     const { error } = await supabase
@@ -609,7 +613,7 @@ function EditQrDialog({
         label: values.label.trim() || "Untitled QR",
         campaign: values.campaign.trim() || null,
         destination_type: values.destination_type,
-        destination_url: values.destination_url.trim() || null,
+        destination_url: trimmed || null,
         destination_label: values.destination_label.trim() || null,
         status: values.status,
         landing_mode: values.landing_mode,
