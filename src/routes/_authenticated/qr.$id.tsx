@@ -119,16 +119,36 @@ function QrDetail() {
 
   const isGoogleReview = destinationType === "google_review";
   const biz = qr?.businesses as { name?: string; brand_primary?: string; logo_url?: string; google_review_url?: string } | null;
-  const effectiveDestinationUrl = isGoogleReview ? biz?.google_review_url ?? "" : destinationUrl;
-  const urlValid = isValidHttpsUrl(effectiveDestinationUrl);
+  const trimmedDestinationUrl = destinationUrl.trim();
+  const resolved = resolveQrDestination({
+    destinationType,
+    destinationUrl: trimmedDestinationUrl,
+    businessGoogleReviewUrl: biz?.google_review_url,
+  });
+  const effectiveDestinationUrl = resolved.url ?? "";
+  const urlValid = !!resolved.url;
 
   async function saveAll() {
     if (!qr) return;
-    if (!urlValid) return toast.error("Destination URL is not a valid https:// URL");
+    if (trimmedDestinationUrl && !isValidDestinationUrl(trimmedDestinationUrl)) {
+      return toast.error("QR destination URL is not a valid https:// URL.");
+    }
+    if (!isGoogleReview && !isValidDestinationUrl(trimmedDestinationUrl)) {
+      return toast.error("Destination URL is required and must be a valid https:// URL.");
+    }
+    if (isGoogleReview && !resolved.url) {
+      return toast.error("No valid Google review URL. Add one on the business or enter a QR-specific override.");
+    }
+    // For google_review, only persist a QR-specific override when it differs from the business URL.
+    const qrDestinationUrl = isGoogleReview
+      ? (trimmedDestinationUrl && trimmedDestinationUrl !== (biz?.google_review_url ?? "").trim()
+          ? trimmedDestinationUrl
+          : null)
+      : trimmedDestinationUrl;
     const patch = {
       label,
       destination_type: destinationType,
-      destination_url: isGoogleReview ? biz?.google_review_url ?? null : destinationUrl.trim() || null,
+      destination_url: qrDestinationUrl,
       destination_label: destinationLabelValue.trim() || null,
       landing_mode: landingMode,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
