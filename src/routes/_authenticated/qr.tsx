@@ -38,7 +38,6 @@ import {
   DESTINATION_TYPES,
   destinationLabel,
   computeEffectiveStatus,
-  isValidHttpsUrl,
   statusBadgeVariant,
   statusLabel,
   type DestinationType,
