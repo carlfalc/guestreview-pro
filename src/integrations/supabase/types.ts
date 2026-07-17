@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_regions: {
+        Row: {
+          confidence: string
+          confirmed_at: string | null
+          country_code: string
+          country_name: string
+          created_at: string
+          currency_code: string
+          currency_name: string
+          currency_symbol: string
+          detected_at: string
+          detection_source: string
+          id: string
+          is_locked: boolean
+          owner_id: string
+          pricing_region: string
+          stripe_billing_country: string | null
+          updated_at: string
+        }
+        Insert: {
+          confidence: string
+          confirmed_at?: string | null
+          country_code: string
+          country_name: string
+          created_at?: string
+          currency_code: string
+          currency_name: string
+          currency_symbol: string
+          detected_at?: string
+          detection_source: string
+          id?: string
+          is_locked?: boolean
+          owner_id: string
+          pricing_region: string
+          stripe_billing_country?: string | null
+          updated_at?: string
+        }
+        Update: {
+          confidence?: string
+          confirmed_at?: string | null
+          country_code?: string
+          country_name?: string
+          created_at?: string
+          currency_code?: string
+          currency_name?: string
+          currency_symbol?: string
+          detected_at?: string
+          detection_source?: string
+          id?: string
+          is_locked?: boolean
+          owner_id?: string
+          pricing_region?: string
+          stripe_billing_country?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_copy_favourites: {
         Row: {
           business_id: string | null
@@ -127,9 +184,13 @@ export type Database = {
       businesses: {
         Row: {
           address: string | null
+          address_line_1: string | null
+          address_line_2: string | null
           ai_copy_preferences: Json
           brand_primary: string | null
           brand_secondary: string | null
+          city: string | null
+          country_code: string | null
           cover_image_url: string | null
           created_at: string
           google_review_url: string | null
@@ -139,6 +200,8 @@ export type Database = {
           name: string
           owner_id: string
           phone: string | null
+          postal_code: string | null
+          region: string | null
           status: string
           updated_at: string
           website: string | null
@@ -146,9 +209,13 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
           ai_copy_preferences?: Json
           brand_primary?: string | null
           brand_secondary?: string | null
+          city?: string | null
+          country_code?: string | null
           cover_image_url?: string | null
           created_at?: string
           google_review_url?: string | null
@@ -158,6 +225,8 @@ export type Database = {
           name: string
           owner_id: string
           phone?: string | null
+          postal_code?: string | null
+          region?: string | null
           status?: string
           updated_at?: string
           website?: string | null
@@ -165,9 +234,13 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
           ai_copy_preferences?: Json
           brand_primary?: string | null
           brand_secondary?: string | null
+          city?: string | null
+          country_code?: string | null
           cover_image_url?: string | null
           created_at?: string
           google_review_url?: string | null
@@ -177,6 +250,8 @@ export type Database = {
           name?: string
           owner_id?: string
           phone?: string | null
+          postal_code?: string | null
+          region?: string | null
           status?: string
           updated_at?: string
           website?: string | null
@@ -476,6 +551,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      region_correction_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          current_country_code: string | null
+          id: string
+          owner_id: string
+          reason: string
+          requested_country_code: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          supporting_information: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          current_country_code?: string | null
+          id?: string
+          owner_id: string
+          reason: string
+          requested_country_code: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          supporting_information?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          current_country_code?: string | null
+          id?: string
+          owner_id?: string
+          reason?: string
+          requested_country_code?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          supporting_information?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       scan_events: {
         Row: {
