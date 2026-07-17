@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { AccountRegionCard } from "@/components/billing/AccountRegionCard";
+import { useAccountRegion } from "@/hooks/use-account-region";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -21,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const [profile, setProfile] = useState<{ full_name?: string; timezone?: string; language?: string; theme?: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const { data: region } = useAccountRegion();
 
   useEffect(() => {
     (async () => {
@@ -61,7 +64,10 @@ function SettingsPage() {
         <p className="mt-1 text-sm text-muted-foreground">Preferences and personalization.</p>
       </div>
 
+      {region ? <AccountRegionCard region={region} /> : null}
+
       <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
+
         <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Full name</Label>

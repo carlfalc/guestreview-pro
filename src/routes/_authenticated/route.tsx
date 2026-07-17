@@ -9,11 +9,14 @@ import {
   Settings,
   LogOut,
   Menu,
+  Sparkles,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAccountRegion } from "@/hooks/use-account-region";
+import { BillingRegionBadge } from "@/components/billing/BillingRegionBadge";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -31,6 +34,7 @@ const nav = [
   { to: "/qr", label: "QR codes", icon: QrCode },
   { to: "/marketing-packs", label: "Marketing Packs", icon: Package },
   { to: "/analytics", label: "Analytics", icon: LineChart },
+  { to: "/pricing", label: "Pricing", icon: Sparkles },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -40,6 +44,7 @@ function AuthedLayout() {
   const queryClient = useQueryClient();
   const [email, setEmail] = useState<string>(user.email ?? "");
   const [open, setOpen] = useState(false);
+  const { data: region } = useAccountRegion();
 
   useEffect(() => {
     setEmail(user.email ?? "");
@@ -115,6 +120,7 @@ function AuthedLayout() {
               <Menu className="h-4 w-4" />
             </button>
             <div className="flex-1" />
+            <BillingRegionBadge region={region ?? null} />
           </header>
           <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-8">
             <Outlet />
