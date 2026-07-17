@@ -196,17 +196,17 @@ function GuestLanding() {
   if (state.kind === "archived") {
     return <StatusPage icon={<ArchiveX className="h-8 w-8" />} brand={state.qr.businesses?.brand_primary ?? undefined} businessName={state.qr.businesses?.name} title="Not available" message="This QR code is no longer active." />;
   }
+  if (state.kind === "invalidDestination") {
+    return <StatusPage icon={<ArchiveX className="h-8 w-8" />} brand={state.qr.businesses?.brand_primary ?? undefined} businessName={state.qr.businesses?.name} title="Review link unavailable" message="This business's review link needs to be updated. Please contact the business." />;
+  }
 
-  return <ActiveLanding qr={state.qr} eventId={eventId} />;
+  return <ActiveLanding qr={state.qr} eventId={eventId} finalUrl={state.finalUrl} />;
 }
 
-function ActiveLanding({ qr, eventId }: { qr: QrRow; eventId: string | null }) {
+function ActiveLanding({ qr, eventId, finalUrl }: { qr: QrRow; eventId: string | null; finalUrl: string }) {
   const b = qr.businesses!;
   const brand = b.brand_primary || "#0071e3";
   const dtype = qr.destination_type as DestinationType;
-  const finalUrl = dtype === "google_review"
-    ? b.google_review_url ?? qr.destination_url ?? ""
-    : qr.destination_url ?? "";
 
   async function goDestination() {
     if (eventId) {
