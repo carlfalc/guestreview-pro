@@ -228,6 +228,40 @@ function QrList() {
           navigate({ to: "/qr/$id", params: { id } });
         }}
       />
+
+      <EditQrDialog
+        qr={editing}
+        onClose={() => setEditing(null)}
+        onRequestDelete={() => setConfirmDelete(true)}
+      />
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this QR code?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the QR code and its scan history. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!editing) return;
+                const { error } = await supabase.from("qr_codes").delete().eq("id", editing.id);
+                if (error) return toast.error(error.message);
+                toast.success("QR code deleted");
+                setConfirmDelete(false);
+                setEditing(null);
+                qc.invalidateQueries({ queryKey: ["all-qr"] });
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
