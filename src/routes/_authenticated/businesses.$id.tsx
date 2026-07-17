@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { ArrowLeft, Plus, MapPin, QrCode, Save, Trash2 } from "lucide-react";
 import { generateShortCode } from "@/lib/short-code";
+import { isValidDestinationUrl } from "@/lib/resolve-qr-destination";
 
 export const Route = createFileRoute("/_authenticated/businesses/$id")({
   component: BusinessDetail,
