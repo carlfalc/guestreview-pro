@@ -106,15 +106,19 @@ export function getRegionForCountry(countryCode: string | null | undefined): Reg
   const up = countryCode.toUpperCase();
   const cfg = REGIONS[up];
   if (cfg) return cfg;
-  // Unsupported country: retain actual code but use international pricing/currency.
+  // Unsupported country: retain actual code + proper name, but use international pricing/currency.
+  // Lazy import to avoid coupling regions.ts to the full ISO list at module load in tight loops.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ISO_COUNTRY_NAMES } = require("./country-names") as typeof import("./country-names");
   return {
     ...INTERNATIONAL_FALLBACK,
     countryCode: up,
-    countryName: up,
+    countryName: ISO_COUNTRY_NAMES[up] ?? up,
   };
 }
 
 export const SUPPORTED_COUNTRIES: RegionConfig[] = Object.values(REGIONS);
 
-/** Nine-decimal currencies use 0 minor units. */
+/** Zero-decimal currencies use 0 minor units. */
 export const ZERO_DECIMAL_CURRENCIES: ReadonlySet<CurrencyCode> = new Set(["JPY", "KRW", "IDR"]);
+
