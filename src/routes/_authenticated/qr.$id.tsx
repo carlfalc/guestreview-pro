@@ -340,20 +340,47 @@ function QrDetail() {
                 </Select>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
-                <Label>Destination URL</Label>
+                <Label>Destination URL{isGoogleReview ? " (QR-specific override — optional)" : ""}</Label>
                 <Input
-                  value={isGoogleReview ? biz?.google_review_url ?? "" : destinationUrl}
+                  value={destinationUrl}
                   onChange={(e) => setDestinationUrl(e.target.value)}
-                  disabled={isGoogleReview}
-                  placeholder="https://..."
+                  placeholder={isGoogleReview ? (biz?.google_review_url ?? "https://g.page/r/.../review") : "https://..."}
                   className="rounded-xl font-mono text-xs"
                 />
-                {isGoogleReview && (
-                  <p className="text-[11px] text-muted-foreground">Uses the business's Google review URL. Switch to Custom to override.</p>
-                )}
-                {!isGoogleReview && destinationUrl && !urlValid && (
+                {isGoogleReview ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    Leave blank to use the business's Google review URL. Enter a URL here to override for this QR only.
+                  </p>
+                ) : null}
+                {trimmedDestinationUrl && !isValidDestinationUrl(trimmedDestinationUrl) && (
                   <p className="text-[11px] text-destructive">Enter a valid https:// URL.</p>
                 )}
+                <div className="rounded-xl border border-border/60 bg-accent/30 p-3 text-[11px]">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-muted-foreground">Effective destination</p>
+                      <p className="mt-0.5 truncate font-mono">
+                        {effectiveDestinationUrl || <span className="text-destructive">Not set</span>}
+                      </p>
+                      <p className="mt-0.5 text-muted-foreground">
+                        Source: {resolved.source === "qr" ? "QR-specific destination" : resolved.source === "business" ? "Business default review link" : "None"}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!urlValid}
+                      onClick={() => {
+                        if (!resolved.url) return toast.error("No valid destination to test");
+                        window.open(resolved.url, "_blank", "noopener,noreferrer");
+                      }}
+                      className="rounded-full"
+                    >
+                      <ExternalLink className="mr-1 h-3.5 w-3.5"/> Test destination
+                    </Button>
+                  </div>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Destination label</Label>
