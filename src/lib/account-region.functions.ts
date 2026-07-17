@@ -1,9 +1,9 @@
 // Client-callable server functions for the account region system.
-// resolveAccountRegion + getAccountRegion require an authenticated user.
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getRequest } from "@tanstack/react-start/server";
+import { isValidCountryCode } from "./country-names";
 
 export interface AccountRegionDTO {
   countryCode: string;
@@ -20,12 +20,14 @@ export interface AccountRegionDTO {
   stripeBillingCountry: string | null;
 }
 
-function rowToDto(row: {
+interface AccountRegionRow {
   country_code: string; country_name: string; currency_code: string;
   currency_symbol: string; currency_name: string; pricing_region: string;
   detection_source: string; confidence: string; is_locked: boolean;
   detected_at: string; confirmed_at: string | null; stripe_billing_country: string | null;
-}): AccountRegionDTO {
+}
+
+function rowToDto(row: AccountRegionRow): AccountRegionDTO {
   return {
     countryCode: row.country_code,
     countryName: row.country_name,
@@ -56,23 +58,32 @@ export const getAccountRegion = createServerFn({ method: "GET" })
   });
 
 /**
- * Detect and persist the caller's account region. Idempotent:
- * - If a row already exists AND is locked, returns it unchanged.
- * - Otherwise runs the detection priority chain and writes a new row.
+ * Initial detection: creates the caller's account_regions row if it does not
+ * exist yet. If a row already exists (locked or not), the ordinary user flow
+ * returns it unchanged. Locked rows may ONLY be modified via:
+ *   - applyVerifiedBillingRegion (Stripe webhook)
+ *   - approveRegionCorrectionRequest (admin)
+ *
+ * Also captures a registration-country snapshot on the profile at first run.
  */
 export const resolveAccountRegion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AccountRegionDTO> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { detectAccountCountry, toAccountRegionRow } = await import("./account-region.server");
+    const {
+      detectAccountCountry,
+      toAccountRegionRow,
+      writeRegionAudit,
+    } = await import("./account-region.server");
 
-    // Bail out early if a locked row already exists.
+    // If a row already exists, respect it — ordinary detection cannot mutate
+    // an existing region (locked semantics).
     const { data: existing } = await supabaseAdmin
       .from("account_regions")
       .select("*")
       .eq("owner_id", context.userId)
       .maybeSingle();
-    if (existing && existing.is_locked) return rowToDto(existing);
+    if (existing) return rowToDto(existing);
 
     let request: Request | undefined;
     try { request = getRequest(); } catch { request = undefined; }
@@ -86,6 +97,42 @@ export const resolveAccountRegion = createServerFn({ method: "POST" })
       .select("*")
       .single();
     if (error) throw new Error(error.message);
+
+    await writeRegionAudit(supabaseAdmin, {
+      ownerId: context.userId,
+      previous: null,
+      next: {
+        country_code: row.country_code,
+        currency_code: row.currency_code,
+        pricing_region: row.pricing_region,
+      },
+      changeSource: "initial_detection",
+      reason: `Initial detection via ${detection.source}`,
+      changedBy: null,
+    });
+
+    // Registration snapshot (one-time). Cannot be edited by the user thanks
+    // to the protect_registration_country trigger.
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("registration_country_code")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (!profile?.registration_country_code) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({
+          registration_country_code: detection.region.countryCode,
+          registration_country_source: detection.source === "business_address"
+            ? "business_address"
+            : detection.source === "ip_geolocation"
+              ? "ip_geolocation"
+              : "browser_locale",
+          registration_country_recorded_at: new Date().toISOString(),
+        })
+        .eq("id", context.userId);
+    }
+
     return rowToDto(upserted);
   });
 
@@ -99,7 +146,7 @@ export const createRegionCorrectionRequest = createServerFn({ method: "POST" })
   }) => {
     const cc = String(data?.requestedCountryCode ?? "").trim().toUpperCase();
     const reason = String(data?.reason ?? "").trim();
-    if (!/^[A-Z]{2}$/.test(cc)) throw new Error("Requested country is required.");
+    if (!isValidCountryCode(cc)) throw new Error("Requested country is not a valid ISO code.");
     if (reason.length < 5) throw new Error("Please provide a reason (min 5 characters).");
     return {
       requestedCountryCode: cc,
@@ -108,12 +155,26 @@ export const createRegionCorrectionRequest = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data, context }) => {
-    // Look up current country (may be null if no region row yet).
     const { data: region } = await context.supabase
       .from("account_regions")
       .select("country_code")
       .eq("owner_id", context.userId)
       .maybeSingle();
+
+    if (region?.country_code === data.requestedCountryCode) {
+      throw new Error("Requested country is the same as your current billing country.");
+    }
+
+    // Prevent duplicate pending requests (also enforced by partial unique index).
+    const { data: existingPending } = await context.supabase
+      .from("region_correction_requests")
+      .select("id")
+      .eq("owner_id", context.userId)
+      .eq("status", "pending")
+      .maybeSingle();
+    if (existingPending) {
+      throw new Error("You already have a billing-region correction awaiting review.");
+    }
 
     const { error } = await context.supabase
       .from("region_correction_requests")
@@ -124,7 +185,12 @@ export const createRegionCorrectionRequest = createServerFn({ method: "POST" })
         reason: data.reason,
         supporting_information: data.supportingInformation,
       });
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (/rcr_one_pending_per_owner/i.test(error.message)) {
+        throw new Error("You already have a billing-region correction awaiting review.");
+      }
+      throw new Error(error.message);
+    }
     return { ok: true };
   });
 
@@ -137,6 +203,20 @@ export const listMyRegionCorrectionRequests = createServerFn({ method: "GET" })
       .select("id, current_country_code, requested_country_code, reason, status, created_at, reviewed_at")
       .eq("owner_id", context.userId)
       .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+/** Region audit trail for the current user (own account only, redacted). */
+export const listMyRegionAuditLog = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("account_region_audit_log")
+      .select("id, previous_country_code, new_country_code, previous_currency_code, new_currency_code, change_source, reason, created_at")
+      .eq("owner_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
     if (error) throw new Error(error.message);
     return data ?? [];
   });

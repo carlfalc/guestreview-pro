@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.protect_registration_country() FROM PUBLIC, anon, authenticated;

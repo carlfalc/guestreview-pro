@@ -2,6 +2,9 @@
 // Every supported country maps to a pricing region and locale.
 // Countries not listed here fall back to INTERNATIONAL / USD.
 
+import { ISO_COUNTRY_NAMES } from "./country-names";
+
+
 export type CurrencyCode =
   | "NZD" | "AUD" | "USD" | "CAD" | "GBP" | "EUR" | "SGD" | "HKD" | "JPY"
   | "KRW" | "INR" | "ZAR" | "AED" | "SAR" | "CHF" | "NOK" | "SEK" | "DKK"
@@ -106,15 +109,17 @@ export function getRegionForCountry(countryCode: string | null | undefined): Reg
   const up = countryCode.toUpperCase();
   const cfg = REGIONS[up];
   if (cfg) return cfg;
-  // Unsupported country: retain actual code but use international pricing/currency.
+  // Unsupported country: retain actual code + real ISO 3166 name.
   return {
     ...INTERNATIONAL_FALLBACK,
     countryCode: up,
-    countryName: up,
+    countryName: ISO_COUNTRY_NAMES[up] ?? up,
   };
 }
 
 export const SUPPORTED_COUNTRIES: RegionConfig[] = Object.values(REGIONS);
 
-/** Nine-decimal currencies use 0 minor units. */
+
+/** Zero-decimal currencies use 0 minor units. */
 export const ZERO_DECIMAL_CURRENCIES: ReadonlySet<CurrencyCode> = new Set(["JPY", "KRW", "IDR"]);
+

@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_region_audit_log: {
+        Row: {
+          change_source: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_country_code: string | null
+          new_currency_code: string | null
+          new_pricing_region: string | null
+          owner_id: string
+          previous_country_code: string | null
+          previous_currency_code: string | null
+          previous_pricing_region: string | null
+          reason: string | null
+          stripe_event_id: string | null
+        }
+        Insert: {
+          change_source: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_country_code?: string | null
+          new_currency_code?: string | null
+          new_pricing_region?: string | null
+          owner_id: string
+          previous_country_code?: string | null
+          previous_currency_code?: string | null
+          previous_pricing_region?: string | null
+          reason?: string | null
+          stripe_event_id?: string | null
+        }
+        Update: {
+          change_source?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_country_code?: string | null
+          new_currency_code?: string | null
+          new_pricing_region?: string | null
+          owner_id?: string
+          previous_country_code?: string | null
+          previous_currency_code?: string | null
+          previous_pricing_region?: string | null
+          reason?: string | null
+          stripe_event_id?: string | null
+        }
+        Relationships: []
+      }
       account_regions: {
         Row: {
           confidence: string
@@ -407,6 +455,9 @@ export type Database = {
           full_name: string | null
           id: string
           language: string | null
+          registration_country_code: string | null
+          registration_country_recorded_at: string | null
+          registration_country_source: string | null
           subscription_tier: string | null
           theme: string | null
           timezone: string | null
@@ -419,6 +470,9 @@ export type Database = {
           full_name?: string | null
           id: string
           language?: string | null
+          registration_country_code?: string | null
+          registration_country_recorded_at?: string | null
+          registration_country_source?: string | null
           subscription_tier?: string | null
           theme?: string | null
           timezone?: string | null
@@ -431,6 +485,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           language?: string | null
+          registration_country_code?: string | null
+          registration_country_recorded_at?: string | null
+          registration_country_source?: string | null
           subscription_tier?: string | null
           theme?: string | null
           timezone?: string | null
