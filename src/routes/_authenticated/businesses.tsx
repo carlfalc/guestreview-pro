@@ -320,10 +320,15 @@ function EditBusinessDialog({
 
   async function save() {
     if (!business) return;
+    const gru = values.google_review_url.trim();
+    if (gru && !isValidDestinationUrl(gru)) {
+      return toast.error("Enter a valid https:// Google review URL (e.g. https://g.page/r/.../review)");
+    }
     setSaving(true);
+    const payload = { ...values, google_review_url: gru || null };
     const { error } = await supabase
       .from("businesses")
-      .update(values)
+      .update(payload)
       .eq("id", business.id);
     setSaving(false);
     if (error) return toast.error(error.message);
