@@ -55,6 +55,23 @@ type BusinessRow = {
   google_review_url: string | null;
 };
 
+type QrRow = {
+  id: string;
+  business_id: string;
+  location_id: string | null;
+  label: string | null;
+  campaign: string | null;
+  destination_type: string;
+  destination_url: string | null;
+  destination_label: string | null;
+  status: string;
+  landing_mode: string;
+  expires_at: string | null;
+  scans_count: number;
+  businesses?: { name?: string; brand_primary?: string } | null;
+  locations?: { name?: string; location_type?: string } | null;
+};
+
 type LocationRow = {
   id: string;
   business_id: string;
