@@ -35,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Building2, MapPin, Trash2, Save, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { isValidDestinationUrl } from "@/lib/resolve-qr-destination";
 
 export const Route = createFileRoute("/_authenticated/businesses")({
   component: Businesses,
