@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Star, Globe, Phone, MapPin, Clock, PauseCircle, ArchiveX } from "lucide-react";
 import { parseUserAgent } from "@/lib/short-code";
 import { destinationLabel, type DestinationType } from "@/lib/qr-destinations";
+import { resolveQrDestination } from "@/lib/resolve-qr-destination";
 
 export const Route = createFileRoute("/r/$code")({
   component: GuestLanding,
