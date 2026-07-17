@@ -31,11 +31,11 @@ import {
   DESTINATION_TYPES,
   destinationLabel,
   computeEffectiveStatus,
-  isValidHttpsUrl,
   statusBadgeVariant,
   statusLabel,
   type DestinationType,
 } from "@/lib/qr-destinations";
+import { isValidDestinationUrl, resolveQrDestination } from "@/lib/resolve-qr-destination";
 import { generateShortCode } from "@/lib/short-code";
 import { QrDesigner } from "@/components/qr-designer";
 import { mergeDesign, type QrDesign } from "@/lib/qr-design";
