@@ -147,7 +147,12 @@ function QrList() {
             const loc = q.locations as { name?: string; location_type?: string } | null;
             const effectiveStatus = computeEffectiveStatus(q.status, q.expires_at);
             return (
-              <Link key={q.id} to="/qr/$id" params={{ id: q.id }} className="group">
+              <button
+                key={q.id}
+                type="button"
+                onClick={() => setEditing(q)}
+                className="group text-left"
+              >
                 <Card className="rounded-2xl border-border/70 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]">
                   <CardContent className="flex items-center gap-3 p-4">
                     <div
@@ -172,7 +177,7 @@ function QrList() {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+              </button>
             );
           })}
         </div>
