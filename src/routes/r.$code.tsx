@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Star, Globe, Phone, MapPin, Clock, PauseCircle, ArchiveX } from "lucide-react";
 import { parseUserAgent } from "@/lib/short-code";
 import { destinationLabel, type DestinationType } from "@/lib/qr-destinations";
+import { resolveQrDestination } from "@/lib/resolve-qr-destination";
 
 export const Route = createFileRoute("/r/$code")({
   component: GuestLanding,
@@ -43,7 +44,8 @@ type State =
   | { kind: "paused"; qr: QrRow }
   | { kind: "expired"; qr: QrRow }
   | { kind: "archived"; qr: QrRow }
-  | { kind: "active"; qr: QrRow };
+  | { kind: "invalidDestination"; qr: QrRow }
+  | { kind: "active"; qr: QrRow; finalUrl: string };
 
 function sessionStorageKey(qrId: string) {
   return `grp:scan:${qrId}`;
@@ -146,15 +148,22 @@ function GuestLanding() {
         setState({ kind: "expired", qr }); return;
       }
 
+      const resolved = resolveQrDestination({
+        destinationType: qr.destination_type,
+        destinationUrl: qr.destination_url,
+        businessGoogleReviewUrl: qr.businesses?.google_review_url,
+      });
+
+      if (!resolved.url) {
+        setState({ kind: "invalidDestination", qr });
+        return;
+      }
+
       const id = await recordScan(qr);
       setEventId(id);
-      setState({ kind: "active", qr });
+      setState({ kind: "active", qr, finalUrl: resolved.url });
 
-      const finalUrl = qr.destination_type === "google_review"
-        ? qr.businesses?.google_review_url ?? qr.destination_url ?? null
-        : qr.destination_url;
-
-      if (qr.landing_mode === "redirect" && finalUrl) {
+      if (qr.landing_mode === "redirect") {
         if (id) {
           const sid = getOrCreateSessionId();
           await supabase.rpc("mark_scan_clicked", {
@@ -163,8 +172,7 @@ function GuestLanding() {
             p_is_review: qr.destination_type === "google_review",
           }).then(() => {}, () => {});
         }
-        // Redirect after DB update completes (or timeout)
-        window.location.href = finalUrl;
+        window.location.href = resolved.url;
       }
     })();
   }, [code]);
@@ -188,17 +196,17 @@ function GuestLanding() {
   if (state.kind === "archived") {
     return <StatusPage icon={<ArchiveX className="h-8 w-8" />} brand={state.qr.businesses?.brand_primary ?? undefined} businessName={state.qr.businesses?.name} title="Not available" message="This QR code is no longer active." />;
   }
+  if (state.kind === "invalidDestination") {
+    return <StatusPage icon={<ArchiveX className="h-8 w-8" />} brand={state.qr.businesses?.brand_primary ?? undefined} businessName={state.qr.businesses?.name} title="Review link unavailable" message="This business's review link needs to be updated. Please contact the business." />;
+  }
 
-  return <ActiveLanding qr={state.qr} eventId={eventId} />;
+  return <ActiveLanding qr={state.qr} eventId={eventId} finalUrl={state.finalUrl} />;
 }
 
-function ActiveLanding({ qr, eventId }: { qr: QrRow; eventId: string | null }) {
+function ActiveLanding({ qr, eventId, finalUrl }: { qr: QrRow; eventId: string | null; finalUrl: string }) {
   const b = qr.businesses!;
   const brand = b.brand_primary || "#0071e3";
   const dtype = qr.destination_type as DestinationType;
-  const finalUrl = dtype === "google_review"
-    ? b.google_review_url ?? qr.destination_url ?? ""
-    : qr.destination_url ?? "";
 
   async function goDestination() {
     if (eventId) {

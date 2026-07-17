@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { ArrowLeft, Plus, MapPin, QrCode, Save, Trash2 } from "lucide-react";
 import { generateShortCode } from "@/lib/short-code";
+import { isValidDestinationUrl } from "@/lib/resolve-qr-destination";
 
 export const Route = createFileRoute("/_authenticated/businesses/$id")({
   component: BusinessDetail,
@@ -95,9 +96,17 @@ function BusinessDetail() {
   async function save() {
     if (!biz) return;
     if (!Object.keys(form).length) return toast.info("Nothing to save");
+    const patch: { [k: string]: string | null } = { ...form };
+    if ("google_review_url" in patch) {
+      const gru = (patch.google_review_url ?? "").trim();
+      if (gru && !isValidDestinationUrl(gru)) {
+        return toast.error("Enter a valid https:// Google review URL (e.g. https://g.page/r/.../review)");
+      }
+      patch.google_review_url = gru || null;
+    }
     const { error } = await supabase
       .from("businesses")
-      .update(form as never)
+      .update(patch as never)
       .eq("id", biz.id);
     if (error) return toast.error(error.message);
     toast.success("Saved");

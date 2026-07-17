@@ -31,11 +31,11 @@ import {
   DESTINATION_TYPES,
   destinationLabel,
   computeEffectiveStatus,
-  isValidHttpsUrl,
   statusBadgeVariant,
   statusLabel,
   type DestinationType,
 } from "@/lib/qr-destinations";
+import { isValidDestinationUrl, resolveQrDestination } from "@/lib/resolve-qr-destination";
 import { generateShortCode } from "@/lib/short-code";
 import { QrDesigner } from "@/components/qr-designer";
 import { mergeDesign, type QrDesign } from "@/lib/qr-design";
@@ -119,16 +119,36 @@ function QrDetail() {
 
   const isGoogleReview = destinationType === "google_review";
   const biz = qr?.businesses as { name?: string; brand_primary?: string; logo_url?: string; google_review_url?: string } | null;
-  const effectiveDestinationUrl = isGoogleReview ? biz?.google_review_url ?? "" : destinationUrl;
-  const urlValid = isValidHttpsUrl(effectiveDestinationUrl);
+  const trimmedDestinationUrl = destinationUrl.trim();
+  const resolved = resolveQrDestination({
+    destinationType,
+    destinationUrl: trimmedDestinationUrl,
+    businessGoogleReviewUrl: biz?.google_review_url,
+  });
+  const effectiveDestinationUrl = resolved.url ?? "";
+  const urlValid = !!resolved.url;
 
   async function saveAll() {
     if (!qr) return;
-    if (!urlValid) return toast.error("Destination URL is not a valid https:// URL");
+    if (trimmedDestinationUrl && !isValidDestinationUrl(trimmedDestinationUrl)) {
+      return toast.error("QR destination URL is not a valid https:// URL.");
+    }
+    if (!isGoogleReview && !isValidDestinationUrl(trimmedDestinationUrl)) {
+      return toast.error("Destination URL is required and must be a valid https:// URL.");
+    }
+    if (isGoogleReview && !resolved.url) {
+      return toast.error("No valid Google review URL. Add one on the business or enter a QR-specific override.");
+    }
+    // For google_review, only persist a QR-specific override when it differs from the business URL.
+    const qrDestinationUrl = isGoogleReview
+      ? (trimmedDestinationUrl && trimmedDestinationUrl !== (biz?.google_review_url ?? "").trim()
+          ? trimmedDestinationUrl
+          : null)
+      : trimmedDestinationUrl;
     const patch = {
       label,
       destination_type: destinationType,
-      destination_url: isGoogleReview ? biz?.google_review_url ?? null : destinationUrl.trim() || null,
+      destination_url: qrDestinationUrl,
       destination_label: destinationLabelValue.trim() || null,
       landing_mode: landingMode,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
@@ -320,20 +340,47 @@ function QrDetail() {
                 </Select>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
-                <Label>Destination URL</Label>
+                <Label>Destination URL{isGoogleReview ? " (QR-specific override — optional)" : ""}</Label>
                 <Input
-                  value={isGoogleReview ? biz?.google_review_url ?? "" : destinationUrl}
+                  value={destinationUrl}
                   onChange={(e) => setDestinationUrl(e.target.value)}
-                  disabled={isGoogleReview}
-                  placeholder="https://..."
+                  placeholder={isGoogleReview ? (biz?.google_review_url ?? "https://g.page/r/.../review") : "https://..."}
                   className="rounded-xl font-mono text-xs"
                 />
-                {isGoogleReview && (
-                  <p className="text-[11px] text-muted-foreground">Uses the business's Google review URL. Switch to Custom to override.</p>
-                )}
-                {!isGoogleReview && destinationUrl && !urlValid && (
+                {isGoogleReview ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    Leave blank to use the business's Google review URL. Enter a URL here to override for this QR only.
+                  </p>
+                ) : null}
+                {trimmedDestinationUrl && !isValidDestinationUrl(trimmedDestinationUrl) && (
                   <p className="text-[11px] text-destructive">Enter a valid https:// URL.</p>
                 )}
+                <div className="rounded-xl border border-border/60 bg-accent/30 p-3 text-[11px]">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-muted-foreground">Effective destination</p>
+                      <p className="mt-0.5 truncate font-mono">
+                        {effectiveDestinationUrl || <span className="text-destructive">Not set</span>}
+                      </p>
+                      <p className="mt-0.5 text-muted-foreground">
+                        Source: {resolved.source === "qr" ? "QR-specific destination" : resolved.source === "business" ? "Business default review link" : "None"}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!urlValid}
+                      onClick={() => {
+                        if (!resolved.url) return toast.error("No valid destination to test");
+                        window.open(resolved.url, "_blank", "noopener,noreferrer");
+                      }}
+                      className="rounded-full"
+                    >
+                      <ExternalLink className="mr-1 h-3.5 w-3.5"/> Test destination
+                    </Button>
+                  </div>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Destination label</Label>

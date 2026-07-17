@@ -35,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Building2, MapPin, Trash2, Save, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { isValidDestinationUrl } from "@/lib/resolve-qr-destination";
 
 export const Route = createFileRoute("/_authenticated/businesses")({
   component: Businesses,
@@ -99,8 +100,13 @@ function Businesses() {
   async function create() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;
+    const gru = form.google_review_url.trim();
+    if (gru && !isValidDestinationUrl(gru)) {
+      return toast.error("Enter a valid https:// Google review URL (e.g. https://g.page/r/.../review)");
+    }
+    const payload = { ...form, google_review_url: gru || null };
     const { error } = await supabase.from("businesses").insert({
-      ...form,
+      ...payload,
       owner_id: userData.user.id,
     });
     if (error) return toast.error(error.message);
@@ -314,10 +320,15 @@ function EditBusinessDialog({
 
   async function save() {
     if (!business) return;
+    const gru = values.google_review_url.trim();
+    if (gru && !isValidDestinationUrl(gru)) {
+      return toast.error("Enter a valid https:// Google review URL (e.g. https://g.page/r/.../review)");
+    }
     setSaving(true);
+    const payload = { ...values, google_review_url: gru || null };
     const { error } = await supabase
       .from("businesses")
-      .update(values)
+      .update(payload)
       .eq("id", business.id);
     setSaving(false);
     if (error) return toast.error(error.message);
