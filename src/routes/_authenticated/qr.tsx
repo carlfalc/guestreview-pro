@@ -14,13 +14,23 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { QrCode, ArrowRight, Plus, Building2, AlertCircle } from "lucide-react";
+import { QrCode, ArrowRight, Plus, Building2, AlertCircle, Trash2, Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { generateShortCode } from "@/lib/short-code";
@@ -45,6 +55,23 @@ type BusinessRow = {
   google_review_url: string | null;
 };
 
+type QrRow = {
+  id: string;
+  business_id: string;
+  location_id: string | null;
+  label: string | null;
+  campaign: string | null;
+  destination_type: string;
+  destination_url: string | null;
+  destination_label: string | null;
+  status: string;
+  landing_mode: string;
+  expires_at: string | null;
+  scans_count: number;
+  businesses?: { name?: string; brand_primary?: string } | null;
+  locations?: { name?: string; location_type?: string } | null;
+};
+
 type LocationRow = {
   id: string;
   business_id: string;
@@ -57,6 +84,9 @@ function QrList() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
+  const [editing, setEditing] = useState<QrRow | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   const { data: qrs, isLoading, error } = useQuery({
     queryKey: ["all-qr"],
     queryFn: async () => {
@@ -65,7 +95,7 @@ function QrList() {
         .select("*, businesses(name, brand_primary), locations(name, location_type)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as unknown as QrRow[];
     },
   });
 
@@ -117,7 +147,12 @@ function QrList() {
             const loc = q.locations as { name?: string; location_type?: string } | null;
             const effectiveStatus = computeEffectiveStatus(q.status, q.expires_at);
             return (
-              <Link key={q.id} to="/qr/$id" params={{ id: q.id }} className="group">
+              <button
+                key={q.id}
+                type="button"
+                onClick={() => setEditing(q)}
+                className="group text-left"
+              >
                 <Card className="rounded-2xl border-border/70 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]">
                   <CardContent className="flex items-center gap-3 p-4">
                     <div
@@ -142,7 +177,7 @@ function QrList() {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+              </button>
             );
           })}
         </div>
@@ -193,6 +228,40 @@ function QrList() {
           navigate({ to: "/qr/$id", params: { id } });
         }}
       />
+
+      <EditQrDialog
+        qr={editing}
+        onClose={() => setEditing(null)}
+        onRequestDelete={() => setConfirmDelete(true)}
+      />
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this QR code?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the QR code and its scan history. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!editing) return;
+                const { error } = await supabase.from("qr_codes").delete().eq("id", editing.id);
+                if (error) return toast.error(error.message);
+                toast.success("QR code deleted");
+                setConfirmDelete(false);
+                setEditing(null);
+                qc.invalidateQueries({ queryKey: ["all-qr"] });
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -450,6 +519,199 @@ function CreateQrDialog({
           <Button onClick={submit} disabled={!businessId || missingReviewUrl || !urlValid || saving} className="rounded-full">
             {saving ? "Creating..." : "Create QR Code"}
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditQrDialog({
+  qr,
+  onClose,
+  onRequestDelete,
+}: {
+  qr: QrRow | null;
+  onClose: () => void;
+  onRequestDelete: () => void;
+}) {
+  const qc = useQueryClient();
+  const [values, setValues] = useState({
+    label: "",
+    campaign: "",
+    destination_type: "google_review" as DestinationType,
+    destination_url: "",
+    destination_label: "",
+    status: "active" as "active" | "paused",
+    landing_mode: "landing" as "landing" | "redirect",
+    location_id: "none" as string,
+    expires_at: "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  const { data: locations } = useQuery({
+    queryKey: ["locations-for-biz", qr?.business_id ?? ""],
+    enabled: !!qr?.business_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("locations")
+        .select("id, business_id, name, location_type")
+        .eq("business_id", qr!.business_id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as LocationRow[];
+    },
+  });
+
+  useEffect(() => {
+    if (qr) {
+      setValues({
+        label: qr.label ?? "",
+        campaign: qr.campaign ?? "",
+        destination_type: (qr.destination_type as DestinationType) ?? "google_review",
+        destination_url: qr.destination_url ?? "",
+        destination_label: qr.destination_label ?? "",
+        status: (qr.status as "active" | "paused") ?? "active",
+        landing_mode: (qr.landing_mode as "landing" | "redirect") ?? "landing",
+        location_id: qr.location_id ?? "none",
+        expires_at: qr.expires_at ? qr.expires_at.slice(0, 16) : "",
+      });
+    }
+  }, [qr]);
+
+  async function save() {
+    if (!qr) return;
+    if (values.destination_url && !isValidHttpsUrl(values.destination_url)) {
+      return toast.error("Enter a valid https:// URL");
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("qr_codes")
+      .update({
+        label: values.label.trim() || "Untitled QR",
+        campaign: values.campaign.trim() || null,
+        destination_type: values.destination_type,
+        destination_url: values.destination_url.trim() || null,
+        destination_label: values.destination_label.trim() || null,
+        status: values.status,
+        landing_mode: values.landing_mode,
+        location_id: values.location_id === "none" ? null : values.location_id,
+        expires_at: values.expires_at ? new Date(values.expires_at).toISOString() : null,
+      })
+      .eq("id", qr.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Saved");
+    qc.invalidateQueries({ queryKey: ["all-qr"] });
+    qc.invalidateQueries({ queryKey: ["qr", qr.id] });
+    onClose();
+  }
+
+  return (
+    <Dialog open={!!qr} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            <div
+              className="grid h-9 w-9 place-items-center rounded-xl text-white"
+              style={{ background: qr?.businesses?.brand_primary ?? "#0071e3" }}
+            >
+              <QrCode className="h-4 w-4" />
+            </div>
+            Edit QR code
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Label</Label>
+            <Input value={values.label} onChange={(e) => setValues({ ...values, label: e.target.value })} className="rounded-xl" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Destination type</Label>
+            <Select value={values.destination_type} onValueChange={(v) => setValues({ ...values, destination_type: v as DestinationType })}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {DESTINATION_TYPES.map((t: { value: DestinationType; label: string }) => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Destination label</Label>
+            <Input value={values.destination_label} onChange={(e) => setValues({ ...values, destination_label: e.target.value })} placeholder="View menu" className="rounded-xl" />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Destination URL</Label>
+            <Input value={values.destination_url} onChange={(e) => setValues({ ...values, destination_url: e.target.value })} placeholder="https://..." className="rounded-xl font-mono text-xs" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Campaign</Label>
+            <Input value={values.campaign} onChange={(e) => setValues({ ...values, campaign: e.target.value })} className="rounded-xl" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Location</Label>
+            <Select value={values.location_id} onValueChange={(v) => setValues({ ...values, location_id: v })}>
+              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Entire business" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Entire business</SelectItem>
+                {locations?.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>{l.name}{l.location_type ? ` · ${l.location_type}` : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Status</Label>
+            <Select value={values.status} onValueChange={(v) => setValues({ ...values, status: v as "active" | "paused" })}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Landing behaviour</Label>
+            <Select value={values.landing_mode} onValueChange={(v) => setValues({ ...values, landing_mode: v as "landing" | "redirect" })}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="landing">Show landing page</SelectItem>
+                <SelectItem value="redirect">Redirect immediately</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Expires at (optional)</Label>
+            <Input type="datetime-local" value={values.expires_at} onChange={(e) => setValues({ ...values, expires_at: e.target.value })} className="rounded-xl" />
+          </div>
+        </div>
+
+        {qr ? (
+          <Link
+            to="/qr/$id"
+            params={{ id: qr.id }}
+            className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            onClick={onClose}
+          >
+            Open full editor (design, formats, marketing) <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        ) : null}
+
+        <DialogFooter className="flex-row items-center justify-between gap-2 sm:justify-between">
+          <Button
+            variant="ghost"
+            onClick={onRequestDelete}
+            className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="mr-1 h-4 w-4" /> Delete QR
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} className="rounded-full">Cancel</Button>
+            <Button onClick={save} disabled={saving} className="rounded-full">
+              <Save className="mr-1 h-4 w-4" /> {saving ? "Saving…" : "Save"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
