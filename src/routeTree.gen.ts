@@ -25,6 +25,7 @@ import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/q
 import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
 import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
+import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -109,6 +110,12 @@ const AuthenticatedBusinessesIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedBusinessesRoute,
   } as any)
+const AuthenticatedAdminRegionRequestsRoute =
+  AuthenticatedAdminRegionRequestsRouteImport.update({
+    id: '/admin/region-requests',
+    path: '/admin/region-requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
+  '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
@@ -138,6 +146,7 @@ export interface FileRoutesByTo {
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
+  '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
@@ -157,6 +166,7 @@ export interface FileRoutesById {
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
+  '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/_authenticated/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/_authenticated/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/qr'
     | '/settings'
     | '/r/$code'
+    | '/admin/region-requests'
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/qr'
     | '/settings'
     | '/r/$code'
+    | '/admin/region-requests'
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
@@ -211,6 +223,7 @@ export interface FileRouteTypes {
     | '/_authenticated/qr'
     | '/_authenticated/settings'
     | '/r/$code'
+    | '/_authenticated/admin/region-requests'
     | '/_authenticated/businesses/$id'
     | '/_authenticated/marketing-packs/$id'
     | '/_authenticated/marketing-packs/new'
@@ -340,6 +353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessesIdRouteImport
       parentRoute: typeof AuthenticatedBusinessesRoute
     }
+    '/_authenticated/admin/region-requests': {
+      id: '/_authenticated/admin/region-requests'
+      path: '/admin/region-requests'
+      fullPath: '/admin/region-requests'
+      preLoaderRoute: typeof AuthenticatedAdminRegionRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -376,6 +396,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminRegionRequestsRoute: typeof AuthenticatedAdminRegionRequestsRoute
   AuthenticatedMarketingPacksIdRoute: typeof AuthenticatedMarketingPacksIdRoute
   AuthenticatedMarketingPacksNewRoute: typeof AuthenticatedMarketingPacksNewRoute
   AuthenticatedMarketingPacksIndexRoute: typeof AuthenticatedMarketingPacksIndexRoute
@@ -388,6 +409,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminRegionRequestsRoute: AuthenticatedAdminRegionRequestsRoute,
   AuthenticatedMarketingPacksIdRoute: AuthenticatedMarketingPacksIdRoute,
   AuthenticatedMarketingPacksNewRoute: AuthenticatedMarketingPacksNewRoute,
   AuthenticatedMarketingPacksIndexRoute: AuthenticatedMarketingPacksIndexRoute,
