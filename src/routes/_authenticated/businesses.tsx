@@ -21,9 +21,19 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Building2, ExternalLink, MapPin } from "lucide-react";
-import { useState } from "react";
+import { Plus, Building2, MapPin, Trash2, Save, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/businesses")({
@@ -43,9 +53,26 @@ const INDUSTRIES = [
   "Other",
 ];
 
+type BusinessRow = {
+  id: string;
+  name: string;
+  industry: string | null;
+  google_review_url: string | null;
+  website: string | null;
+  phone: string | null;
+  address: string | null;
+  welcome_message: string | null;
+  brand_primary: string | null;
+  locations?: { count: number }[];
+  qr_codes?: { count: number }[];
+};
+
 function Businesses() {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<BusinessRow | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   const { data: businesses, isLoading } = useQuery({
     queryKey: ["businesses"],
     queryFn: async () => {
@@ -54,7 +81,7 @@ function Businesses() {
         .select("*, locations(count), qr_codes(count)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as unknown as BusinessRow[];
     },
   });
 
@@ -78,7 +105,7 @@ function Businesses() {
     });
     if (error) return toast.error(error.message);
     toast.success("Business created");
-    setOpen(false);
+    setCreateOpen(false);
     setForm({ ...form, name: "" });
     qc.invalidateQueries({ queryKey: ["businesses"] });
   }
@@ -92,7 +119,7 @@ function Businesses() {
             Manage all the businesses under your account.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="rounded-full">
               <Plus className="mr-1 h-4 w-4" /> New business
@@ -144,7 +171,7 @@ function Businesses() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)} className="rounded-full">Cancel</Button>
+              <Button variant="outline" onClick={() => setCreateOpen(false)} className="rounded-full">Cancel</Button>
               <Button onClick={create} disabled={!form.name} className="rounded-full">Create</Button>
             </DialogFooter>
           </DialogContent>
@@ -160,14 +187,14 @@ function Businesses() {
       ) : businesses && businesses.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {businesses.map((b) => {
-            const locCount = (b.locations as unknown as { count: number }[])?.[0]?.count ?? 0;
-            const qrCount = (b.qr_codes as unknown as { count: number }[])?.[0]?.count ?? 0;
+            const locCount = b.locations?.[0]?.count ?? 0;
+            const qrCount = b.qr_codes?.[0]?.count ?? 0;
             return (
-              <Link
+              <button
                 key={b.id}
-                to="/businesses/$id"
-                params={{ id: b.id }}
-                className="group"
+                type="button"
+                onClick={() => setEditing(b)}
+                className="group text-left"
               >
                 <Card className="h-full rounded-3xl border-border/70 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-elevated)]">
                   <CardContent className="p-6">
@@ -190,7 +217,7 @@ function Businesses() {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+              </button>
             );
           })}
         </div>
@@ -204,12 +231,184 @@ function Businesses() {
             <p className="max-w-sm text-sm text-muted-foreground">
               Create a business to generate branded QR codes, guest landing pages and per-location analytics.
             </p>
-            <Button className="mt-2 rounded-full" onClick={() => setOpen(true)}>
+            <Button className="mt-2 rounded-full" onClick={() => setCreateOpen(true)}>
               <Plus className="mr-1 h-4 w-4"/> New business
             </Button>
           </CardContent>
         </Card>
       )}
+
+      <EditBusinessDialog
+        business={editing}
+        onClose={() => setEditing(null)}
+        onRequestDelete={() => setConfirmDelete(true)}
+      />
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this business?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the business along with its locations, QR codes and marketing packs. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!editing) return;
+                const { error } = await supabase.from("businesses").delete().eq("id", editing.id);
+                if (error) return toast.error(error.message);
+                toast.success("Business deleted");
+                setConfirmDelete(false);
+                setEditing(null);
+                qc.invalidateQueries({ queryKey: ["businesses"] });
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+  );
+}
+
+function EditBusinessDialog({
+  business,
+  onClose,
+  onRequestDelete,
+}: {
+  business: BusinessRow | null;
+  onClose: () => void;
+  onRequestDelete: () => void;
+}) {
+  const qc = useQueryClient();
+  const [values, setValues] = useState({
+    name: "",
+    industry: "Restaurant",
+    google_review_url: "",
+    website: "",
+    phone: "",
+    address: "",
+    welcome_message: "",
+    brand_primary: "#0071e3",
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (business) {
+      setValues({
+        name: business.name ?? "",
+        industry: business.industry ?? "Restaurant",
+        google_review_url: business.google_review_url ?? "",
+        website: business.website ?? "",
+        phone: business.phone ?? "",
+        address: business.address ?? "",
+        welcome_message: business.welcome_message ?? "",
+        brand_primary: business.brand_primary ?? "#0071e3",
+      });
+    }
+  }, [business]);
+
+  async function save() {
+    if (!business) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("businesses")
+      .update(values)
+      .eq("id", business.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Saved");
+    qc.invalidateQueries({ queryKey: ["businesses"] });
+    qc.invalidateQueries({ queryKey: ["business", business.id] });
+    onClose();
+  }
+
+  return (
+    <Dialog open={!!business} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            <div
+              className="grid h-9 w-9 place-items-center rounded-xl text-white"
+              style={{ background: values.brand_primary || "#0071e3" }}
+            >
+              <Building2 className="h-4 w-4" />
+            </div>
+            Edit business
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2 space-y-1.5">
+            <Label>Business name</Label>
+            <Input value={values.name} onChange={(e) => setValues({ ...values, name: e.target.value })} className="rounded-xl"/>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Industry</Label>
+            <Select value={values.industry} onValueChange={(v) => setValues({ ...values, industry: v })}>
+              <SelectTrigger className="rounded-xl"><SelectValue/></SelectTrigger>
+              <SelectContent>
+                {INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Brand color</Label>
+            <Input type="color" value={values.brand_primary} onChange={(e) => setValues({ ...values, brand_primary: e.target.value })} className="h-10 rounded-xl p-1"/>
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Google review URL</Label>
+            <Input value={values.google_review_url} onChange={(e) => setValues({ ...values, google_review_url: e.target.value })} placeholder="https://g.page/r/..." className="rounded-xl"/>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Website</Label>
+            <Input value={values.website} onChange={(e) => setValues({ ...values, website: e.target.value })} className="rounded-xl"/>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Phone</Label>
+            <Input value={values.phone} onChange={(e) => setValues({ ...values, phone: e.target.value })} className="rounded-xl"/>
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Address</Label>
+            <Input value={values.address} onChange={(e) => setValues({ ...values, address: e.target.value })} className="rounded-xl"/>
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Welcome message</Label>
+            <Textarea value={values.welcome_message} onChange={(e) => setValues({ ...values, welcome_message: e.target.value })} className="rounded-xl"/>
+          </div>
+        </div>
+
+        {business ? (
+          <Link
+            to="/businesses/$id"
+            params={{ id: business.id }}
+            className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            onClick={onClose}
+          >
+            Manage locations & QR codes <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        ) : null}
+
+        <DialogFooter className="flex-row items-center justify-between gap-2 sm:justify-between">
+          <Button
+            variant="ghost"
+            onClick={onRequestDelete}
+            className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="mr-1 h-4 w-4" /> Delete business
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} className="rounded-full">Cancel</Button>
+            <Button onClick={save} disabled={saving || !values.name} className="rounded-full">
+              <Save className="mr-1 h-4 w-4" /> {saving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
