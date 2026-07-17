@@ -67,6 +67,9 @@ function QrList() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
+  const [editing, setEditing] = useState<QrRow | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   const { data: qrs, isLoading, error } = useQuery({
     queryKey: ["all-qr"],
     queryFn: async () => {
@@ -75,7 +78,7 @@ function QrList() {
         .select("*, businesses(name, brand_primary), locations(name, location_type)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as unknown as QrRow[];
     },
   });
 
