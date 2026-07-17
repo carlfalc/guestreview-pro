@@ -99,8 +99,13 @@ function Businesses() {
   async function create() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;
+    const gru = form.google_review_url.trim();
+    if (gru && !isValidDestinationUrl(gru)) {
+      return toast.error("Enter a valid https:// Google review URL (e.g. https://g.page/r/.../review)");
+    }
+    const payload = { ...form, google_review_url: gru || null };
     const { error } = await supabase.from("businesses").insert({
-      ...form,
+      ...payload,
       owner_id: userData.user.id,
     });
     if (error) return toast.error(error.message);
