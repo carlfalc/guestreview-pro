@@ -43,6 +43,7 @@ import {
   statusLabel,
   type DestinationType,
 } from "@/lib/qr-destinations";
+import { isValidDestinationUrl, resolveQrDestination } from "@/lib/resolve-qr-destination";
 
 export const Route = createFileRoute("/_authenticated/qr")({
   component: QrList,
