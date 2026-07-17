@@ -148,15 +148,22 @@ function GuestLanding() {
         setState({ kind: "expired", qr }); return;
       }
 
+      const resolved = resolveQrDestination({
+        destinationType: qr.destination_type,
+        destinationUrl: qr.destination_url,
+        businessGoogleReviewUrl: qr.businesses?.google_review_url,
+      });
+
+      if (!resolved.url) {
+        setState({ kind: "invalidDestination", qr });
+        return;
+      }
+
       const id = await recordScan(qr);
       setEventId(id);
-      setState({ kind: "active", qr });
+      setState({ kind: "active", qr, finalUrl: resolved.url });
 
-      const finalUrl = qr.destination_type === "google_review"
-        ? qr.businesses?.google_review_url ?? qr.destination_url ?? null
-        : qr.destination_url;
-
-      if (qr.landing_mode === "redirect" && finalUrl) {
+      if (qr.landing_mode === "redirect") {
         if (id) {
           const sid = getOrCreateSessionId();
           await supabase.rpc("mark_scan_clicked", {
@@ -165,8 +172,7 @@ function GuestLanding() {
             p_is_review: qr.destination_type === "google_review",
           }).then(() => {}, () => {});
         }
-        // Redirect after DB update completes (or timeout)
-        window.location.href = finalUrl;
+        window.location.href = resolved.url;
       }
     })();
   }, [code]);
