@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { QrCode, ArrowRight, Plus, Building2, AlertCircle, Trash2, Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { friendlyMutationError } from "@/lib/plan-errors";
 import { toast } from "sonner";
 import { generateShortCode } from "@/lib/short-code";
 import {
