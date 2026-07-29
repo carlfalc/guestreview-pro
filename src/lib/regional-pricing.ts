@@ -135,7 +135,7 @@ export const PLAN_FEATURES: PlanFeatureRow[] = [
     tagline: "Get started with reviews.",
     features: [
       "1 business",
-      "Up to 3 QR codes",
+      "1 QR code",
       "Basic analytics",
       "Basic marketing packs",
       "GuestReview Pro branding",
