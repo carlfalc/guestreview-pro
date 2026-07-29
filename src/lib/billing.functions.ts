@@ -183,18 +183,27 @@ export const createCustomerPortalSession = createServerFn({ method: "POST" })
     }
   });
 
+export interface InvoiceDTO {
+  id: string;
+  status: string | null;
+  amountPaid: number;
+  currency: string;
+  created: string | null;
+  hostedInvoiceUrl: string | null;
+}
+
 /** Invoice history for the billing page. */
 export const getMyInvoices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { environment: StripeEnvName }) => ({ environment: validEnv(data?.environment) }))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data, context }): Promise<{ invoices: InvoiceDTO[] }> => {
     const { data: sub } = await context.supabase
       .from("subscriptions")
       .select("stripe_customer_id")
       .eq("owner_id", context.userId)
       .eq("environment", data.environment)
       .maybeSingle();
-    if (!sub?.stripe_customer_id) return { invoices: [] as Array<Record<string, unknown>> };
+    if (!sub?.stripe_customer_id) return { invoices: [] };
 
     const { createStripeClient } = await import("./stripe.server");
     try {
@@ -203,7 +212,7 @@ export const getMyInvoices = createServerFn({ method: "POST" })
       return {
         invoices: list.data.map((inv) => ({
           id: inv.id ?? "",
-          status: inv.status ?? null,
+          status: (inv.status as string | null) ?? null,
           amountPaid: inv.amount_paid ?? 0,
           currency: (inv.currency ?? "usd").toUpperCase(),
           created: inv.created ? new Date(inv.created * 1000).toISOString() : null,
@@ -211,6 +220,6 @@ export const getMyInvoices = createServerFn({ method: "POST" })
         })),
       };
     } catch {
-      return { invoices: [] as Array<Record<string, unknown>> };
+      return { invoices: [] };
     }
   });
