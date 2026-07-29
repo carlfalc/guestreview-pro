@@ -110,7 +110,8 @@ async function recordScan(qr: QrRow): Promise<string | null> {
 
     if (!inserted) return null;
     try { sessionStorage.setItem(sessionStorageKey(qr.id), inserted.id); } catch { /* ignore */ }
-    await supabase.rpc("increment_qr_scans", { p_qr_id: qr.id }).then(() => {}, () => {});
+    // fire-and-forget: never block the guest redirect on the counter
+    void supabase.rpc("increment_qr_scans", { p_qr_id: qr.id }).then(() => {}, () => {});
     return inserted.id;
   } catch {
     return null;
