@@ -894,6 +894,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      effective_plan_key: { Args: { _owner_id: string }; Returns: string }
       has_paid_access: {
         Args: { _environment?: string; _owner_id: string }
         Returns: boolean
