@@ -19,6 +19,7 @@ import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
 import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBusinessesRouteImport } from './routes/_authenticated/businesses'
+import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedMarketingPacksIndexRouteImport } from './routes/_authenticated/marketing-packs.index'
 import { Route as RCodeViewRouteImport } from './routes/r.$code_.view'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_au
 import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
 import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -77,6 +79,11 @@ const AuthenticatedBusinessesRoute = AuthenticatedBusinessesRouteImport.update({
   path: '/businesses',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -122,12 +129,19 @@ const AuthenticatedAdminRegionRequestsRoute =
     path: '/admin/region-requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/pricing': typeof AuthenticatedPricingRoute
@@ -141,12 +155,14 @@ export interface FileRoutesByFullPath {
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/pricing': typeof AuthenticatedPricingRoute
@@ -160,6 +176,7 @@ export interface FileRoutesByTo {
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -168,6 +185,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
+  '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/pricing': typeof AuthenticatedPricingRoute
@@ -181,6 +199,7 @@ export interface FileRoutesById {
   '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code_/view': typeof RCodeViewRoute
   '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -189,6 +208,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/analytics'
+    | '/billing'
     | '/businesses'
     | '/dashboard'
     | '/pricing'
@@ -202,12 +222,14 @@ export interface FileRouteTypes {
     | '/qr/$id'
     | '/r/$code/view'
     | '/marketing-packs/'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/reset-password'
     | '/analytics'
+    | '/billing'
     | '/businesses'
     | '/dashboard'
     | '/pricing'
@@ -221,6 +243,7 @@ export interface FileRouteTypes {
     | '/qr/$id'
     | '/r/$code/view'
     | '/marketing-packs'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -228,6 +251,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/analytics'
+    | '/_authenticated/billing'
     | '/_authenticated/businesses'
     | '/_authenticated/dashboard'
     | '/_authenticated/pricing'
@@ -241,6 +265,7 @@ export interface FileRouteTypes {
     | '/_authenticated/qr/$id'
     | '/r/$code_/view'
     | '/_authenticated/marketing-packs/'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -250,6 +275,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RCodeRoute: typeof RCodeRoute
   RCodeViewRoute: typeof RCodeViewRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -324,6 +350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/billing': {
+      id: '/_authenticated/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/analytics': {
       id: '/_authenticated/analytics'
       path: '/analytics'
@@ -380,6 +413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRegionRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -411,6 +451,7 @@ const AuthenticatedQrRouteWithChildren = AuthenticatedQrRoute._addFileChildren(
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
+  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedBusinessesRoute: typeof AuthenticatedBusinessesRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
@@ -424,6 +465,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
+  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedBusinessesRoute: AuthenticatedBusinessesRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
@@ -445,7 +487,18 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RCodeRoute: RCodeRoute,
   RCodeViewRoute: RCodeViewRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

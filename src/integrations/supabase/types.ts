@@ -760,6 +760,114 @@ export type Database = {
           },
         ]
       }
+      stripe_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_type: string
+          id: string
+          livemode: boolean
+          processed_at: string | null
+          processing_status: string
+          received_at: string
+          stripe_event_id: string
+        }
+        Insert: {
+          error_message?: string | null
+          event_type: string
+          id?: string
+          livemode?: boolean
+          processed_at?: string | null
+          processing_status?: string
+          received_at?: string
+          stripe_event_id: string
+        }
+        Update: {
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          livemode?: boolean
+          processed_at?: string | null
+          processing_status?: string
+          received_at?: string
+          stripe_event_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          amount_minor: number | null
+          billing_interval: string | null
+          cancel_at_period_end: boolean
+          canceled_at: string | null
+          created_at: string
+          currency_code: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
+          id: string
+          last_invoice_id: string | null
+          last_payment_status: string | null
+          owner_id: string
+          plan_key: string
+          pricing_region: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_price_id: string | null
+          stripe_product_id: string | null
+          stripe_subscription_id: string | null
+          trial_end: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_minor?: number | null
+          billing_interval?: string | null
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          currency_code?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          last_invoice_id?: string | null
+          last_payment_status?: string | null
+          owner_id: string
+          plan_key?: string
+          pricing_region?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_minor?: number | null
+          billing_interval?: string | null
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          currency_code?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          last_invoice_id?: string | null
+          last_payment_status?: string | null
+          owner_id?: string
+          plan_key?: string
+          pricing_region?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -786,6 +894,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      effective_plan_key: { Args: { _owner_id: string }; Returns: string }
+      has_paid_access: {
+        Args: { _environment?: string; _owner_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

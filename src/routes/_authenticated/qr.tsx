@@ -32,6 +32,9 @@ import {
 } from "@/components/ui/select";
 import { QrCode, ArrowRight, Plus, Building2, AlertCircle, Trash2, Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useBilling } from "@/hooks/use-billing";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { friendlyMutationError } from "@/lib/plan-errors";
 import { toast } from "sonner";
 import { generateShortCode } from "@/lib/short-code";
 import {
@@ -112,9 +115,12 @@ function QrList() {
   });
 
   const hasBusinesses = !!businesses?.length;
+  const billing = useBilling();
+  const atQrLimit = !billing.isPaid && billing.usage.activeQrCodes >= billing.entitlements.activeQrCodesMax;
 
   return (
     <div className="animate-fade-in-up space-y-8">
+      {atQrLimit && <UpgradePrompt reason="qrLimit" compact />}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">QR codes</h1>
@@ -250,7 +256,7 @@ function QrList() {
               onClick={async () => {
                 if (!editing) return;
                 const { error } = await supabase.from("qr_codes").delete().eq("id", editing.id);
-                if (error) return toast.error(error.message);
+                if (error) return toast.error(friendlyMutationError(error));
                 toast.success("QR code deleted");
                 setConfirmDelete(false);
                 setEditing(null);
@@ -401,7 +407,7 @@ function CreateQrDialog({
       toast.success("QR code created");
       onCreated(data.id);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create QR code");
+      toast.error(friendlyMutationError(e, "Failed to create QR code"));
     } finally {
       setSaving(false);
     }

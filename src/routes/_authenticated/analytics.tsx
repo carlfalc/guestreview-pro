@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useBilling } from "@/hooks/use-billing";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import {
   Area,
   AreaChart,
@@ -55,6 +57,7 @@ interface QrLookup {
 }
 
 function AnalyticsPage() {
+  const billing = useBilling();
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["analytics"],
     queryFn: async () => {
@@ -264,6 +267,7 @@ function AnalyticsPage() {
 
   return (
     <div className="animate-fade-in-up space-y-8">
+      {!billing.entitlements.advancedAnalytics && <UpgradePrompt reason="advancedAnalytics" compact />}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Analytics</h1>
