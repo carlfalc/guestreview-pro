@@ -21,6 +21,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBusinessesRouteImport } from './routes/_authenticated/businesses'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedMarketingPacksIndexRouteImport } from './routes/_authenticated/marketing-packs.index'
+import { Route as RCodeViewRouteImport } from './routes/r.$code_.view'
 import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/qr.$id'
 import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
 import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
@@ -87,6 +88,11 @@ const AuthenticatedMarketingPacksIndexRoute =
     path: '/marketing-packs/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const RCodeViewRoute = RCodeViewRouteImport.update({
+  id: '/r/$code_/view',
+  path: '/r/$code/view',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedQrIdRoute = AuthenticatedQrIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
+  '/r/$code/view': typeof RCodeViewRoute
   '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
 }
 export interface FileRoutesByTo {
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
+  '/r/$code/view': typeof RCodeViewRoute
   '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
 }
 export interface FileRoutesById {
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
+  '/r/$code_/view': typeof RCodeViewRoute
   '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
 }
 export interface FileRouteTypes {
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
     | '/qr/$id'
+    | '/r/$code/view'
     | '/marketing-packs/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
     | '/qr/$id'
+    | '/r/$code/view'
     | '/marketing-packs'
   id:
     | '__root__'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing-packs/$id'
     | '/_authenticated/marketing-packs/new'
     | '/_authenticated/qr/$id'
+    | '/r/$code_/view'
     | '/_authenticated/marketing-packs/'
   fileRoutesById: FileRoutesById
 }
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RCodeRoute: typeof RCodeRoute
+  RCodeViewRoute: typeof RCodeViewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -324,6 +337,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/marketing-packs/'
       preLoaderRoute: typeof AuthenticatedMarketingPacksIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/r/$code_/view': {
+      id: '/r/$code_/view'
+      path: '/r/$code/view'
+      fullPath: '/r/$code/view'
+      preLoaderRoute: typeof RCodeViewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/qr/$id': {
       id: '/_authenticated/qr/$id'
@@ -424,7 +444,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RCodeRoute: RCodeRoute,
+  RCodeViewRoute: RCodeViewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
