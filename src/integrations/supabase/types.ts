@@ -794,6 +794,22 @@ export type Database = {
         Returns: boolean
       }
       increment_qr_scans: { Args: { p_qr_id: string }; Returns: undefined }
+      log_scan_redirect: {
+        Args: {
+          p_browser?: string
+          p_clicked?: boolean
+          p_country_code?: string
+          p_destination_type?: string
+          p_device_type?: string
+          p_os?: string
+          p_qr_id: string
+          p_referrer?: string
+          p_session_id?: string
+          p_user_agent?: string
+          p_visitor_hash?: string
+        }
+        Returns: string
+      }
       mark_scan_clicked: {
         Args: {
           p_event_id: string
