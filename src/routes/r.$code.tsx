@@ -108,10 +108,8 @@ export const Route = createFileRoute("/r/$code")({
         const headers = new Headers({
           Location: resolved.url,
           "Cache-Control": "no-store, no-cache, must-revalidate",
-          Referrer_Policy: "no-referrer",
+          "Referrer-Policy": "no-referrer",
         });
-        headers.delete("Referrer_Policy");
-        headers.set("Referrer-Policy", "no-referrer");
 
         if (!alreadyCounted) {
           const ua = request.headers.get("user-agent") ?? "";
@@ -121,7 +119,7 @@ export const Route = createFileRoute("/r/$code")({
           const countryCode =
             request.headers.get("cf-ipcountry") ??
             request.headers.get("x-vercel-ip-country") ??
-            null;
+            undefined;
 
           try {
             await supabase.rpc("log_scan_redirect", {
@@ -130,8 +128,8 @@ export const Route = createFileRoute("/r/$code")({
               p_device_type: parsed.device_type,
               p_os: parsed.os,
               p_browser: parsed.browser,
-              p_user_agent: ua || null,
-              p_referrer: request.headers.get("referer"),
+              p_user_agent: ua || undefined,
+              p_referrer: request.headers.get("referer") ?? undefined,
               p_visitor_hash: visitorHash,
               p_session_id: sessionId,
               p_country_code: countryCode,
