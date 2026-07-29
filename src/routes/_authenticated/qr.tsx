@@ -251,7 +251,7 @@ function QrList() {
               onClick={async () => {
                 if (!editing) return;
                 const { error } = await supabase.from("qr_codes").delete().eq("id", editing.id);
-                if (error) return toast.error(error.message);
+                if (error) return toast.error(friendlyMutationError(error));
                 toast.success("QR code deleted");
                 setConfirmDelete(false);
                 setEditing(null);
@@ -402,7 +402,7 @@ function CreateQrDialog({
       toast.success("QR code created");
       onCreated(data.id);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create QR code");
+      toast.error(friendlyMutationError(e, "Failed to create QR code"));
     } finally {
       setSaving(false);
     }
