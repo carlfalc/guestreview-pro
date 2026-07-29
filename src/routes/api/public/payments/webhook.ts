@@ -1,17 +1,17 @@
 // Stripe subscription webhook. Public by design (Stripe cannot send a session
 // token); every request is authenticated by HMAC signature verification.
 import { createFileRoute } from "@tanstack/react-router";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 
-let _admin: ReturnType<typeof createClient> | null = null;
-function admin() {
+let _admin: SupabaseClient | null = null;
+function admin(): SupabaseClient {
   if (!_admin) {
     _admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
   }
-  return _admin;
+  return _admin as SupabaseClient;
 }
 
 const iso = (unix?: number | null) => (unix ? new Date(unix * 1000).toISOString() : null);
