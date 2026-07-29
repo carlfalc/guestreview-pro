@@ -1,32 +1,49 @@
-## What's actually wrong
+## Goal
 
-Your published site is **public** — I checked, and the anonymous access rules for QR codes, businesses and locations are all correct. So the redirect page itself is fine.
+Make `/r/<code>` redirect a scanning phone to Google without loading the React app first. Today the phone downloads the app bundle, runs `GuestLanding`, queries the database from the browser, then redirects. The new path answers the very first HTTP request with a `302`.
 
-The problem is the **address baked into the QR image**.
+## How it works
 
-Both places that build the QR link use the address of whatever window you were in when you designed/downloaded it:
+```text
+now:   phone -> /r/CODE -> HTML + JS bundle -> hydrate -> DB query -> location.href = google
+after: phone -> /r/CODE -> [server: DB lookup] -> 302 Location: google
+```
 
-- `src/routes/_authenticated/qr.$id.tsx` (line 117)
-- `src/routes/_authenticated/marketing-packs.$id.tsx` (line 173)
+## Changes
 
-Both do `window.location.origin + "/r/" + short_code`.
+**1. Add a server GET handler to `src/routes/r.$code.tsx`**
 
-When you build the pack inside the Lovable editor preview, that origin is the private preview address (`id-preview--….lovable.app`). That address is always behind the Lovable login, no matter what your publish settings say. So the printed Glasshouse QR literally points at a login-gated URL — which is exactly what your phone hit.
+The file keeps its UI component, and gains a `server.handlers.GET` block that runs on the edge before any HTML is produced:
 
-## The fix
+- Look up the QR row by `short_code` using a server-side publishable-key Supabase client (created inside the handler, per the server-function rules). Select only the columns needed to decide: status, expiry, destination fields, landing mode, business `google_review_url`, plus the ids needed for logging.
+- Reuse the existing `resolveQrDestination` helper unchanged, so redirect precedence and URL validation stay identical to today.
+- If the QR is active, `landing_mode` is redirect, and the resolver returns a URL: return `Response.redirect(url, 302)` with `Cache-Control: no-store`.
+- Everything else (not found, paused, expired, archived, invalid destination, `landing_mode = landing`) redirects to a new companion route that renders the existing UI.
 
-1. Add a single canonical public base URL for scan links (`https://www.guestreviewpro.com`), defined in one shared helper — e.g. `src/lib/public-url.ts` exporting `buildScanUrl(shortCode)`.
-2. Use that helper in both files above, so every QR, preview, export, PDF and marketing pack encodes the public domain regardless of where you're working.
-3. Keep a localhost fallback so local development still works.
-4. Show the resolved scan URL as plain text under the QR in the designer, so you can eyeball the domain before printing.
-5. Re-generate and re-download the Glasshouse QR/pack once the fix is in. Anything already printed with the preview URL will need reprinting — the short code stays the same, only the domain changes.
+**2. Add `src/routes/r.$code.view.tsx`**
 
-## Technical notes
+The current `GuestLanding` component moves here essentially as-is, so the branded landing page and all status pages keep working, including their own analytics and "clicked review" tracking. `r.$code.tsx` becomes a thin server-redirect route.
 
-- No database changes; `short_code` and all existing rows stay as they are.
-- No change to destination resolution — `resolve-qr-destination.ts` and `/r/$code` behaviour are untouched.
-- Optional follow-up: also accept the custom domains you already have (`googlereviewpro.com`, `guestreviewpro.com`) — one is chosen as canonical for printed codes.
+**3. Analytics without slowing the redirect**
 
-## Test
+Add a single database function, `log_scan_redirect`, that inserts the `scan_events` row and bumps `scans_count` in one call, returning the new event id. The handler makes one call to it and then redirects — one round trip instead of the current bundle-load plus multiple browser round trips.
 
-Scan the newly exported Glasshouse QR on a phone with no Lovable session — it should jump straight to the Google review page with no login.
+- Device/OS/browser come from the request `User-Agent` header, referrer from the `Referer` header, IP-derived nothing (unchanged privacy posture).
+- Session dedupe moves from `sessionStorage` to a short-lived `httpOnly` cookie per QR code, preserving the "don't double-count the same visitor" behaviour.
+- Because a server 302 guarantees the guest reaches the destination, the event is written with `destination_clicked = true` immediately. Landing-mode scans keep the existing click-tracking flow on the view route.
+
+**4. Migration**
+
+One migration adding the `log_scan_redirect` security-definer function, with `EXECUTE` granted to `anon` and `authenticated` (matching how scans are already recorded anonymously today). No table or policy changes.
+
+## Verification
+
+- Hit `/r/<code>` for the Glasshouse code with a redirect-following disabled request and confirm a `302` with the Google review URL in `Location`.
+- Confirm a `scan_events` row is written and `scans_count` increments.
+- Confirm a landing-mode QR still shows the branded page, and paused/expired/archived/invalid codes still show their status pages.
+- Confirm a second request within the cookie window does not double-count.
+
+## Known trade-offs
+
+- Non-redirect scans (landing mode, status pages) gain one extra tiny hop to `/r/<code>/view`.
+- The scan event is recorded as "clicked" at redirect time rather than on a confirmed arrival at Google — there is no way to observe the arrival from a 302, and this matches what the redirect actually guarantees.
