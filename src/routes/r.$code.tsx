@@ -110,7 +110,8 @@ async function recordScan(qr: QrRow): Promise<string | null> {
 
     if (!inserted) return null;
     try { sessionStorage.setItem(sessionStorageKey(qr.id), inserted.id); } catch { /* ignore */ }
-    await supabase.rpc("increment_qr_scans", { p_qr_id: qr.id }).then(() => {}, () => {});
+    // fire-and-forget: never block the guest redirect on the counter
+    void supabase.rpc("increment_qr_scans", { p_qr_id: qr.id }).then(() => {}, () => {});
     return inserted.id;
   } catch {
     return null;
@@ -159,21 +160,28 @@ function GuestLanding() {
         return;
       }
 
+      // Redirect mode: send the guest on immediately and log the scan in the
+      // background. Analytics must never sit between the scan and Google.
+      if (qr.landing_mode === "redirect") {
+        setState({ kind: "active", qr, finalUrl: resolved.url });
+        void (async () => {
+          const id = await recordScan(qr);
+          if (id) {
+            const sid = getOrCreateSessionId();
+            void supabase.rpc("mark_scan_clicked", {
+              p_event_id: id,
+              p_session_id: sid,
+              p_is_review: qr.destination_type === "google_review",
+            }).then(() => {}, () => {});
+          }
+        })();
+        window.location.replace(resolved.url);
+        return;
+      }
+
       const id = await recordScan(qr);
       setEventId(id);
       setState({ kind: "active", qr, finalUrl: resolved.url });
-
-      if (qr.landing_mode === "redirect") {
-        if (id) {
-          const sid = getOrCreateSessionId();
-          await supabase.rpc("mark_scan_clicked", {
-            p_event_id: id,
-            p_session_id: sid,
-            p_is_review: qr.destination_type === "google_review",
-          }).then(() => {}, () => {});
-        }
-        window.location.href = resolved.url;
-      }
     })();
   }, [code]);
 
