@@ -23,6 +23,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { friendlyMutationError } from "@/lib/plan-errors";
 import { toast } from "sonner";
 import { useState } from "react";
 import { ArrowLeft, Plus, MapPin, QrCode, Save, Trash2 } from "lucide-react";
@@ -142,7 +143,7 @@ function BusinessDetail() {
       label: qrForm.label || "Untitled QR",
       campaign: qrForm.campaign || null,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyMutationError(error));
     toast.success("QR created");
     setQrOpen(false);
     setQrForm({ label: "", location_id: "", campaign: "" });

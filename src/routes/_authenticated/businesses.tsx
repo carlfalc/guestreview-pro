@@ -34,6 +34,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Building2, MapPin, Trash2, Save, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import { friendlyMutationError } from "@/lib/plan-errors";
 import { toast } from "sonner";
 import { isValidDestinationUrl } from "@/lib/resolve-qr-destination";
 
@@ -109,7 +110,7 @@ function Businesses() {
       ...payload,
       owner_id: userData.user.id,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyMutationError(error));
     toast.success("Business created");
     setCreateOpen(false);
     setForm({ ...form, name: "" });
