@@ -59,6 +59,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { buildScanUrl } from "@/lib/public-url";
 import jsQR from "jsqr";
 
 const PREVIEW_BUCKET = "marketing-pack-previews";
@@ -170,7 +171,7 @@ function MarketingPackEditor() {
   const qrDesign: QrDesign = useMemo(() => mergeDesign((qrRow?.design as Partial<QrDesign> | null) ?? null), [qrRow]);
   const brand = biz?.brand_primary ?? "#0071e3";
   const rawLogoUrl = qrRow?.logo_url ?? biz?.logo_url ?? null;
-  const qrData = typeof window !== "undefined" && qrRow ? `${window.location.origin}/r/${qrRow.short_code}` : "";
+  const qrData = qrRow ? buildScanUrl(qrRow.short_code) : "";
 
   const contentBase: ContentBase = useMemo(() => ({
     businessName: biz?.name ?? "",

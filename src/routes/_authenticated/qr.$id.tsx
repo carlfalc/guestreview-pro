@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { buildScanUrl } from "@/lib/public-url";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -114,8 +115,9 @@ function QrDetail() {
 
   const shortUrl = useMemo(() => {
     if (!qr) return "";
-    return `${typeof window !== "undefined" ? window.location.origin : ""}/r/${qr.short_code}`;
+    return buildScanUrl(qr.short_code as string);
   }, [qr]);
+
 
   const isGoogleReview = destinationType === "google_review";
   const biz = qr?.businesses as { name?: string; brand_primary?: string; logo_url?: string; google_review_url?: string } | null;
