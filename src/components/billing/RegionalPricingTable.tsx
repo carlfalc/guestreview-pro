@@ -1,10 +1,23 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { getRegionForCountry } from "@/lib/regions";
-import { getRegionalPlanPrices, PLAN_FEATURES, type PlanKey } from "@/lib/regional-pricing";
+import {
+  getRegionalPlanPrices,
+  PLAN_FEATURES,
+  resolveBillablePlan,
+  type PlanKey,
+  type PlanTier,
+  type PaidInterval,
+} from "@/lib/regional-pricing";
 import { formatRegionalPriceCompact } from "@/lib/format-price";
 import { BillingRegionBadge } from "./BillingRegionBadge";
+import { CheckoutDialog } from "./CheckoutDialog";
+import { useBilling } from "@/hooks/use-billing";
 import type { AccountRegionDTO } from "@/lib/account-region.functions";
+import { useNavigate } from "@tanstack/react-router";
 
 /** Consistent annual-vs-monthly savings calculation. Returns null when the
  *  annual price is not lower than 12 × monthly (never claim a saving). */
@@ -20,12 +33,23 @@ function annualSavings(monthlyMinor: number, annualMinor: number) {
 export function RegionalPricingTable({ region }: { region: AccountRegionDTO }) {
   const config = getRegionForCountry(region.countryCode);
   const prices = getRegionalPlanPrices(region.pricingRegion as ReturnType<typeof getRegionForCountry>["pricingRegion"]);
+  const billing = useBilling();
+  const navigate = useNavigate();
+  const [interval, setInterval] = useState<PaidInterval>("monthly");
+  const [checkout, setCheckout] = useState<PlanTier | null>(null);
+
+  const fallback = resolveBillablePlan(
+    region.pricingRegion as ReturnType<typeof getRegionForCountry>["pricingRegion"],
+    "pro",
+    interval,
+  );
 
   const rows: Array<{ tier: "free" | "pro" | "business"; monthly: PlanKey; annual: PlanKey | null }> = [
     { tier: "free",     monthly: "free",             annual: null },
     { tier: "pro",      monthly: "pro_monthly",      annual: "pro_annual" },
     { tier: "business", monthly: "business_monthly", annual: "business_annual" },
   ];
+
 
   return (
     <div className="space-y-6">
