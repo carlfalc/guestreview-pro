@@ -23,6 +23,7 @@ import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedMarketingPacksIndexRouteImport } from './routes/_authenticated/marketing-packs.index'
 import { Route as RCodeViewRouteImport } from './routes/r.$code_.view'
+import { Route as ApiPublicTmpTaxCodesRouteImport } from './routes/api/public/tmp-tax-codes'
 import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/qr.$id'
 import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
 import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
@@ -100,6 +101,11 @@ const RCodeViewRoute = RCodeViewRouteImport.update({
   path: '/r/$code/view',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTmpTaxCodesRoute = ApiPublicTmpTaxCodesRouteImport.update({
+  id: '/api/public/tmp-tax-codes',
+  path: '/api/public/tmp-tax-codes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedQrIdRoute = AuthenticatedQrIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
+  '/api/public/tmp-tax-codes': typeof ApiPublicTmpTaxCodesRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
+  '/api/public/tmp-tax-codes': typeof ApiPublicTmpTaxCodesRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
+  '/api/public/tmp-tax-codes': typeof ApiPublicTmpTaxCodesRoute
   '/r/$code_/view': typeof RCodeViewRoute
   '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
     | '/qr/$id'
+    | '/api/public/tmp-tax-codes'
     | '/r/$code/view'
     | '/marketing-packs/'
     | '/api/public/payments/webhook'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
     | '/qr/$id'
+    | '/api/public/tmp-tax-codes'
     | '/r/$code/view'
     | '/marketing-packs'
     | '/api/public/payments/webhook'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing-packs/$id'
     | '/_authenticated/marketing-packs/new'
     | '/_authenticated/qr/$id'
+    | '/api/public/tmp-tax-codes'
     | '/r/$code_/view'
     | '/_authenticated/marketing-packs/'
     | '/api/public/payments/webhook'
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RCodeRoute: typeof RCodeRoute
+  ApiPublicTmpTaxCodesRoute: typeof ApiPublicTmpTaxCodesRoute
   RCodeViewRoute: typeof RCodeViewRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -376,6 +389,13 @@ declare module '@tanstack/react-router' {
       path: '/r/$code/view'
       fullPath: '/r/$code/view'
       preLoaderRoute: typeof RCodeViewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/tmp-tax-codes': {
+      id: '/api/public/tmp-tax-codes'
+      path: '/api/public/tmp-tax-codes'
+      fullPath: '/api/public/tmp-tax-codes'
+      preLoaderRoute: typeof ApiPublicTmpTaxCodesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/qr/$id': {
@@ -486,6 +506,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RCodeRoute: RCodeRoute,
+  ApiPublicTmpTaxCodesRoute: ApiPublicTmpTaxCodesRoute,
   RCodeViewRoute: RCodeViewRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
