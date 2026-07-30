@@ -298,6 +298,7 @@ function CreateQrDialog({
   const [fg, setFg] = useState("#000000");
   const [bg, setBg] = useState("#ffffff");
   const [saving, setSaving] = useState(false);
+  const track = useTrack();
 
   const business = useMemo(
     () => businesses.find((b) => b.id === businessId),
