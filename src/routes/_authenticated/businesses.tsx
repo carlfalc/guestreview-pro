@@ -195,6 +195,8 @@ function Businesses() {
         </Dialog>
       </div>
 
+      {atBusinessLimit && <UpgradePrompt reason="businessLimit" compact />}
+
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
