@@ -669,6 +669,51 @@ export type Database = {
         }
         Relationships: []
       }
+      regional_plan_prices: {
+        Row: {
+          active: boolean
+          amount_minor: number
+          billing_interval: string
+          created_at: string
+          currency_code: string
+          environment: string
+          id: string
+          plan_key: string
+          pricing_region: string
+          stripe_lookup_key: string
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount_minor: number
+          billing_interval: string
+          created_at?: string
+          currency_code: string
+          environment: string
+          id?: string
+          plan_key: string
+          pricing_region: string
+          stripe_lookup_key: string
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount_minor?: number
+          billing_interval?: string
+          created_at?: string
+          currency_code?: string
+          environment?: string
+          id?: string
+          plan_key?: string
+          pricing_region?: string
+          stripe_lookup_key?: string
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       scan_events: {
         Row: {
           browser: string | null
@@ -777,33 +822,42 @@ export type Database = {
       }
       stripe_webhook_events: {
         Row: {
+          environment: string
           error_message: string | null
           event_type: string
           id: string
+          last_attempt_at: string | null
           livemode: boolean
           processed_at: string | null
           processing_status: string
           received_at: string
+          retry_count: number
           stripe_event_id: string
         }
         Insert: {
+          environment?: string
           error_message?: string | null
           event_type: string
           id?: string
+          last_attempt_at?: string | null
           livemode?: boolean
           processed_at?: string | null
           processing_status?: string
           received_at?: string
+          retry_count?: number
           stripe_event_id: string
         }
         Update: {
+          environment?: string
           error_message?: string | null
           event_type?: string
           id?: string
+          last_attempt_at?: string | null
           livemode?: boolean
           processed_at?: string | null
           processing_status?: string
           received_at?: string
+          retry_count?: number
           stripe_event_id?: string
         }
         Relationships: []
@@ -909,7 +963,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_stripe_webhook_event: {
+        Args: {
+          p_environment: string
+          p_event_id: string
+          p_event_type: string
+          p_livemode: boolean
+        }
+        Returns: string
+      }
       effective_plan_key: { Args: { _owner_id: string }; Returns: string }
+      finish_stripe_webhook_event: {
+        Args: { p_error?: string; p_event_id: string; p_status: string }
+        Returns: undefined
+      }
       has_paid_access: {
         Args: { _environment?: string; _owner_id: string }
         Returns: boolean

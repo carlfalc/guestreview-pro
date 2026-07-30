@@ -1,7 +1,10 @@
-// Client-callable billing surface. Only tier + interval come from the browser:
-// currency, amount, pricing region and the Stripe price ID are all derived
-// server-side from the locked account_regions row.
+// Client-callable billing surface.
+//
+// The browser may only choose tier + interval and an allow-listed return path.
+// Currency, amount, pricing region, Stripe price ID, the payment environment
+// and the final return URL are all derived server-side.
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { PlanTier, PaidInterval } from "./regional-pricing";
 import type { PlanTierKey, PlanEntitlements, UsageCounts } from "./entitlements";
@@ -10,9 +13,16 @@ import type { AccountSubscription, StripeEnvName } from "./entitlements.server";
 const TIERS: PlanTier[] = ["pro", "business"];
 const INTERVALS: PaidInterval[] = ["monthly", "annual"];
 
-function validEnv(env: unknown): StripeEnvName {
-  if (env !== "sandbox" && env !== "live") throw new Error("Invalid payment environment.");
-  return env;
+/** Trusted environment + host for the current request. Never client input. */
+async function trustedContext(): Promise<{ environment: StripeEnvName; host: string | null }> {
+  const { resolvePaymentsEnvironment, requestHost } = await import("./payments-env.server");
+  let host: string | null = null;
+  try {
+    host = requestHost(getRequest());
+  } catch {
+    host = null;
+  }
+  return { environment: resolvePaymentsEnvironment(host), host };
 }
 
 export interface AccountBillingState {
@@ -20,25 +30,24 @@ export interface AccountBillingState {
   entitlements: PlanEntitlements;
   usage: UsageCounts;
   subscription: AccountSubscription | null;
+  /** Which Stripe environment the server actually used. Display only. */
+  environment: StripeEnvName;
 }
 
 /** Authoritative plan + entitlements + usage for the signed-in account. */
 export const getMyBillingState = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { environment: StripeEnvName }) => ({ environment: validEnv(data?.environment) }))
-  .handler(async ({ data, context }): Promise<AccountBillingState> => {
+  .handler(async ({ context }): Promise<AccountBillingState> => {
+    const { environment } = await trustedContext();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getAccountEntitlements } = await import("./entitlements.server");
-    const state = await getAccountEntitlements(
-      supabaseAdmin as never,
-      context.userId,
-      data.environment,
-    );
+    const state = await getAccountEntitlements(supabaseAdmin as never, context.userId, environment);
     return {
       plan: state.plan,
       entitlements: state.entitlements,
       usage: state.usage,
       subscription: state.subscription,
+      environment,
     };
   });
 
@@ -51,31 +60,25 @@ export interface CheckoutResult {
 
 export const createSubscriptionCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: {
-    tier: PlanTier;
-    interval: PaidInterval;
-    returnUrl: string;
-    environment: StripeEnvName;
-  }) => {
+  .inputValidator((data: { tier: PlanTier; interval: PaidInterval; returnPath?: string }) => {
     if (!TIERS.includes(data?.tier)) throw new Error("Unknown plan.");
     if (!INTERVALS.includes(data?.interval)) throw new Error("Unknown billing interval.");
-    if (typeof data.returnUrl !== "string" || !/^https?:\/\//.test(data.returnUrl)) {
-      throw new Error("Invalid return URL.");
-    }
     return {
       tier: data.tier,
       interval: data.interval,
-      returnUrl: data.returnUrl,
-      environment: validEnv(data.environment),
+      returnPath: typeof data?.returnPath === "string" ? data.returnPath : undefined,
     };
   })
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
+    const { environment, host } = await trustedContext();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createStripeClient, getStripeErrorMessage, automaticTaxEnabled } = await import("./stripe.server");
     const { resolveBillablePlan } = await import("./regional-pricing");
     const { loadSubscription } = await import("./entitlements.server");
     const { effectivePlan } = await import("./entitlements");
     const { getOrCreateStripeCustomer } = await import("./stripe-customer.server");
+    const { buildReturnUrl } = await import("./payments-env.server");
+    const { findTrustedPriceByLookupKey, backfillStripePriceId } = await import("./plan-price-map.server");
 
     const admin = supabaseAdmin as never;
 
@@ -89,19 +92,25 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
     if (!region) return { error: "Your billing region has not been resolved yet. Reload and try again." };
 
     // 2. Refuse a second active subscription.
-    const existing = await loadSubscription(admin, context.userId, data.environment);
+    const existing = await loadSubscription(admin, context.userId, environment);
     if (existing && effectivePlan(existing) !== "free" && existing.status !== "canceled") {
       return { alreadySubscribed: true };
     }
 
-    const plan = resolveBillablePlan(
-      region.pricing_region as never,
-      data.tier,
-      data.interval,
+    const plan = resolveBillablePlan(region.pricing_region as never, data.tier, data.interval);
+
+    // 3. The plan must exist in the trusted mapping for THIS environment.
+    const trusted = await findTrustedPriceByLookupKey(
+      supabaseAdmin as never,
+      plan.stripeLookupKey,
+      environment,
     );
+    if (!trusted) {
+      return { error: `This plan is not available for purchase right now. (${plan.stripeLookupKey})` };
+    }
 
     try {
-      const stripe = createStripeClient(data.environment);
+      const stripe = createStripeClient(environment);
 
       const prices = await stripe.prices.list({ lookup_keys: [plan.stripeLookupKey], limit: 1 });
       if (!prices.data.length) {
@@ -109,12 +118,28 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       }
       const stripePrice = prices.data[0];
 
+      // 4. Validate what Stripe returned against the trusted mapping.
+      if (
+        (stripePrice.currency ?? "").toUpperCase() !== trusted.currencyCode ||
+        (stripePrice.unit_amount ?? -1) !== trusted.amountMinor
+      ) {
+        return { error: "Plan pricing is misconfigured. Please contact support." };
+      }
+      if (!trusted.stripePriceId) {
+        await backfillStripePriceId(
+          supabaseAdmin as never,
+          trusted.stripeLookupKey,
+          environment,
+          stripePrice.id,
+        );
+      }
+
       const customerId = await getOrCreateStripeCustomer({
         stripe,
         admin,
         supabase: context.supabase,
         ownerId: context.userId,
-        environment: data.environment,
+        environment,
         countryCode: region.country_code as string,
         pricingRegion: region.pricing_region as string,
       });
@@ -122,7 +147,10 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         ui_mode: "embedded_page",
-        return_url: data.returnUrl,
+        return_url: buildReturnUrl(data.returnPath ?? "/billing", host, {
+          checkout: "complete",
+          session_id: "{CHECKOUT_SESSION_ID}",
+        }),
         customer: customerId,
         line_items: [{ price: stripePrice.id, quantity: 1 }],
         billing_address_collection: "required",
@@ -153,29 +181,29 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
 
 export const createCustomerPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { returnUrl: string; environment: StripeEnvName }) => {
-    if (typeof data?.returnUrl !== "string" || !/^https?:\/\//.test(data.returnUrl)) {
-      throw new Error("Invalid return URL.");
-    }
-    return { returnUrl: data.returnUrl, environment: validEnv(data.environment) };
-  })
+  .inputValidator((data?: { returnPath?: string }) => ({
+    returnPath: typeof data?.returnPath === "string" ? data.returnPath : undefined,
+  }))
   .handler(async ({ data, context }): Promise<{ url?: string; error?: string }> => {
+    const { environment, host } = await trustedContext();
+    const { buildReturnUrl } = await import("./payments-env.server");
+
     // RLS-scoped read: a caller can only ever reach their own customer id.
     const { data: sub, error } = await context.supabase
       .from("subscriptions")
       .select("stripe_customer_id")
       .eq("owner_id", context.userId)
-      .eq("environment", data.environment)
+      .eq("environment", environment)
       .maybeSingle();
     if (error) return { error: error.message };
     if (!sub?.stripe_customer_id) return { error: "No billing account found for this user." };
 
     const { createStripeClient, getStripeErrorMessage } = await import("./stripe.server");
     try {
-      const stripe = createStripeClient(data.environment);
+      const stripe = createStripeClient(environment);
       const portal = await stripe.billingPortal.sessions.create({
         customer: sub.stripe_customer_id,
-        return_url: data.returnUrl,
+        return_url: buildReturnUrl(data?.returnPath ?? "/billing", host),
       });
       return { url: portal.url };
     } catch (e) {
@@ -195,19 +223,19 @@ export interface InvoiceDTO {
 /** Invoice history for the billing page. */
 export const getMyInvoices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { environment: StripeEnvName }) => ({ environment: validEnv(data?.environment) }))
-  .handler(async ({ data, context }): Promise<{ invoices: InvoiceDTO[] }> => {
+  .handler(async ({ context }): Promise<{ invoices: InvoiceDTO[] }> => {
+    const { environment } = await trustedContext();
     const { data: sub } = await context.supabase
       .from("subscriptions")
       .select("stripe_customer_id")
       .eq("owner_id", context.userId)
-      .eq("environment", data.environment)
+      .eq("environment", environment)
       .maybeSingle();
     if (!sub?.stripe_customer_id) return { invoices: [] };
 
     const { createStripeClient } = await import("./stripe.server");
     try {
-      const stripe = createStripeClient(data.environment);
+      const stripe = createStripeClient(environment);
       const list = await stripe.invoices.list({ customer: sub.stripe_customer_id, limit: 12 });
       return {
         invoices: list.data.map((inv) => ({

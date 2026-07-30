@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useBilling, useRefreshBilling } from "@/hooks/use-billing";
 import { createCustomerPortalSession, getMyInvoices } from "@/lib/billing.functions";
-import { getStripeEnvironment } from "@/lib/stripe";
+
 import { formatRegionalPrice } from "@/lib/format-price";
 import { PLAN_FEATURES } from "@/lib/regional-pricing";
 import { Link } from "@tanstack/react-router";
@@ -61,7 +61,7 @@ function BillingPage() {
   const invoices = useQuery({
     queryKey: ["billing-invoices"],
     enabled: billing.paymentsConfigured && Boolean(billing.subscription?.stripeCustomerId),
-    queryFn: async () => (await fetchInvoices({ data: { environment: getStripeEnvironment() } })).invoices,
+    queryFn: async () => (await fetchInvoices()).invoices,
   });
 
   const sub = billing.subscription;
@@ -70,9 +70,7 @@ function BillingPage() {
   const openPortal = async () => {
     setOpeningPortal(true);
     try {
-      const result = await portal({
-        data: { environment: getStripeEnvironment(), returnUrl: `${window.location.origin}/billing` },
-      });
+      const result = await portal({ data: { returnPath: "/billing" } });
       if (result.error || !result.url) throw new Error(result.error ?? "Portal unavailable.");
       window.open(result.url, "_blank", "noopener");
     } catch (e) {

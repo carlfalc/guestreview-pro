@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { createSubscriptionCheckout } from "@/lib/billing.functions";
 import type { PlanTier, PaidInterval } from "@/lib/regional-pricing";
 import { useServerFn } from "@tanstack/react-start";
@@ -20,13 +20,10 @@ export function CheckoutDialog({ open, onOpenChange, tier, interval, onAlreadySu
   const [failed, setFailed] = useState<string | null>(null);
 
   const fetchClientSecret = useCallback(async () => {
+    // No environment and no return URL from the browser — the server decides
+    // both from trusted configuration.
     const result = await createCheckout({
-      data: {
-        tier,
-        interval,
-        environment: getStripeEnvironment(),
-        returnUrl: `${window.location.origin}/billing?checkout=complete&session_id={CHECKOUT_SESSION_ID}`,
-      },
+      data: { tier, interval, returnPath: "/billing" },
     });
     if (result.alreadySubscribed) {
       onAlreadySubscribed?.();
