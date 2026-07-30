@@ -149,8 +149,12 @@ function RootComponent() {
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isPublicScan = pathname.startsWith("/r/");
+
   return (
     <QueryClientProvider client={queryClient}>
+      {!isPublicScan && <PaymentTestModeBanner />}
       <Outlet />
       <Toaster position="top-center" />
     </QueryClientProvider>
