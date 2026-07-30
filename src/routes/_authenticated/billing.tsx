@@ -61,7 +61,7 @@ function BillingPage() {
   const invoices = useQuery({
     queryKey: ["billing-invoices"],
     enabled: billing.paymentsConfigured && Boolean(billing.subscription?.stripeCustomerId),
-    queryFn: async () => (await fetchInvoices({ data: { environment: getStripeEnvironment() } })).invoices,
+    queryFn: async () => (await fetchInvoices()).invoices,
   });
 
   const sub = billing.subscription;
