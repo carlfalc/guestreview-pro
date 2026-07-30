@@ -38,7 +38,8 @@ export function isProductionHost(host: string | null | undefined): boolean {
  *  1. `PAYMENTS_ENV` (explicit server configuration) — must be exactly
  *     "sandbox" or "live"; any other value is ignored rather than trusted.
  *  2. The request host: a known production host means live.
- *  3. Everything else — local dev, Lovable preview, tests — is sandbox.
+ *  3. Everything else — local dev, Lovable preview, automated tests (which
+ *     never run against a production host) — is sandbox.
  *
  * Never reads request bodies, query parameters, cookies or client state.
  */
@@ -46,7 +47,6 @@ export function resolvePaymentsEnvironment(host?: string | null): StripeEnv {
   const configured = (process.env.PAYMENTS_ENV ?? "").trim().toLowerCase();
   if (configured === "live") return "live";
   if (configured === "sandbox") return "sandbox";
-  if (process.env.NODE_ENV === "test" || process.env.VITEST) return "sandbox";
   return isProductionHost(host) ? "live" : "sandbox";
 }
 
