@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /businesses
+Disallow: /qr
+Disallow: /analytics
+Disallow: /marketing-packs
+Disallow: /settings
+Disallow: /billing
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://www.guestreviewpro.com/sitemap.xml
