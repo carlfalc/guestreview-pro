@@ -173,11 +173,31 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
         },
       });
 
+      // Record the attempt so an abandoned checkout can be recovered later.
+      // Best-effort: a failure here must never block a paying customer.
+      try {
+        await (admin as { from: (t: string) => never }).from("checkout_attempts")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .insert({
+            owner_id: context.userId,
+            environment,
+            plan_key: plan.tier,
+            billing_interval: plan.interval,
+            currency_code: trusted.currencyCode,
+            amount_minor: trusted.amountMinor,
+            stripe_session_id: session.id,
+            status: "started",
+          } as never);
+      } catch (e) {
+        console.error("checkout_attempts insert failed:", e);
+      }
+
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
   });
+
 
 export const createCustomerPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
