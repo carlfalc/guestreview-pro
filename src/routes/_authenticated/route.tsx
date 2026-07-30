@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAccountRegion } from "@/hooks/use-account-region";
 import { BillingRegionBadge } from "@/components/billing/BillingRegionBadge";
+import { BetaFeedbackButton } from "@/components/feedback/BetaFeedbackButton";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
