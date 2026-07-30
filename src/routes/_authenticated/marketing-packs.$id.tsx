@@ -33,10 +33,11 @@ import {
 import { runFoldedValidations, decodeFoldedQrValidation, type FoldedDecodeResult } from "@/lib/folded-validation";
 import {
   statusMeta, packTypeById, buildFormatContent, similarFormats, defaultFoldedConfig,
-  FONT_OPTIONS, STAR_STYLES, BORDER_STYLES,
+  FONT_OPTIONS, STAR_STYLES, BORDER_STYLES, BRANDING_CREDIT,
   type GlobalSettings, type FormatCustomizations, type FormatOverride, type PackStatus, type ContentBase,
   type FoldedConfig,
 } from "@/lib/marketing-packs";
+import { useBilling } from "@/hooks/use-billing";
 import {
   buildAutoFixProposals, applyAutoFixes, summariseAutoFixes,
   type AutoFixProposal, type AutoFixSnapshot,
