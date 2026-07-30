@@ -132,6 +132,10 @@ function AuthedLayout() {
           </main>
         </div>
       </div>
+      <BetaFeedbackButton />
+    </div>
+  );
+}
     </div>
   );
 }
