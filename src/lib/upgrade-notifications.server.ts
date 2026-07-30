@@ -16,10 +16,11 @@ const PLAN_LABEL: Record<PaidPlanKey, string> = {
  * templates scaffolded, so this resolves to a no-op until then.
  */
 async function sendWelcomeEmail(email: string, name: string | null, plan: PaidPlanKey) {
+  // Resolved through a variable so the bundler does not require the module to
+  // exist yet; it appears when app emails are scaffolded.
+  const specifier = "@/lib/email-templates/send-email";
   try {
-    const mod = (await import(
-      /* @vite-ignore */ "@/lib/email-templates/send-email"
-    ).catch(() => null)) as
+    const mod = (await import(/* @vite-ignore */ specifier).catch(() => null)) as
       | { sendTemplateEmail?: (t: string, to: string, o?: unknown) => Promise<unknown> }
       | null;
     if (!mod?.sendTemplateEmail) return false;
