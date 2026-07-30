@@ -229,6 +229,45 @@ export type Database = {
           },
         ]
       }
+      beta_feedback: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          created_at: string
+          id: string
+          message: string
+          owner_id: string
+          path: string | null
+          rating: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          message: string
+          owner_id: string
+          path?: string | null
+          rating?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          owner_id?: string
+          path?: string | null
+          rating?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       businesses: {
         Row: {
           address: string | null
@@ -1044,6 +1083,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_beta_health: { Args: { _since?: string }; Returns: Json }
       admin_conversion_funnel: {
         Args: { _since?: string }
         Returns: {

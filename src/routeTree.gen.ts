@@ -30,6 +30,7 @@ import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
 import { Route as AuthenticatedAdminWebhookEventsRouteImport } from './routes/_authenticated/admin.webhook-events'
 import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
+import { Route as AuthenticatedAdminHealthRouteImport } from './routes/_authenticated/admin.health'
 import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -143,6 +144,12 @@ const AuthenticatedAdminRegionRequestsRoute =
     path: '/admin/region-requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminHealthRoute =
+  AuthenticatedAdminHealthRouteImport.update({
+    id: '/admin/health',
+    path: '/admin/health',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminFunnelRoute =
   AuthenticatedAdminFunnelRouteImport.update({
     id: '/admin/funnel',
@@ -170,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
+  '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
@@ -194,6 +202,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
+  '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
@@ -220,6 +229,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
+  '/_authenticated/admin/health': typeof AuthenticatedAdminHealthRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/_authenticated/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/_authenticated/businesses/$id': typeof AuthenticatedBusinessesIdRoute
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/r/$code'
     | '/admin/funnel'
+    | '/admin/health'
     | '/admin/region-requests'
     | '/admin/webhook-events'
     | '/businesses/$id'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/r/$code'
     | '/admin/funnel'
+    | '/admin/health'
     | '/admin/region-requests'
     | '/admin/webhook-events'
     | '/businesses/$id'
@@ -295,6 +307,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/r/$code'
     | '/_authenticated/admin/funnel'
+    | '/_authenticated/admin/health'
     | '/_authenticated/admin/region-requests'
     | '/_authenticated/admin/webhook-events'
     | '/_authenticated/businesses/$id'
@@ -466,6 +479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRegionRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/health': {
+      id: '/_authenticated/admin/health'
+      path: '/admin/health'
+      fullPath: '/admin/health'
+      preLoaderRoute: typeof AuthenticatedAdminHealthRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/funnel': {
       id: '/_authenticated/admin/funnel'
       path: '/admin/funnel'
@@ -518,6 +538,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
+  AuthenticatedAdminHealthRoute: typeof AuthenticatedAdminHealthRoute
   AuthenticatedAdminRegionRequestsRoute: typeof AuthenticatedAdminRegionRequestsRoute
   AuthenticatedAdminWebhookEventsRoute: typeof AuthenticatedAdminWebhookEventsRoute
   AuthenticatedMarketingPacksIdRoute: typeof AuthenticatedMarketingPacksIdRoute
@@ -534,6 +555,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
+  AuthenticatedAdminHealthRoute: AuthenticatedAdminHealthRoute,
   AuthenticatedAdminRegionRequestsRoute: AuthenticatedAdminRegionRequestsRoute,
   AuthenticatedAdminWebhookEventsRoute: AuthenticatedAdminWebhookEventsRoute,
   AuthenticatedMarketingPacksIdRoute: AuthenticatedMarketingPacksIdRoute,
