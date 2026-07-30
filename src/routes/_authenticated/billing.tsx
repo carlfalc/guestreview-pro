@@ -89,6 +89,11 @@ function BillingPage() {
         </p>
       </div>
 
+      <UpgradeChecklist />
+      <PlanPrioritiesCard />
+
+
+
       <Card className="rounded-3xl border-border/70">
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center gap-3">
