@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAccountRegion } from "@/hooks/use-account-region";
 import { RegionalPricingTable } from "@/components/billing/RegionalPricingTable";
+import { useTrackOnce } from "@/hooks/use-analytics";
 
 export const Route = createFileRoute("/_authenticated/pricing")({
   component: PricingPage,
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/pricing")({
 
 function PricingPage() {
   const { data: region, isLoading } = useAccountRegion();
+  useTrackOnce("pricing_viewed");
+
 
   return (
     <div className="animate-fade-in-up space-y-6">
