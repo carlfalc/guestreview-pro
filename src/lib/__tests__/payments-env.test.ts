@@ -13,7 +13,6 @@ beforeEach(() => {
   delete process.env.PAYMENTS_ENV;
   delete process.env.APP_URL;
   delete process.env.STRIPE_AUTOMATIC_TAX_ENABLED;
-  vi.stubEnv("VITEST", "");
 });
 afterEach(() => {
   process.env = { ...ORIGINAL };
