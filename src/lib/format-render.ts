@@ -33,6 +33,8 @@ export type FormatContent = {
   supportText: string;
   ctaText: string;
   footerText?: string;
+  /** Free-plan attribution line. Null/undefined on paid plans. */
+  brandingCredit?: string | null;
   showStars?: boolean;
   showGoogleBadge?: boolean;
   textAlign?: "left" | "center" | "right";
