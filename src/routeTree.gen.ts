@@ -29,6 +29,7 @@ import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_au
 import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
 import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
+import { Route as ApiPublicPaymentsWebhookAuditRouteImport } from './routes/api/public/payments/webhook-audit'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -135,6 +136,12 @@ const AuthenticatedAdminRegionRequestsRoute =
     path: '/admin/region-requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPaymentsWebhookAuditRoute =
+  ApiPublicPaymentsWebhookAuditRouteImport.update({
+    id: '/api/public/payments/webhook-audit',
+    path: '/api/public/payments/webhook-audit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/r/$code/view': typeof RCodeViewRoute
   '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/payments/webhook-audit': typeof ApiPublicPaymentsWebhookAuditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -185,6 +193,7 @@ export interface FileRoutesByTo {
   '/r/$code/view': typeof RCodeViewRoute
   '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/payments/webhook-audit': typeof ApiPublicPaymentsWebhookAuditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -209,6 +218,7 @@ export interface FileRoutesById {
   '/r/$code_/view': typeof RCodeViewRoute
   '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/payments/webhook-audit': typeof ApiPublicPaymentsWebhookAuditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -233,6 +243,7 @@ export interface FileRouteTypes {
     | '/r/$code/view'
     | '/marketing-packs/'
     | '/api/public/payments/webhook'
+    | '/api/public/payments/webhook-audit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -255,6 +266,7 @@ export interface FileRouteTypes {
     | '/r/$code/view'
     | '/marketing-packs'
     | '/api/public/payments/webhook'
+    | '/api/public/payments/webhook-audit'
   id:
     | '__root__'
     | '/'
@@ -278,6 +290,7 @@ export interface FileRouteTypes {
     | '/r/$code_/view'
     | '/_authenticated/marketing-packs/'
     | '/api/public/payments/webhook'
+    | '/api/public/payments/webhook-audit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -289,6 +302,7 @@ export interface RootRouteChildren {
   RCodeRoute: typeof RCodeRoute
   RCodeViewRoute: typeof RCodeViewRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicPaymentsWebhookAuditRoute: typeof ApiPublicPaymentsWebhookAuditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -433,6 +447,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRegionRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/payments/webhook-audit': {
+      id: '/api/public/payments/webhook-audit'
+      path: '/api/public/payments/webhook-audit'
+      fullPath: '/api/public/payments/webhook-audit'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -509,6 +530,7 @@ const rootRouteChildren: RootRouteChildren = {
   RCodeRoute: RCodeRoute,
   RCodeViewRoute: RCodeViewRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicPaymentsWebhookAuditRoute: ApiPublicPaymentsWebhookAuditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
