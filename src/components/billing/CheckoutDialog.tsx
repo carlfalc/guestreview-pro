@@ -20,13 +20,10 @@ export function CheckoutDialog({ open, onOpenChange, tier, interval, onAlreadySu
   const [failed, setFailed] = useState<string | null>(null);
 
   const fetchClientSecret = useCallback(async () => {
+    // No environment and no return URL from the browser — the server decides
+    // both from trusted configuration.
     const result = await createCheckout({
-      data: {
-        tier,
-        interval,
-        environment: getStripeEnvironment(),
-        returnUrl: `${window.location.origin}/billing?checkout=complete&session_id={CHECKOUT_SESSION_ID}`,
-      },
+      data: { tier, interval, returnPath: "/billing" },
     });
     if (result.alreadySubscribed) {
       onAlreadySubscribed?.();
