@@ -138,36 +138,43 @@ async function handle(request: Request, env: StripeEnv) {
   const fresh = await claimEvent(event as { id: string; type: string }, env);
   if (!fresh) return;
 
-  switch (event.type) {
-    case "customer.subscription.created":
-    case "customer.subscription.updated":
-    case "customer.subscription.deleted":
-      await upsertSubscription(event.data.object, env);
-      break;
-    case "invoice.payment_succeeded":
-    case "invoice.paid":
-      await markPayment(event.data.object, env, "paid");
-      break;
-    case "invoice.payment_failed":
-      await markPayment(event.data.object, env, "failed");
-      break;
-    case "checkout.session.completed": {
-      const session = event.data.object as any;
-      if (session.subscription) {
-        const { createStripeClient } = await import("@/lib/stripe.server");
-        const stripe = createStripeClient(env);
-        const sub = await stripe.subscriptions.retrieve(
-          typeof session.subscription === "string" ? session.subscription : session.subscription.id,
-        );
-        await upsertSubscription(
-          { ...(sub as unknown as Record<string, unknown>), metadata: { ...(sub as any).metadata, ...session.metadata } },
-          env,
-        );
+  try {
+    switch (event.type) {
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted":
+        await upsertSubscription(event.data.object, env);
+        break;
+      case "invoice.payment_succeeded":
+      case "invoice.paid":
+        await markPayment(event.data.object, env, "paid");
+        break;
+      case "invoice.payment_failed":
+        await markPayment(event.data.object, env, "failed");
+        break;
+      case "checkout.session.completed": {
+        const session = event.data.object as any;
+        if (session.subscription) {
+          const { createStripeClient } = await import("@/lib/stripe.server");
+          const stripe = createStripeClient(env);
+          const sub = await stripe.subscriptions.retrieve(
+            typeof session.subscription === "string" ? session.subscription : session.subscription.id,
+          );
+          await upsertSubscription(
+            { ...(sub as unknown as Record<string, unknown>), metadata: { ...(sub as any).metadata, ...session.metadata } },
+            env,
+          );
+        }
+        break;
       }
-      break;
+      default:
+        console.log("Unhandled Stripe event:", event.type);
     }
-    default:
-      console.log("Unhandled Stripe event:", event.type);
+    await finishEvent(event.id, "processed");
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    await finishEvent(event.id, "failed", message);
+    throw e;
   }
 }
 
