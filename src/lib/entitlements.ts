@@ -100,31 +100,63 @@ export function canCreateQrCodeWith(plan: PlanTierKey, usage: UsageCounts): bool
   return usage.activeQrCodes < entitlementsFor(plan).activeQrCodesMax;
 }
 
+export interface OverLimitOptions {
+  /**
+   * IDs the account owner chose to keep manageable. Honoured first; any
+   * remaining allowance is filled oldest-first.
+   */
+  preferredIds?: Array<string | null | undefined>;
+}
+
 /**
- * Existing accounts may already exceed the Free allowance. Nothing is deleted
- * or deactivated: the oldest QR codes stay fully manageable up to the limit,
- * and the rest are flagged "legacy over limit" — still redirecting publicly,
- * read-only in management until the account upgrades.
+ * Accounts that drop below their previous allowance keep everything live:
+ * nothing is deleted, deactivated or stopped from redirecting. Records inside
+ * the allowance stay fully editable; the rest are flagged "over limit" and
+ * become read-only in management until the account upgrades. The owner picks
+ * which records keep the allowance via `preferredIds`; otherwise the oldest win.
  */
+export function markOverLimit<T extends { id: string; created_at: string; status: string }>(
+  rows: T[],
+  max: number,
+  options: OverLimitOptions = {},
+): Array<T & { overLimit: boolean }> {
+  const preferred = (options.preferredIds ?? []).filter(Boolean) as string[];
+  const active = rows.filter((r) => r.status === "active");
+  const byAge = [...active].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+  const keep = new Set<string>();
+  for (const id of preferred) {
+    if (keep.size >= max) break;
+    if (active.some((r) => r.id === id)) keep.add(id);
+  }
+  for (const row of byAge) {
+    if (keep.size >= max) break;
+    keep.add(row.id);
+  }
+  return rows.map((row) => ({
+    ...row,
+    overLimit: row.status === "active" && !keep.has(row.id),
+  }));
+}
+
+/** QR-code specific wrapper kept for existing call sites. */
 export function markLegacyOverLimit<T extends { id: string; created_at: string; status: string }>(
   qrCodes: T[],
   plan: PlanTierKey,
+  options: OverLimitOptions = {},
 ): Array<T & { legacyOverLimit: boolean }> {
-  const max = entitlementsFor(plan).activeQrCodesMax;
-  const ordered = [...qrCodes].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  return markOverLimit(qrCodes, entitlementsFor(plan).activeQrCodesMax, options).map(
+    ({ overLimit, ...rest }) => ({ ...(rest as unknown as T), legacyOverLimit: overLimit }),
   );
-  let activeSeen = 0;
-  const flags = new Map<string, boolean>();
-  for (const qr of ordered) {
-    if (qr.status !== "active") {
-      flags.set(qr.id, false);
-      continue;
-    }
-    activeSeen += 1;
-    flags.set(qr.id, activeSeen > max);
-  }
-  return qrCodes.map((qr) => ({ ...qr, legacyOverLimit: flags.get(qr.id) ?? false }));
+}
+
+export function markBusinessesOverLimit<T extends { id: string; created_at: string; status: string }>(
+  businesses: T[],
+  plan: PlanTierKey,
+  options: OverLimitOptions = {},
+): Array<T & { overLimit: boolean }> {
+  return markOverLimit(businesses, entitlementsFor(plan).businessesMax, options);
 }
 
 export const UPGRADE_COPY = {
