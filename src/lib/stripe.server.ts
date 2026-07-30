@@ -67,14 +67,15 @@ export function getStripeErrorMessage(error: unknown): string {
 }
 
 /**
- * Is tax calculation switched on for this deployment? Defaults to ON — the
- * seller is responsible for registration, filing and remittance. Set
- * STRIPE_AUTOMATIC_TAX_ENABLED to "false" to disable it.
+ * Is Stripe automatic tax switched on for this deployment?
+ *
+ * DEFAULTS TO OFF. Tax is only calculated when the trusted server setting
+ * STRIPE_AUTOMATIC_TAX_ENABLED is exactly "true". Enabling it does not make
+ * anyone tax-compliant: the seller remains responsible for registration,
+ * filing and remittance in every jurisdiction. See docs/TAX.md.
  */
 export function automaticTaxEnabled(): boolean {
-  const raw = (process.env.STRIPE_AUTOMATIC_TAX_ENABLED ?? "").toLowerCase();
-  if (raw === "false" || raw === "0" || raw === "no") return false;
-  return true;
+  return (process.env.STRIPE_AUTOMATIC_TAX_ENABLED ?? "").trim().toLowerCase() === "true";
 }
 
 /**
