@@ -407,6 +407,7 @@ function CreateQrDialog({
         .single();
       if (error) throw error;
       toast.success("QR code created");
+      track("qr_created", { destinationType });
       onCreated(data.id);
     } catch (e) {
       toast.error(friendlyMutationError(e, "Failed to create QR code"));
