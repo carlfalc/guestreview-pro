@@ -34,6 +34,7 @@ import { QrCode, ArrowRight, Plus, Building2, AlertCircle, Trash2, Save } from "
 import { useEffect, useMemo, useState } from "react";
 import { useBilling } from "@/hooks/use-billing";
 import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { useTrack } from "@/hooks/use-analytics";
 import { friendlyMutationError } from "@/lib/plan-errors";
 import { toast } from "sonner";
 import { generateShortCode } from "@/lib/short-code";
