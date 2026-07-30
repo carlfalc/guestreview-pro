@@ -12,6 +12,8 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { formatRegionalPrice } from "@/lib/format-price";
 import { PLAN_FEATURES } from "@/lib/regional-pricing";
 import { Link } from "@tanstack/react-router";
+import { UpgradeChecklist } from "@/components/billing/UpgradeChecklist";
+import { PlanPrioritiesCard } from "@/components/billing/PlanPrioritiesCard";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   component: BillingPage,
@@ -88,6 +90,11 @@ function BillingPage() {
           Your plan, renewal date and payment history. Pricing follows your locked account region.
         </p>
       </div>
+
+      <UpgradeChecklist />
+      <PlanPrioritiesCard />
+
+
 
       <Card className="rounded-3xl border-border/70">
         <CardContent className="space-y-4 p-6">

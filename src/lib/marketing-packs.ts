@@ -225,7 +225,16 @@ export type ContentBase = {
   showLogo: boolean;
   showStars: boolean;
   showGoogleBadge: boolean;
+  /**
+   * Free-plan attribution rendered on every exported asset. Paid plans pass
+   * null, so upgrading silently clears it from every existing pack — the
+   * credit is derived at render time and never stored on the pack row.
+   */
+  brandingCredit?: string | null;
 };
+
+/** The attribution shown on Free-plan assets. */
+export const BRANDING_CREDIT = "Created with GuestReview Pro";
 
 /**
  * Merge base pack content + global settings + per-format override into the
@@ -251,6 +260,7 @@ export function buildFormatContent(
     supportText: override?.supportText ?? base.supportText,
     ctaText: override?.ctaText ?? base.ctaText,
     footerText: override?.footerText ?? base.footerText,
+    brandingCredit: base.brandingCredit ?? null,
     showStars,
     showGoogleBadge,
     textAlign: override?.textAlign ?? global.textAlign ?? "center",

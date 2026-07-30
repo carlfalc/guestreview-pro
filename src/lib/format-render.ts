@@ -33,6 +33,8 @@ export type FormatContent = {
   supportText: string;
   ctaText: string;
   footerText?: string;
+  /** Free-plan attribution line. Null/undefined on paid plans. */
+  brandingCredit?: string | null;
   showStars?: boolean;
   showGoogleBadge?: boolean;
   textAlign?: "left" | "center" | "right";
@@ -262,8 +264,10 @@ export async function renderFormatSvg(
   const ctaH = ctaFont * 2.4;
   const ctaX = tx - (textAlign === "center" ? ctaW / 2 : textAlign === "right" ? ctaW : 0);
   const footerFont = Math.max(displayH * 0.022, format.medium === "print" ? 2.2 : 13);
+  const creditFont = Math.max(displayH * 0.016, format.medium === "print" ? 1.8 : 10);
+  const creditLine = content.brandingCredit ? creditFont * 1.9 : 0;
   const footerLine = content.footerText ? footerFont * 1.8 : 0;
-  const ctaY = offY + displayH - ctaH - displayH * 0.06 - footerLine;
+  const ctaY = offY + displayH - ctaH - displayH * 0.06 - footerLine - creditLine;
   const ctaRadius = cornerR > 0 ? Math.min(ctaH / 2, cornerR * 1.2) : ctaH / 2;
   if (content.ctaText) {
     parts.push(
@@ -277,7 +281,14 @@ export async function renderFormatSvg(
   // Footer
   if (content.footerText) {
     parts.push(
-      `<text x="${tx}" y="${offY + displayH - displayH * 0.03}" fill="${textColor}" fill-opacity="0.55" font-family="${escapeAttr(fontFamily)}" font-size="${footerFont}" text-anchor="${textAnchor}">${escapeText(content.footerText)}</text>`,
+      `<text x="${tx}" y="${offY + displayH - displayH * 0.03 - creditLine}" fill="${textColor}" fill-opacity="0.55" font-family="${escapeAttr(fontFamily)}" font-size="${footerFont}" text-anchor="${textAnchor}">${escapeText(content.footerText)}</text>`,
+    );
+  }
+
+  // Free-plan attribution — removed automatically on paid plans.
+  if (content.brandingCredit) {
+    parts.push(
+      `<text x="${tx}" y="${offY + displayH - displayH * 0.022}" fill="${textColor}" fill-opacity="0.4" font-family="${escapeAttr(fontFamily)}" font-size="${creditFont}" text-anchor="${textAnchor}">${escapeText(content.brandingCredit)}</text>`,
     );
   }
 

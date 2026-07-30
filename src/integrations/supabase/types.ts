@@ -455,6 +455,8 @@ export type Database = {
           full_name: string | null
           id: string
           language: string | null
+          plan_primary_business_id: string | null
+          plan_primary_qr_id: string | null
           registration_country_code: string | null
           registration_country_recorded_at: string | null
           registration_country_source: string | null
@@ -462,6 +464,9 @@ export type Database = {
           theme: string | null
           timezone: string | null
           updated_at: string
+          upgrade_checklist_dismissed_at: string | null
+          upgrade_welcome_email_sent_at: string | null
+          upgrade_welcome_plan_key: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -470,6 +475,8 @@ export type Database = {
           full_name?: string | null
           id: string
           language?: string | null
+          plan_primary_business_id?: string | null
+          plan_primary_qr_id?: string | null
           registration_country_code?: string | null
           registration_country_recorded_at?: string | null
           registration_country_source?: string | null
@@ -477,6 +484,9 @@ export type Database = {
           theme?: string | null
           timezone?: string | null
           updated_at?: string
+          upgrade_checklist_dismissed_at?: string | null
+          upgrade_welcome_email_sent_at?: string | null
+          upgrade_welcome_plan_key?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -485,6 +495,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           language?: string | null
+          plan_primary_business_id?: string | null
+          plan_primary_qr_id?: string | null
           registration_country_code?: string | null
           registration_country_recorded_at?: string | null
           registration_country_source?: string | null
@@ -492,6 +504,9 @@ export type Database = {
           theme?: string | null
           timezone?: string | null
           updated_at?: string
+          upgrade_checklist_dismissed_at?: string | null
+          upgrade_welcome_email_sent_at?: string | null
+          upgrade_welcome_plan_key?: string | null
         }
         Relationships: []
       }

@@ -35,13 +35,28 @@ function intervalFromPrice(price: any): "monthly" | "annual" | null {
 async function claimEvent(event: { id: string; type: string }, env: StripeEnv) {
   const { error } = await admin()
     .from("stripe_webhook_events")
-    .insert({ event_id: event.id, event_type: event.type, environment: env });
+    .insert({
+      stripe_event_id: event.id,
+      event_type: event.type,
+      livemode: env === "live",
+    });
   if (error) {
     // Unique violation = already processed.
     if ((error as { code?: string }).code === "23505") return false;
     throw new Error(error.message);
   }
   return true;
+}
+
+async function finishEvent(eventId: string, status: "processed" | "failed", message?: string) {
+  await admin()
+    .from("stripe_webhook_events")
+    .update({
+      processing_status: status,
+      error_message: message ?? null,
+      processed_at: new Date().toISOString(),
+    })
+    .eq("stripe_event_id", eventId);
 }
 
 async function ownerIdFor(subscription: any, env: StripeEnv): Promise<string | null> {
@@ -71,6 +86,8 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
   const cancelled = subscription.status === "canceled";
 
+  const planKey = cancelled ? "free" : planKeyFromPrice(price);
+
   await admin()
     .from("subscriptions")
     .upsert(
@@ -81,7 +98,7 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
           typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id,
         stripe_subscription_id: subscription.id,
         stripe_price_id: price?.lookup_key ?? price?.id ?? null,
-        plan_key: cancelled ? "free" : planKeyFromPrice(price),
+        plan_key: planKey,
         status: subscription.status,
         billing_interval: intervalFromPrice(price),
         currency_code: (price?.currency ?? "").toUpperCase() || null,
@@ -95,6 +112,15 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
       },
       { onConflict: "owner_id" },
     );
+
+  // Post-purchase business logic. Entitlements (unlimited QR codes, advanced
+  // analytics, branding removal on every existing asset) are derived from the
+  // row above, so they unlock the moment it is written. What still needs an
+  // explicit action is the one-off welcome + onboarding checklist.
+  if (planKey !== "free" && ["active", "trialing"].includes(subscription.status)) {
+    const { onSubscriptionActivated } = await import("@/lib/upgrade-notifications.server");
+    await onSubscriptionActivated(admin(), ownerId, planKey);
+  }
 }
 
 async function markPayment(invoice: any, env: StripeEnv, status: "paid" | "failed") {
@@ -112,36 +138,43 @@ async function handle(request: Request, env: StripeEnv) {
   const fresh = await claimEvent(event as { id: string; type: string }, env);
   if (!fresh) return;
 
-  switch (event.type) {
-    case "customer.subscription.created":
-    case "customer.subscription.updated":
-    case "customer.subscription.deleted":
-      await upsertSubscription(event.data.object, env);
-      break;
-    case "invoice.payment_succeeded":
-    case "invoice.paid":
-      await markPayment(event.data.object, env, "paid");
-      break;
-    case "invoice.payment_failed":
-      await markPayment(event.data.object, env, "failed");
-      break;
-    case "checkout.session.completed": {
-      const session = event.data.object as any;
-      if (session.subscription) {
-        const { createStripeClient } = await import("@/lib/stripe.server");
-        const stripe = createStripeClient(env);
-        const sub = await stripe.subscriptions.retrieve(
-          typeof session.subscription === "string" ? session.subscription : session.subscription.id,
-        );
-        await upsertSubscription(
-          { ...(sub as unknown as Record<string, unknown>), metadata: { ...(sub as any).metadata, ...session.metadata } },
-          env,
-        );
+  try {
+    switch (event.type) {
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted":
+        await upsertSubscription(event.data.object, env);
+        break;
+      case "invoice.payment_succeeded":
+      case "invoice.paid":
+        await markPayment(event.data.object, env, "paid");
+        break;
+      case "invoice.payment_failed":
+        await markPayment(event.data.object, env, "failed");
+        break;
+      case "checkout.session.completed": {
+        const session = event.data.object as any;
+        if (session.subscription) {
+          const { createStripeClient } = await import("@/lib/stripe.server");
+          const stripe = createStripeClient(env);
+          const sub = await stripe.subscriptions.retrieve(
+            typeof session.subscription === "string" ? session.subscription : session.subscription.id,
+          );
+          await upsertSubscription(
+            { ...(sub as unknown as Record<string, unknown>), metadata: { ...(sub as any).metadata, ...session.metadata } },
+            env,
+          );
+        }
+        break;
       }
-      break;
+      default:
+        console.log("Unhandled Stripe event:", event.type);
     }
-    default:
-      console.log("Unhandled Stripe event:", event.type);
+    await finishEvent(event.id, "processed");
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    await finishEvent(event.id, "failed", message);
+    throw e;
   }
 }
 
