@@ -70,9 +70,7 @@ function BillingPage() {
   const openPortal = async () => {
     setOpeningPortal(true);
     try {
-      const result = await portal({
-        data: { environment: getStripeEnvironment(), returnUrl: `${window.location.origin}/billing` },
-      });
+      const result = await portal({ data: { returnPath: "/billing" } });
       if (result.error || !result.url) throw new Error(result.error ?? "Portal unavailable.");
       window.open(result.url, "_blank", "noopener");
     } catch (e) {
