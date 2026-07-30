@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useBilling, useRefreshBilling } from "@/hooks/use-billing";
 import { createCustomerPortalSession, getMyInvoices } from "@/lib/billing.functions";
-import { getStripeEnvironment } from "@/lib/stripe";
+
 import { formatRegionalPrice } from "@/lib/format-price";
 import { PLAN_FEATURES } from "@/lib/regional-pricing";
 import { Link } from "@tanstack/react-router";
