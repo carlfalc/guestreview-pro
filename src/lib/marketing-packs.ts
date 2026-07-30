@@ -260,6 +260,7 @@ export function buildFormatContent(
     supportText: override?.supportText ?? base.supportText,
     ctaText: override?.ctaText ?? base.ctaText,
     footerText: override?.footerText ?? base.footerText,
+    brandingCredit: base.brandingCredit ?? null,
     showStars,
     showGoogleBadge,
     textAlign: override?.textAlign ?? global.textAlign ?? "center",
