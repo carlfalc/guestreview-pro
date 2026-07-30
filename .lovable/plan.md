@@ -1,49 +1,33 @@
-## Goal
+# Stripe go-live review — what's done and what's left
 
-Make `/r/<code>` redirect a scanning phone to Google without loading the React app first. Today the phone downloads the app bundle, runs `GuestLanding`, queries the database from the browser, then redirects. The new path answers the very first HTTP request with a `302`.
+## Confirmed complete on your side
 
-## How it works
+All five go-live steps report completed: sandbox claimed, Stripe go-live form submitted, Lovable app installed on your live account, live API keys provisioned, readiness check passed. Live account is connected alongside the sandbox.
 
-```text
-now:   phone -> /r/CODE -> HTML + JS bundle -> hydrate -> DB query -> location.href = google
-after: phone -> /r/CODE -> [server: DB lookup] -> 302 Location: google
-```
+Also verified in the app:
 
-## Changes
+- Live and test client tokens are both present in the build config, and the code picks the environment from the token prefix (never silently defaults to live).
+- Live and sandbox webhook secrets and gateway API keys are all present.
+- Webhook handler exists at the required public path and updates subscription state.
+- Checkout uses embedded mode, resolves one Stripe customer per account, blocks a second active subscription, and stamps plan/region metadata on both the session and subscription.
+- Customer portal session is auth-protected and scoped to the caller's own billing record.
 
-**1. Add a server GET handler to `src/routes/r.$code.tsx`**
+## Gaps I'd close before taking real money
 
-The file keeps its UI component, and gains a `server.handlers.GET` block that runs on the edge before any HTML is produced:
+1. **Tax is currently switched off.** Checkout only enables Stripe tax when the `STRIPE_AUTOMATIC_TAX_ENABLED` flag is set, and it is not set. As an NZ-based seller you aren't eligible for Stripe's full compliance handling, so the right setting is tax calculation and collection at checkout (+0.5% per transaction), with you handling registration, filing and remittance. This also needs a tax code on each of the two products (SaaS/electronic services) so tax is calculated correctly.
 
-- Look up the QR row by `short_code` using a server-side publishable-key Supabase client (created inside the handler, per the server-function rules). Select only the columns needed to decide: status, expiry, destination fields, landing mode, business `google_review_url`, plus the ids needed for logging.
-- Reuse the existing `resolveQrDestination` helper unchanged, so redirect precedence and URL validation stay identical to today.
-- If the QR is active, `landing_mode` is redirect, and the resolver returns a URL: return `Response.redirect(url, 302)` with `Cache-Control: no-store`.
-- Everything else (not found, paused, expired, archived, invalid destination, `landing_mode = landing`) redirects to a new companion route that renders the existing UI.
+2. **No test-mode banner.** Nothing tells a user in the preview/test environment that their payment isn't real, and nothing warns if a production build ever ships without a live token. A small always-mounted banner covers both.
 
-**2. Add `src/routes/r.$code.view.tsx`**
+3. **Welcome emails are a no-op.** The upgrade flow tries to send a welcome email but the sender domain isn't configured, so it silently skips. Either set up email on guestreviewpro.com or accept that upgrades are silent for now.
 
-The current `GuestLanding` component moves here essentially as-is, so the branded landing page and all status pages keep working, including their own analytics and "clicked review" tracking. `r.$code.tsx` becomes a thin server-redirect route.
+4. **Live catalogue sync depends on publishing.** Products and prices sync test → live on publish. If you haven't published since the catalogue was created, live checkout will fail with "no price configured". Worth a publish plus one live verification.
 
-**3. Analytics without slowing the redirect**
+5. **No end-to-end live smoke test yet.** A single real low-value transaction (or a live-mode check that prices resolve) confirms the whole chain: checkout → webhook → subscriptions row → entitlements unlocked → portal cancel.
 
-Add a single database function, `log_scan_redirect`, that inserts the `scan_events` row and bumps `scans_count` in one call, returning the new event id. The handler makes one call to it and then redirects — one round trip instead of the current bundle-load plus multiple browser round trips.
+## What I'd change in code
 
-- Device/OS/browser come from the request `User-Agent` header, referrer from the `Referer` header, IP-derived nothing (unchanged privacy posture).
-- Session dedupe moves from `sessionStorage` to a short-lived `httpOnly` cookie per QR code, preserving the "don't double-count the same visitor" behaviour.
-- Because a server 302 guarantees the guest reaches the destination, the event is written with `destination_clicked = true` immediately. Landing-mode scans keep the existing click-tracking flow on the view route.
+- `src/lib/stripe.server.ts` / deployment config: enable the automatic-tax flag so `automatic_tax: { enabled: true }` is sent on every checkout session.
+- One-off Stripe product update setting the correct tax code on both GuestReview Pro and GuestReview Business.
+- New `src/components/PaymentTestModeBanner.tsx`, mounted once in `src/routes/__root.tsx`: orange notice on test tokens, red "production checkout not configured" notice when no token, nothing on live.
 
-**4. Migration**
-
-One migration adding the `log_scan_redirect` security-definer function, with `EXECUTE` granted to `anon` and `authenticated` (matching how scans are already recorded anonymously today). No table or policy changes.
-
-## Verification
-
-- Hit `/r/<code>` for the Glasshouse code with a redirect-following disabled request and confirm a `302` with the Google review URL in `Location`.
-- Confirm a `scan_events` row is written and `scans_count` increments.
-- Confirm a landing-mode QR still shows the branded page, and paused/expired/archived/invalid codes still show their status pages.
-- Confirm a second request within the cookie window does not double-count.
-
-## Known trade-offs
-
-- Non-redirect scans (landing mode, status pages) gain one extra tiny hop to `/r/<code>/view`.
-- The scan event is recorded as "clicked" at redirect time rather than on a confirmed arrival at Google — there is no way to observe the arrival from a 302, and this matches what the redirect actually guarantees.
+Nothing else in the billing stack needs changing — entitlements, region locks, over-limit handling and the QR redirect path are all untouched by this.
