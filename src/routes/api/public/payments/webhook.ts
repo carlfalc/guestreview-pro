@@ -35,13 +35,28 @@ function intervalFromPrice(price: any): "monthly" | "annual" | null {
 async function claimEvent(event: { id: string; type: string }, env: StripeEnv) {
   const { error } = await admin()
     .from("stripe_webhook_events")
-    .insert({ event_id: event.id, event_type: event.type, environment: env });
+    .insert({
+      stripe_event_id: event.id,
+      event_type: event.type,
+      livemode: env === "live",
+    });
   if (error) {
     // Unique violation = already processed.
     if ((error as { code?: string }).code === "23505") return false;
     throw new Error(error.message);
   }
   return true;
+}
+
+async function finishEvent(eventId: string, status: "processed" | "failed", message?: string) {
+  await admin()
+    .from("stripe_webhook_events")
+    .update({
+      processing_status: status,
+      error_message: message ?? null,
+      processed_at: new Date().toISOString(),
+    })
+    .eq("stripe_event_id", eventId);
 }
 
 async function ownerIdFor(subscription: any, env: StripeEnv): Promise<string | null> {
