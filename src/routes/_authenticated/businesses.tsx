@@ -124,7 +124,7 @@ function Businesses() {
   }
 
   const atBusinessLimit =
-    !billing.isPaid && billing.usage.activeBusinesses >= billing.entitlements.businessesMax;
+    !billing.isPaid && billing.usage.businesses >= billing.entitlements.businessesMax;
 
   return (
     <div className="animate-fade-in-up space-y-8">
