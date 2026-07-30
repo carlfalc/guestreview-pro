@@ -30,6 +30,7 @@ import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
 import { Route as AuthenticatedAdminWebhookEventsRouteImport } from './routes/_authenticated/admin.webhook-events'
 import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
+import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -142,6 +143,12 @@ const AuthenticatedAdminRegionRequestsRoute =
     path: '/admin/region-requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminFunnelRoute =
+  AuthenticatedAdminFunnelRouteImport.update({
+    id: '/admin/funnel',
+    path: '/admin/funnel',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -162,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
+  '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
@@ -185,6 +193,7 @@ export interface FileRoutesByTo {
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
+  '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
@@ -210,6 +219,7 @@ export interface FileRoutesById {
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
+  '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/_authenticated/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/_authenticated/businesses/$id': typeof AuthenticatedBusinessesIdRoute
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/qr'
     | '/settings'
     | '/r/$code'
+    | '/admin/funnel'
     | '/admin/region-requests'
     | '/admin/webhook-events'
     | '/businesses/$id'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/qr'
     | '/settings'
     | '/r/$code'
+    | '/admin/funnel'
     | '/admin/region-requests'
     | '/admin/webhook-events'
     | '/businesses/$id'
@@ -282,6 +294,7 @@ export interface FileRouteTypes {
     | '/_authenticated/qr'
     | '/_authenticated/settings'
     | '/r/$code'
+    | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/region-requests'
     | '/_authenticated/admin/webhook-events'
     | '/_authenticated/businesses/$id'
@@ -453,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRegionRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/funnel': {
+      id: '/_authenticated/admin/funnel'
+      path: '/admin/funnel'
+      fullPath: '/admin/funnel'
+      preLoaderRoute: typeof AuthenticatedAdminFunnelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -497,6 +517,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminRegionRequestsRoute: typeof AuthenticatedAdminRegionRequestsRoute
   AuthenticatedAdminWebhookEventsRoute: typeof AuthenticatedAdminWebhookEventsRoute
   AuthenticatedMarketingPacksIdRoute: typeof AuthenticatedMarketingPacksIdRoute
@@ -512,6 +533,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminRegionRequestsRoute: AuthenticatedAdminRegionRequestsRoute,
   AuthenticatedAdminWebhookEventsRoute: AuthenticatedAdminWebhookEventsRoute,
   AuthenticatedMarketingPacksIdRoute: AuthenticatedMarketingPacksIdRoute,

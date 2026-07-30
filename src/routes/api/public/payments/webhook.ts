@@ -222,8 +222,28 @@ async function dispatch(event: { type: string; data: { object: any } }, env: Str
           env,
         );
       }
+      // Close the recovery loop: this checkout is no longer abandonable.
+      if (typeof session.id === "string") {
+        await admin()
+          .from("checkout_attempts")
+          .update({ status: "completed", completed_at: new Date().toISOString() })
+          .eq("stripe_session_id", session.id);
+      }
       break;
     }
+
+    case "checkout.session.expired": {
+      const session = event.data.object;
+      if (typeof session.id === "string") {
+        await admin()
+          .from("checkout_attempts")
+          .update({ abandoned_reason: "session_expired" })
+          .eq("stripe_session_id", session.id)
+          .eq("status", "started");
+      }
+      break;
+    }
+
 
     default:
       console.log("Unhandled Stripe event:", event.type);

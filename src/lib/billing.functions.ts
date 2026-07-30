@@ -173,11 +173,33 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
         },
       });
 
+      // Record the attempt so an abandoned checkout can be recovered later.
+      // Best-effort: a failure here must never block a paying customer.
+      try {
+        const attempts = (supabaseAdmin as unknown as {
+          from: (table: string) => { insert: (row: Record<string, unknown>) => Promise<unknown> };
+        }).from("checkout_attempts");
+        await attempts.insert({
+          owner_id: context.userId,
+          environment,
+          plan_key: plan.tier,
+          billing_interval: plan.interval,
+          currency_code: trusted.currencyCode,
+          amount_minor: trusted.amountMinor,
+          stripe_session_id: session.id,
+          status: "started",
+        });
+      } catch (e) {
+        console.error("checkout_attempts insert failed:", e);
+      }
+
+
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
   });
+
 
 export const createCustomerPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

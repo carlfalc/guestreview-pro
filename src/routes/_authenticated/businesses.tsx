@@ -37,6 +37,9 @@ import { useEffect, useState } from "react";
 import { friendlyMutationError } from "@/lib/plan-errors";
 import { toast } from "sonner";
 import { isValidDestinationUrl } from "@/lib/resolve-qr-destination";
+import { useBilling } from "@/hooks/use-billing";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { useTrack } from "@/hooks/use-analytics";
 
 export const Route = createFileRoute("/_authenticated/businesses")({
   component: Businesses,
@@ -71,6 +74,8 @@ type BusinessRow = {
 
 function Businesses() {
   const qc = useQueryClient();
+  const billing = useBilling();
+  const track = useTrack();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<BusinessRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -112,10 +117,14 @@ function Businesses() {
     });
     if (error) return toast.error(friendlyMutationError(error));
     toast.success("Business created");
+    track("business_created");
     setCreateOpen(false);
     setForm({ ...form, name: "" });
     qc.invalidateQueries({ queryKey: ["businesses"] });
   }
+
+  const atBusinessLimit =
+    !billing.isPaid && billing.usage.businesses >= billing.entitlements.businessesMax;
 
   return (
     <div className="animate-fade-in-up space-y-8">
@@ -126,6 +135,7 @@ function Businesses() {
             Manage all the businesses under your account.
           </p>
         </div>
+
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="rounded-full">
@@ -184,6 +194,8 @@ function Businesses() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {atBusinessLimit && <UpgradePrompt reason="businessLimit" compact />}
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

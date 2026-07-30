@@ -307,6 +307,57 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_attempts: {
+        Row: {
+          abandoned_reason: string | null
+          amount_minor: number | null
+          billing_interval: string
+          completed_at: string | null
+          created_at: string
+          currency_code: string | null
+          environment: string
+          id: string
+          owner_id: string
+          plan_key: string
+          started_at: string
+          status: string
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          abandoned_reason?: string | null
+          amount_minor?: number | null
+          billing_interval: string
+          completed_at?: string | null
+          created_at?: string
+          currency_code?: string | null
+          environment?: string
+          id?: string
+          owner_id: string
+          plan_key: string
+          started_at?: string
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          abandoned_reason?: string | null
+          amount_minor?: number | null
+          billing_interval?: string
+          completed_at?: string | null
+          created_at?: string
+          currency_code?: string | null
+          environment?: string
+          id?: string
+          owner_id?: string
+          plan_key?: string
+          started_at?: string
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           business_id: string
@@ -446,6 +497,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      product_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: string
+          owner_id: string | null
+          path: string | null
+          properties: Json
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: string
+          owner_id?: string | null
+          path?: string | null
+          properties?: Json
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: string
+          owner_id?: string | null
+          path?: string | null
+          properties?: Json
+          session_id?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -963,6 +1044,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_conversion_funnel: {
+        Args: { _since?: string }
+        Returns: {
+          accounts: number
+          step: string
+          step_order: number
+        }[]
+      }
       claim_stripe_webhook_event: {
         Args: {
           p_environment: string
@@ -1013,6 +1102,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      my_onboarding_progress: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"

@@ -34,6 +34,7 @@ import { QrCode, ArrowRight, Plus, Building2, AlertCircle, Trash2, Save } from "
 import { useEffect, useMemo, useState } from "react";
 import { useBilling } from "@/hooks/use-billing";
 import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { useTrack } from "@/hooks/use-analytics";
 import { friendlyMutationError } from "@/lib/plan-errors";
 import { toast } from "sonner";
 import { generateShortCode } from "@/lib/short-code";
@@ -298,6 +299,7 @@ function CreateQrDialog({
   const [fg, setFg] = useState("#000000");
   const [bg, setBg] = useState("#ffffff");
   const [saving, setSaving] = useState(false);
+  const track = useTrack();
 
   const business = useMemo(
     () => businesses.find((b) => b.id === businessId),
@@ -405,6 +407,7 @@ function CreateQrDialog({
         .single();
       if (error) throw error;
       toast.success("QR code created");
+      track("qr_created", { destinationType });
       onCreated(data.id);
     } catch (e) {
       toast.error(friendlyMutationError(e, "Failed to create QR code"));
