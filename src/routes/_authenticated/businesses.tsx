@@ -117,10 +117,14 @@ function Businesses() {
     });
     if (error) return toast.error(friendlyMutationError(error));
     toast.success("Business created");
+    track("business_created");
     setCreateOpen(false);
     setForm({ ...form, name: "" });
     qc.invalidateQueries({ queryKey: ["businesses"] });
   }
+
+  const atBusinessLimit =
+    !billing.isPaid && billing.usage.activeBusinesses >= billing.entitlements.businessesMax;
 
   return (
     <div className="animate-fade-in-up space-y-8">
@@ -131,6 +135,7 @@ function Businesses() {
             Manage all the businesses under your account.
           </p>
         </div>
+
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="rounded-full">
