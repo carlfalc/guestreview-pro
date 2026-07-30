@@ -37,6 +37,9 @@ import { useEffect, useState } from "react";
 import { friendlyMutationError } from "@/lib/plan-errors";
 import { toast } from "sonner";
 import { isValidDestinationUrl } from "@/lib/resolve-qr-destination";
+import { useBilling } from "@/hooks/use-billing";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import { useTrack } from "@/hooks/use-analytics";
 
 export const Route = createFileRoute("/_authenticated/businesses")({
   component: Businesses,
