@@ -4,11 +4,13 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -149,8 +151,12 @@ function RootComponent() {
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isPublicScan = pathname.startsWith("/r/");
+
   return (
     <QueryClientProvider client={queryClient}>
+      {!isPublicScan && <PaymentTestModeBanner />}
       <Outlet />
       <Toaster position="top-center" />
     </QueryClientProvider>
