@@ -28,6 +28,7 @@ import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/q
 import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
 import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
+import { Route as AuthenticatedAdminWebhookEventsRouteImport } from './routes/_authenticated/admin.webhook-events'
 import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -129,6 +130,12 @@ const AuthenticatedBusinessesIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedBusinessesRoute,
   } as any)
+const AuthenticatedAdminWebhookEventsRoute =
+  AuthenticatedAdminWebhookEventsRouteImport.update({
+    id: '/admin/webhook-events',
+    path: '/admin/webhook-events',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminRegionRequestsRoute =
   AuthenticatedAdminRegionRequestsRouteImport.update({
     id: '/admin/region-requests',
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
+  '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
@@ -178,6 +186,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
+  '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
@@ -202,6 +211,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
+  '/_authenticated/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/_authenticated/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/_authenticated/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/r/$code'
     | '/admin/region-requests'
+    | '/admin/webhook-events'
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/r/$code'
     | '/admin/region-requests'
+    | '/admin/webhook-events'
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
@@ -271,6 +283,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/r/$code'
     | '/_authenticated/admin/region-requests'
+    | '/_authenticated/admin/webhook-events'
     | '/_authenticated/businesses/$id'
     | '/_authenticated/marketing-packs/$id'
     | '/_authenticated/marketing-packs/new'
@@ -426,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessesIdRouteImport
       parentRoute: typeof AuthenticatedBusinessesRoute
     }
+    '/_authenticated/admin/webhook-events': {
+      id: '/_authenticated/admin/webhook-events'
+      path: '/admin/webhook-events'
+      fullPath: '/admin/webhook-events'
+      preLoaderRoute: typeof AuthenticatedAdminWebhookEventsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/region-requests': {
       id: '/_authenticated/admin/region-requests'
       path: '/admin/region-requests'
@@ -478,6 +498,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAdminRegionRequestsRoute: typeof AuthenticatedAdminRegionRequestsRoute
+  AuthenticatedAdminWebhookEventsRoute: typeof AuthenticatedAdminWebhookEventsRoute
   AuthenticatedMarketingPacksIdRoute: typeof AuthenticatedMarketingPacksIdRoute
   AuthenticatedMarketingPacksNewRoute: typeof AuthenticatedMarketingPacksNewRoute
   AuthenticatedMarketingPacksIndexRoute: typeof AuthenticatedMarketingPacksIndexRoute
@@ -492,6 +513,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAdminRegionRequestsRoute: AuthenticatedAdminRegionRequestsRoute,
+  AuthenticatedAdminWebhookEventsRoute: AuthenticatedAdminWebhookEventsRoute,
   AuthenticatedMarketingPacksIdRoute: AuthenticatedMarketingPacksIdRoute,
   AuthenticatedMarketingPacksNewRoute: AuthenticatedMarketingPacksNewRoute,
   AuthenticatedMarketingPacksIndexRoute: AuthenticatedMarketingPacksIndexRoute,
@@ -513,3 +535,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
