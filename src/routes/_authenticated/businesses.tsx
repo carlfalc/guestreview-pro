@@ -74,6 +74,8 @@ type BusinessRow = {
 
 function Businesses() {
   const qc = useQueryClient();
+  const billing = useBilling();
+  const track = useTrack();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<BusinessRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
