@@ -86,6 +86,8 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
   const cancelled = subscription.status === "canceled";
 
+  const planKey = cancelled ? "free" : planKeyFromPrice(price);
+
   await admin()
     .from("subscriptions")
     .upsert(
@@ -96,7 +98,7 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
           typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id,
         stripe_subscription_id: subscription.id,
         stripe_price_id: price?.lookup_key ?? price?.id ?? null,
-        plan_key: cancelled ? "free" : planKeyFromPrice(price),
+        plan_key: planKey,
         status: subscription.status,
         billing_interval: intervalFromPrice(price),
         currency_code: (price?.currency ?? "").toUpperCase() || null,
@@ -110,6 +112,15 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
       },
       { onConflict: "owner_id" },
     );
+
+  // Post-purchase business logic. Entitlements (unlimited QR codes, advanced
+  // analytics, branding removal on every existing asset) are derived from the
+  // row above, so they unlock the moment it is written. What still needs an
+  // explicit action is the one-off welcome + onboarding checklist.
+  if (planKey !== "free" && ["active", "trialing"].includes(subscription.status)) {
+    const { onSubscriptionActivated } = await import("@/lib/upgrade-notifications.server");
+    await onSubscriptionActivated(admin(), ownerId, planKey);
+  }
 }
 
 async function markPayment(invoice: any, env: StripeEnv, status: "paid" | "failed") {
