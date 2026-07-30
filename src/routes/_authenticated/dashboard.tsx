@@ -21,9 +21,20 @@ import {
   YAxis,
 } from "recharts";
 import { format, subDays } from "date-fns";
+import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
+import { FinishUpgradeCard } from "@/components/billing/FinishUpgradeCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
+  head: () => ({
+    meta: [
+      { title: "Dashboard · GuestReview Pro" },
+      {
+        name: "description",
+        content: "Track scans, review clicks and QR performance across your locations.",
+      },
+    ],
+  }),
 });
 
 function Dashboard() {
