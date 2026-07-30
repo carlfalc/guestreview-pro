@@ -174,6 +174,11 @@ function MarketingPackEditor() {
   const rawLogoUrl = qrRow?.logo_url ?? biz?.logo_url ?? null;
   const qrData = qrRow ? buildScanUrl(qrRow.short_code) : "";
 
+  const billing = useBilling();
+  // Derived at render time: the moment a payment lands, every existing pack
+  // and export drops the attribution without touching stored pack data.
+  const brandingCredit = billing.entitlements.removeBranding ? null : BRANDING_CREDIT;
+
   const contentBase: ContentBase = useMemo(() => ({
     businessName: biz?.name ?? "",
     logoUrl: rawLogoUrl,
@@ -185,7 +190,8 @@ function MarketingPackEditor() {
     showLogo,
     showStars,
     showGoogleBadge,
-  }), [biz, rawLogoUrl, headline, supportText, ctaText, footerText, showBusinessName, showLogo, showStars, showGoogleBadge]);
+    brandingCredit,
+  }), [biz, rawLogoUrl, headline, supportText, ctaText, footerText, showBusinessName, showLogo, showStars, showGoogleBadge, brandingCredit]);
 
   const resolveContent = useCallback((f: BusinessFormat): FormatContent =>
     buildFormatContent(contentBase, globalSettings, formatCustomizations[f.id]),
