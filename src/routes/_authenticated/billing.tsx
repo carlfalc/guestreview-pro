@@ -12,6 +12,8 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { formatRegionalPrice } from "@/lib/format-price";
 import { PLAN_FEATURES } from "@/lib/regional-pricing";
 import { Link } from "@tanstack/react-router";
+import { UpgradeChecklist } from "@/components/billing/UpgradeChecklist";
+import { PlanPrioritiesCard } from "@/components/billing/PlanPrioritiesCard";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   component: BillingPage,
