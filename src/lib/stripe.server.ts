@@ -66,10 +66,15 @@ export function getStripeErrorMessage(error: unknown): string {
   return "Stripe request failed";
 }
 
-/** Is automatic tax calculation switched on for this deployment? */
+/**
+ * Is tax calculation switched on for this deployment? Defaults to ON — the
+ * seller is responsible for registration, filing and remittance. Set
+ * STRIPE_AUTOMATIC_TAX_ENABLED to "false" to disable it.
+ */
 export function automaticTaxEnabled(): boolean {
   const raw = (process.env.STRIPE_AUTOMATIC_TAX_ENABLED ?? "").toLowerCase();
-  return raw === "true" || raw === "1" || raw === "yes";
+  if (raw === "false" || raw === "0" || raw === "no") return false;
+  return true;
 }
 
 /**
