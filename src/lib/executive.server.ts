@@ -31,7 +31,7 @@ export async function buildExecutiveOverview(args: {
   const { supabase, userId } = args;
   const data = { businessId: args.businessId, periodDays: args.periodDays };
 
-    const { supabase, userId } = context;
+    const { loadHealthFacts } = await import("@/lib/health-facts.server");
     const { loadHealthFacts } = await import("@/lib/health-facts.server");
     const { placementByKey } = await import("@/lib/placement-recommendations");
 
