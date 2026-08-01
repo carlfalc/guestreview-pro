@@ -555,7 +555,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
   {
     slug: "review-programme-staff-routine",
     title: "Building a review routine your staff will actually keep",
-    metaTitle: "Staff Routines for Google Review Collection | GuestReview Pro",
+    metaTitle: "Staff Routines for Review Collection | GuestReview Pro",
     metaDescription:
       "How to embed review collection into shift routines: who asks, when, what they say, how to brief new starters and which numbers to review each month.",
     category: "reputation-ops",
