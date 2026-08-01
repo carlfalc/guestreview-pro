@@ -116,12 +116,16 @@ function ExamplesGallery() {
               <div className="grid h-52 place-items-center overflow-hidden rounded-2xl bg-white/5 p-4">
                 <TemplatePreview template={t} />
               </div>
-              <p className="mt-4 text-sm font-semibold">{t.name}</p>
+              <p className="mt-2 text-center text-[11px] uppercase tracking-wide text-white/35">
+                Sample preview — demo business, not a scannable code
+              </p>
+              <p className="mt-3 text-sm font-semibold">{t.name}</p>
               <p className="mt-1 text-xs text-white/50">
                 {templateDimensions(t)} · {t.placement}
               </p>
             </div>
           ))}
+
         </div>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
