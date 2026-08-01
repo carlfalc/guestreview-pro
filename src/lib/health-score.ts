@@ -384,12 +384,12 @@ export function computeHealthScore(input: HealthInput): HealthScore {
   if (!canScore) {
     headline = "Not enough data yet";
     message =
-      "Finish the setup steps below and we'll start measuring your review health. Nothing here counts against you.";
+      "Finish the setup steps below and we'll start measuring your Reputation Health™. Nothing here counts against you.";
   } else if (overall === null) {
     headline = "Not enough data yet";
     message = `Your setup looks fine — we just need real customer scans before scoring performance. Setup and technical checks are shown below in the meantime.`;
   } else {
-    headline = `Review health ${overall}/100`;
+    headline = `Reputation Health™ ${overall}/100`;
     message = "Scored from real scan events across your placements, goals and campaigns.";
   }
 

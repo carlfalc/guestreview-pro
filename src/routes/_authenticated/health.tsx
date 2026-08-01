@@ -64,7 +64,7 @@ function HealthPage() {
   return (
     <div className="animate-fade-in-up space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Review health</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Reputation Health™</h1>
         <p className="text-sm text-muted-foreground">
           Measured from real scan events across your placements, goals, campaigns and locations.
         </p>
