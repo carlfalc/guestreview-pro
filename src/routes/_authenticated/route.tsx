@@ -41,7 +41,7 @@ const nav = [
   { to: "/marketing-packs", label: "Marketing Packs", icon: Package },
 
   { to: "/analytics", label: "Analytics", icon: LineChart },
-  { to: "/health", label: "Review health", icon: HeartPulse },
+  { to: "/health", label: "Reputation Health™", icon: HeartPulse },
   { to: "/plans", label: "Plans", icon: Sparkles },
   { to: "/billing", label: "Billing", icon: CreditCard },
   { to: "/settings", label: "Settings", icon: Settings },
