@@ -363,7 +363,7 @@ export const generateWeeklyInsight = createServerFn({ method: "POST" })
         business_id: data.businessId,
         period_start: periodStart.toISOString(),
         period_end: periodEnd.toISOString(),
-        input_payload: payload as unknown as Record<string, unknown>,
+        input_payload: JSON.parse(JSON.stringify(payload)),
         provider: PROVIDER,
         model: DEFAULT_MODEL,
       };
@@ -406,7 +406,7 @@ export const generateWeeklyInsight = createServerFn({ method: "POST" })
         const { data: done, error } = await supabase
           .from("weekly_ai_insights")
           .update({
-            generated_output: output as unknown as Record<string, unknown>,
+            generated_output: JSON.parse(JSON.stringify(output)),
             generation_status: "completed",
             generated_at: new Date().toISOString(),
             error_message: null,
