@@ -1348,6 +1348,109 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_ai_insight_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          helpful: boolean
+          id: string
+          insight_id: string
+          owner_id: string
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          helpful: boolean
+          id?: string
+          insight_id: string
+          owner_id: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          helpful?: boolean
+          id?: string
+          insight_id?: string
+          owner_id?: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_ai_insight_feedback_insight_id_fkey"
+            columns: ["insight_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_ai_insights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_ai_insights: {
+        Row: {
+          business_id: string
+          created_at: string
+          error_message: string | null
+          generated_at: string | null
+          generated_output: Json | null
+          generation_status: string
+          health_score_id: string | null
+          id: string
+          input_payload: Json
+          model: string | null
+          owner_id: string
+          period_end: string
+          period_start: string
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          error_message?: string | null
+          generated_at?: string | null
+          generated_output?: Json | null
+          generation_status?: string
+          health_score_id?: string | null
+          id?: string
+          input_payload?: Json
+          model?: string | null
+          owner_id: string
+          period_end: string
+          period_start: string
+          provider?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          error_message?: string | null
+          generated_at?: string | null
+          generated_output?: Json | null
+          generation_status?: string
+          health_score_id?: string | null
+          id?: string
+          input_payload?: Json
+          model?: string | null
+          owner_id?: string
+          period_end?: string
+          period_start?: string
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_ai_insights_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
