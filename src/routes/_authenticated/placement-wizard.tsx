@@ -40,7 +40,6 @@ import {
   INDUSTRIES,
   blueprintsForIndustry,
   defaultPlanName,
-  destinationForGoal,
   formatById,
   industryLabel,
   matchIndustry,
@@ -747,10 +746,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function PriorityBadge({ priority }: { priority: PriorityKey }) {
+function PriorityBadge({ priority }: { priority: PriorityKey }) {
   const variant = priority === "high" ? "default" : priority === "medium" ? "secondary" : "outline";
   return <Badge variant={variant}>{priority} priority</Badge>;
 }
-
-// Keeps the destination mapping referenced so it stays in the type graph.
-export const _destinationForGoal = destinationForGoal;
