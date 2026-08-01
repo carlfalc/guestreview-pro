@@ -92,7 +92,11 @@ function AdminHealthPage() {
             <Metric label="Active businesses" value={h.businesses} />
             <Metric label="Active QR codes" value={h.activeQrCodes} />
             <Metric label="Marketing packs (7d)" value={h.packs} />
-            <Metric label="Scans (7d)" value={h.scans} sub={`${h.scanClickThrough}% clicked through`} />
+            <Metric
+              label="Scans (7d)"
+              value={h.scans}
+              sub={`${h.scanClickThrough}% clicked through`}
+            />
             <Metric label="Paid accounts" value={h.paidAccounts} />
             <Metric
               label="Checkouts (7d)"
@@ -127,7 +131,11 @@ function AdminHealthPage() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Beta feedback</h2>
-            {h && <Badge variant={h.feedbackNew > 0 ? "default" : "secondary"}>{h.feedbackNew} new</Badge>}
+            {h && (
+              <Badge variant={h.feedbackNew > 0 ? "default" : "secondary"}>
+                {h.feedbackNew} new
+              </Badge>
+            )}
           </div>
 
           {feedbackQ.isLoading && (

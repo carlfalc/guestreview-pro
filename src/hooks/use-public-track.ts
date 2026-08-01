@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { trackPublicEvent } from "@/lib/public-marketing.functions";
+import { getAttribution } from "@/lib/attribution";
 import type { EventProperties, ProductEventName } from "@/lib/analytics";
 
 const SESSION_KEY = "grp_session_id";
@@ -27,10 +28,11 @@ export function usePublicTrack() {
     (name: ProductEventName, properties?: EventProperties) => {
       void (async () => {
         try {
+          const attribution = getAttribution();
           await track({
             data: {
               name,
-              properties: properties ?? {},
+              properties: { ...attribution, ...(properties ?? {}) },
               path: typeof window !== "undefined" ? window.location.pathname : undefined,
               sessionId: sessionId(),
             },

@@ -47,9 +47,10 @@ export function LeadCaptureForm({
   if (state === "done") {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
-        <p className="text-lg font-semibold">Check your inbox</p>
+        <p className="text-lg font-semibold">Thanks — we’ve got your request</p>
         <p className="mt-2 text-sm text-white/60">
-          The QR Placement Guide is on its way. You can unsubscribe from any email we send.
+          We’ve recorded your details and will email the QR Placement Guide shortly. You can
+          unsubscribe from any email we send.
         </p>
       </div>
     );

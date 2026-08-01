@@ -24,7 +24,9 @@ import { Route as CompareRouteImport } from './routes/compare'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
+import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -35,12 +37,14 @@ import { Route as AuthenticatedBusinessesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedMarketingPacksIndexRouteImport } from './routes/_authenticated/marketing-packs.index'
+import { Route as ResourcesCategoryCategoryRouteImport } from './routes/resources.category.$category'
 import { Route as RCodeViewRouteImport } from './routes/r.$code_.view'
 import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/qr.$id'
 import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
 import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
 import { Route as AuthenticatedAdminWebhookEventsRouteImport } from './routes/_authenticated/admin.webhook-events'
+import { Route as AuthenticatedAdminSeoRouteImport } from './routes/_authenticated/admin.seo'
 import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
 import { Route as AuthenticatedAdminHealthRouteImport } from './routes/_authenticated/admin.health'
 import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
@@ -120,9 +124,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResourcesIndexRoute = ResourcesIndexRouteImport.update({
+  id: '/resources/',
+  path: '/resources/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
   id: '/industries/',
   path: '/industries/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesSlugRoute = ResourcesSlugRouteImport.update({
+  id: '/resources/$slug',
+  path: '/resources/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RCodeRoute = RCodeRouteImport.update({
@@ -176,6 +190,12 @@ const AuthenticatedMarketingPacksIndexRoute =
     path: '/marketing-packs/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ResourcesCategoryCategoryRoute =
+  ResourcesCategoryCategoryRouteImport.update({
+    id: '/resources/category/$category',
+    path: '/resources/category/$category',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const RCodeViewRoute = RCodeViewRouteImport.update({
   id: '/r/$code_/view',
   path: '/r/$code/view',
@@ -210,6 +230,11 @@ const AuthenticatedAdminWebhookEventsRoute =
     path: '/admin/webhook-events',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminSeoRoute = AuthenticatedAdminSeoRouteImport.update({
+  id: '/admin/seo',
+  path: '/admin/seo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRegionRequestsRoute =
   AuthenticatedAdminRegionRequestsRouteImport.update({
     id: '/admin/region-requests',
@@ -259,16 +284,20 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/resources/$slug': typeof ResourcesSlugRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
+  '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
+  '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -296,16 +325,20 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/resources/$slug': typeof ResourcesSlugRoute
   '/industries': typeof IndustriesIndexRoute
+  '/resources': typeof ResourcesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
+  '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
+  '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -335,16 +368,20 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/resources/$slug': typeof ResourcesSlugRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/health': typeof AuthenticatedAdminHealthRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
+  '/_authenticated/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/_authenticated/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
   '/_authenticated/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/_authenticated/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code_/view': typeof RCodeViewRoute
+  '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -374,16 +411,20 @@ export interface FileRouteTypes {
     | '/settings'
     | '/industries/$slug'
     | '/r/$code'
+    | '/resources/$slug'
     | '/industries/'
+    | '/resources/'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
+    | '/admin/seo'
     | '/admin/webhook-events'
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
     | '/qr/$id'
     | '/r/$code/view'
+    | '/resources/category/$category'
     | '/marketing-packs/'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -411,16 +452,20 @@ export interface FileRouteTypes {
     | '/settings'
     | '/industries/$slug'
     | '/r/$code'
+    | '/resources/$slug'
     | '/industries'
+    | '/resources'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
+    | '/admin/seo'
     | '/admin/webhook-events'
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
     | '/qr/$id'
     | '/r/$code/view'
+    | '/resources/category/$category'
     | '/marketing-packs'
     | '/api/public/payments/webhook'
   id:
@@ -449,16 +494,20 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/industries/$slug'
     | '/r/$code'
+    | '/resources/$slug'
     | '/industries/'
+    | '/resources/'
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/health'
     | '/_authenticated/admin/region-requests'
+    | '/_authenticated/admin/seo'
     | '/_authenticated/admin/webhook-events'
     | '/_authenticated/businesses/$id'
     | '/_authenticated/marketing-packs/$id'
     | '/_authenticated/marketing-packs/new'
     | '/_authenticated/qr/$id'
     | '/r/$code_/view'
+    | '/resources/category/$category'
     | '/_authenticated/marketing-packs/'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -481,8 +530,11 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   IndustriesSlugRoute: typeof IndustriesSlugRoute
   RCodeRoute: typeof RCodeRoute
+  ResourcesSlugRoute: typeof ResourcesSlugRoute
   IndustriesIndexRoute: typeof IndustriesIndexRoute
+  ResourcesIndexRoute: typeof ResourcesIndexRoute
   RCodeViewRoute: typeof RCodeViewRoute
+  ResourcesCategoryCategoryRoute: typeof ResourcesCategoryCategoryRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -593,11 +645,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/resources/': {
+      id: '/resources/'
+      path: '/resources'
+      fullPath: '/resources/'
+      preLoaderRoute: typeof ResourcesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/industries/': {
       id: '/industries/'
       path: '/industries'
       fullPath: '/industries/'
       preLoaderRoute: typeof IndustriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/$slug': {
+      id: '/resources/$slug'
+      path: '/resources/$slug'
+      fullPath: '/resources/$slug'
+      preLoaderRoute: typeof ResourcesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$code': {
@@ -670,6 +736,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingPacksIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/resources/category/$category': {
+      id: '/resources/category/$category'
+      path: '/resources/category/$category'
+      fullPath: '/resources/category/$category'
+      preLoaderRoute: typeof ResourcesCategoryCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$code_/view': {
       id: '/r/$code_/view'
       path: '/r/$code/view'
@@ -710,6 +783,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/webhook-events'
       fullPath: '/admin/webhook-events'
       preLoaderRoute: typeof AuthenticatedAdminWebhookEventsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/seo': {
+      id: '/_authenticated/admin/seo'
+      path: '/admin/seo'
+      fullPath: '/admin/seo'
+      preLoaderRoute: typeof AuthenticatedAdminSeoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/region-requests': {
@@ -780,6 +860,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminHealthRoute: typeof AuthenticatedAdminHealthRoute
   AuthenticatedAdminRegionRequestsRoute: typeof AuthenticatedAdminRegionRequestsRoute
+  AuthenticatedAdminSeoRoute: typeof AuthenticatedAdminSeoRoute
   AuthenticatedAdminWebhookEventsRoute: typeof AuthenticatedAdminWebhookEventsRoute
   AuthenticatedMarketingPacksIdRoute: typeof AuthenticatedMarketingPacksIdRoute
   AuthenticatedMarketingPacksNewRoute: typeof AuthenticatedMarketingPacksNewRoute
@@ -797,6 +878,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminHealthRoute: AuthenticatedAdminHealthRoute,
   AuthenticatedAdminRegionRequestsRoute: AuthenticatedAdminRegionRequestsRoute,
+  AuthenticatedAdminSeoRoute: AuthenticatedAdminSeoRoute,
   AuthenticatedAdminWebhookEventsRoute: AuthenticatedAdminWebhookEventsRoute,
   AuthenticatedMarketingPacksIdRoute: AuthenticatedMarketingPacksIdRoute,
   AuthenticatedMarketingPacksNewRoute: AuthenticatedMarketingPacksNewRoute,
@@ -824,8 +906,11 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   IndustriesSlugRoute: IndustriesSlugRoute,
   RCodeRoute: RCodeRoute,
+  ResourcesSlugRoute: ResourcesSlugRoute,
   IndustriesIndexRoute: IndustriesIndexRoute,
+  ResourcesIndexRoute: ResourcesIndexRoute,
   RCodeViewRoute: RCodeViewRoute,
+  ResourcesCategoryCategoryRoute: ResourcesCategoryCategoryRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport

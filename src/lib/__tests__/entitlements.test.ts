@@ -16,16 +16,24 @@ describe("effectivePlan", () => {
     expect(effectivePlan(null)).toBe("free");
   });
   it("grants the plan while active", () => {
-    expect(effectivePlan({ planKey: "pro", status: "active", currentPeriodEnd: future })).toBe("pro");
+    expect(effectivePlan({ planKey: "pro", status: "active", currentPeriodEnd: future })).toBe(
+      "pro",
+    );
   });
   it("keeps access while past_due (dunning)", () => {
-    expect(effectivePlan({ planKey: "pro", status: "past_due", currentPeriodEnd: future })).toBe("pro");
+    expect(effectivePlan({ planKey: "pro", status: "past_due", currentPeriodEnd: future })).toBe(
+      "pro",
+    );
   });
   it("keeps access after cancel until period end", () => {
-    expect(effectivePlan({ planKey: "business", status: "canceled", currentPeriodEnd: future })).toBe("business");
+    expect(
+      effectivePlan({ planKey: "business", status: "canceled", currentPeriodEnd: future }),
+    ).toBe("business");
   });
   it("drops to free once the period has passed", () => {
-    expect(effectivePlan({ planKey: "pro", status: "canceled", currentPeriodEnd: past })).toBe("free");
+    expect(effectivePlan({ planKey: "pro", status: "canceled", currentPeriodEnd: past })).toBe(
+      "free",
+    );
   });
 });
 

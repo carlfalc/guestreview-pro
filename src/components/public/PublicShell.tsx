@@ -9,9 +9,9 @@ const NAV = [
   { to: "/templates", label: "Templates" },
   { to: "/examples", label: "Examples" },
   { to: "/google-review-qr-code", label: "Google review QR" },
+  { to: "/resources", label: "Resources" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
-
 
 /**
  * Public marketing chrome. Deliberately independent of the authenticated
@@ -23,7 +23,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
   return (
     <div
       className="min-h-screen text-white"
-      style={{ background: "radial-gradient(ellipse at top, #12194d 0%, #060826 55%, #030417 100%)" }}
+      style={{
+        background: "radial-gradient(ellipse at top, #12194d 0%, #060826 55%, #030417 100%)",
+      }}
     >
       <a
         href="#main"
@@ -56,7 +58,11 @@ export function PublicShell({ children }: { children: ReactNode }) {
 
           <div className="hidden items-center gap-2 lg:flex">
             <Link to="/auth">
-              <Button variant="ghost" size="sm" className="rounded-full text-white hover:bg-white/10 hover:text-white">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full text-white hover:bg-white/10 hover:text-white"
+              >
                 Sign in
               </Button>
             </Link>
@@ -75,12 +81,20 @@ export function PublicShell({ children }: { children: ReactNode }) {
             aria-label={open ? "Close menu" : "Open menu"}
             className="grid h-10 w-10 place-items-center rounded-full border border-white/15 lg:hidden"
           >
-            {open ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
+            {open ? (
+              <X className="h-4 w-4" aria-hidden />
+            ) : (
+              <Menu className="h-4 w-4" aria-hidden />
+            )}
           </button>
         </div>
 
         {open && (
-          <nav id="mobile-nav" aria-label="Mobile" className="border-t border-white/5 px-6 py-4 lg:hidden">
+          <nav
+            id="mobile-nav"
+            aria-label="Mobile"
+            className="border-t border-white/5 px-6 py-4 lg:hidden"
+          >
             <ul className="space-y-1">
               {NAV.map((item) => (
                 <li key={item.to}>
@@ -101,7 +115,10 @@ export function PublicShell({ children }: { children: ReactNode }) {
                 </Button>
               </Link>
               <Link to="/auth" onClick={() => setOpen(false)}>
-                <Button variant="outline" className="w-full rounded-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                >
                   Sign in
                 </Button>
               </Link>
@@ -124,8 +141,8 @@ function PublicFooter() {
         <div>
           <p className="text-sm font-semibold">GuestReview Pro</p>
           <p className="mt-3 text-sm leading-relaxed text-white/50">
-            Branded Google review QR codes and print-ready marketing packs for hospitality, retail and
-            local service businesses.
+            Branded Google review QR codes and print-ready marketing packs for hospitality, retail
+            and local service businesses.
           </p>
         </div>
         <FooterColumn
@@ -143,6 +160,7 @@ function PublicFooter() {
           title="Company"
           links={[
             { to: "/industries", label: "Industries" },
+            { to: "/resources", label: "Resource centre" },
             { to: "/compare", label: "Compare approaches" },
             { to: "/contact", label: "Contact" },
           ]}
@@ -210,7 +228,10 @@ export function PageHero({
         {eyebrow && (
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-white/60">{eyebrow}</p>
         )}
-        <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-6xl" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.03em" }}>
+        <h1
+          className="mt-5 text-4xl font-black tracking-tight sm:text-6xl"
+          style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.03em" }}
+        >
           {title}
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-white/65">{subtitle}</p>
@@ -235,7 +256,10 @@ export function Section({
     <section id={id} className="border-b border-white/5">
       <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
         {title && (
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
+          <h2
+            className="text-3xl font-bold tracking-tight sm:text-4xl"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
             {title}
           </h2>
         )}
@@ -247,21 +271,33 @@ export function Section({
 }
 
 export function CardGrid({ children, cols = 3 }: { children: ReactNode; cols?: 2 | 3 | 4 }) {
-  const map = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 lg:grid-cols-3", 4: "sm:grid-cols-2 lg:grid-cols-4" };
+  const map = {
+    2: "sm:grid-cols-2",
+    3: "sm:grid-cols-2 lg:grid-cols-3",
+    4: "sm:grid-cols-2 lg:grid-cols-4",
+  };
   return <div className={`grid gap-4 ${map[cols]}`}>{children}</div>;
 }
 
 export function InfoCard({ title, body, icon }: { title: string; body: string; icon?: ReactNode }) {
   return (
     <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-white/20 hover:bg-white/[0.06]">
-      {icon && <div className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-white/10">{icon}</div>}
+      {icon && (
+        <div className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-white/10">{icon}</div>
+      )}
       <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-white/60">{body}</p>
     </div>
   );
 }
 
-export function Faq({ items, title = "Frequently asked questions" }: { items: Array<{ q: string; a: string }>; title?: string }) {
+export function Faq({
+  items,
+  title = "Frequently asked questions",
+}: {
+  items: Array<{ q: string; a: string }>;
+  title?: string;
+}) {
   return (
     <Section title={title}>
       <div className="divide-y divide-white/10 rounded-3xl border border-white/10 bg-white/[0.02]">
@@ -288,13 +324,19 @@ export function FinalCta({
   return (
     <section>
       <div className="mx-auto max-w-4xl px-6 py-20 text-center">
-        <h2 className="text-3xl font-black tracking-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)" }}>
+        <h2
+          className="text-3xl font-black tracking-tight sm:text-5xl"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
           {title}
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-white/65">{body}</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link to="/auth" data-cta="signup">
-            <Button size="lg" className="rounded-full bg-white px-8 text-[#0a0f3d] hover:bg-white/90">
+            <Button
+              size="lg"
+              className="rounded-full bg-white px-8 text-[#0a0f3d] hover:bg-white/90"
+            >
               Create your free QR <ArrowRight className="ml-1 h-4 w-4" aria-hidden />
             </Button>
           </Link>

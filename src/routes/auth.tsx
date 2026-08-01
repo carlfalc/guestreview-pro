@@ -92,21 +92,25 @@ function AuthPage() {
         <h1
           className="mt-3 text-center text-white"
           style={{
-            fontFamily: 'var(--font-display)',
+            fontFamily: "var(--font-display)",
             fontWeight: 900,
-            fontStretch: '125%',
-            letterSpacing: '-0.04em',
+            fontStretch: "125%",
+            letterSpacing: "-0.04em",
             lineHeight: 0.9,
-            fontSize: 'clamp(3rem, 8vw, 5rem)',
+            fontSize: "clamp(3rem, 8vw, 5rem)",
           }}
         >
-          {mode === 'reset' ? 'RESET' : mode === 'signup' ? 'JOIN' : 'WELCOME'}
+          {mode === "reset" ? "RESET" : mode === "signup" ? "JOIN" : "WELCOME"}
         </h1>
 
         <Card className="mt-8 rounded-3xl border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-center text-base font-medium tracking-tight text-white/80">
-              {mode === "reset" ? "Enter your email to receive a reset link" : mode === "signup" ? "Create your account" : "Sign in to continue"}
+              {mode === "reset"
+                ? "Enter your email to receive a reset link"
+                : mode === "signup"
+                  ? "Create your account"
+                  : "Sign in to continue"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -119,10 +123,22 @@ function AuthPage() {
                   type="button"
                 >
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h5.9c-.3 1.4-1 2.5-2.2 3.3v2.8h3.6c2.1-1.9 3.2-4.7 3.2-8.3z"/>
-                    <path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.6l-3.6-2.8c-1 .7-2.3 1.1-3.7 1.1-2.8 0-5.2-1.9-6.1-4.5H2.2v2.9C4 20.5 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.9 14.1c-.2-.7-.4-1.4-.4-2.2s.1-1.5.4-2.2V6.8H2.2C1.4 8.4 1 10.1 1 12s.4 3.6 1.2 5.2l3.7-3.1z"/>
-                    <path fill="#EA4335" d="M12 5.4c1.6 0 3 .5 4.1 1.6l3.1-3.1C17.4 2.1 14.9 1 12 1 7.7 1 4 3.5 2.2 6.8l3.7 2.9c.9-2.6 3.3-4.3 6.1-4.3z"/>
+                    <path
+                      fill="#4285F4"
+                      d="M22.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h5.9c-.3 1.4-1 2.5-2.2 3.3v2.8h3.6c2.1-1.9 3.2-4.7 3.2-8.3z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.9 0 5.4-1 7.2-2.6l-3.6-2.8c-1 .7-2.3 1.1-3.7 1.1-2.8 0-5.2-1.9-6.1-4.5H2.2v2.9C4 20.5 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.9 14.1c-.2-.7-.4-1.4-.4-2.2s.1-1.5.4-2.2V6.8H2.2C1.4 8.4 1 10.1 1 12s.4 3.6 1.2 5.2l3.7-3.1z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.4c1.6 0 3 .5 4.1 1.6l3.1-3.1C17.4 2.1 14.9 1 12 1 7.7 1 4 3.5 2.2 6.8l3.7 2.9c.9-2.6 3.3-4.3 6.1-4.3z"
+                    />
                   </svg>
                   Continue with Google
                 </Button>
@@ -161,21 +177,45 @@ function AuthPage() {
             ) : (
               <Tabs value={mode} onValueChange={(v) => setMode(v as "signin" | "signup")}>
                 <TabsList className="grid w-full grid-cols-2 rounded-full">
-                  <TabsTrigger value="signin" className="rounded-full">Sign in</TabsTrigger>
-                  <TabsTrigger value="signup" className="rounded-full">Sign up</TabsTrigger>
+                  <TabsTrigger value="signin" className="rounded-full">
+                    Sign in
+                  </TabsTrigger>
+                  <TabsTrigger value="signup" className="rounded-full">
+                    Sign up
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="signin" className="mt-6">
                   <form onSubmit={signInEmail} className="space-y-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl"/>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="rounded-xl"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="password">Password</Label>
-                        <button type="button" onClick={() => setMode("reset")} className="text-xs text-primary hover:underline">Forgot?</button>
+                        <button
+                          type="button"
+                          onClick={() => setMode("reset")}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Forgot?
+                        </button>
                       </div>
-                      <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="rounded-xl"/>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="rounded-xl"
+                      />
                     </div>
                     <Button type="submit" disabled={loading} className="w-full rounded-full">
                       {loading ? "Signing in…" : "Sign in"}
@@ -186,15 +226,36 @@ function AuthPage() {
                   <form onSubmit={signUpEmail} className="space-y-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="name">Full name</Label>
-                      <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="rounded-xl"/>
+                      <Input
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        className="rounded-xl"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="email2">Email</Label>
-                      <Input id="email2" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="rounded-xl"/>
+                      <Input
+                        id="email2"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="rounded-xl"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="password2">Password</Label>
-                      <Input id="password2" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="rounded-xl"/>
+                      <Input
+                        id="password2"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                        className="rounded-xl"
+                      />
                     </div>
                     <Button type="submit" disabled={loading} className="w-full rounded-full">
                       {loading ? "Creating account…" : "Create account"}

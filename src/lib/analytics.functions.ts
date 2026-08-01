@@ -29,15 +29,17 @@ async function trustedEnvironment(): Promise<StripeEnvName> {
  */
 export const trackProductEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { name: string; properties?: unknown; path?: string; sessionId?: string }) => ({
-    name: String(data?.name ?? ""),
-    properties: sanitiseEventProperties(data?.properties),
-    path: sanitisePath(data?.path),
-    sessionId:
-      typeof data?.sessionId === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(data.sessionId)
-        ? data.sessionId
-        : null,
-  }))
+  .inputValidator(
+    (data: { name: string; properties?: unknown; path?: string; sessionId?: string }) => ({
+      name: String(data?.name ?? ""),
+      properties: sanitiseEventProperties(data?.properties),
+      path: sanitisePath(data?.path),
+      sessionId:
+        typeof data?.sessionId === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(data.sessionId)
+          ? data.sessionId
+          : null,
+    }),
+  )
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
     if (!isProductEvent(data.name)) return { ok: false };
     const { error } = await context.supabase.from("product_events").insert({
@@ -144,9 +146,9 @@ export const adminConversionFunnel = createServerFn({ method: "POST" })
       _since: since,
     });
     if (error) throw new Error(error.message);
-    const steps = ((rows ?? []) as Array<{ step: string; step_order: number; accounts: number }>).map(
-      (r) => ({ step: r.step, stepOrder: Number(r.step_order), accounts: Number(r.accounts) }),
-    );
+    const steps = (
+      (rows ?? []) as Array<{ step: string; step_order: number; accounts: number }>
+    ).map((r) => ({ step: r.step, stepOrder: Number(r.step_order), accounts: Number(r.accounts) }));
     return { days: data.days, steps };
   });
 

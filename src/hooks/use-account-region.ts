@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getAccountRegion, resolveAccountRegion, type AccountRegionDTO } from "@/lib/account-region.functions";
+import {
+  getAccountRegion,
+  resolveAccountRegion,
+  type AccountRegionDTO,
+} from "@/lib/account-region.functions";
 
 /**
  * Load the caller's account_regions row. If none exists yet, run the
@@ -29,7 +33,13 @@ export function useAccountRegion() {
     },
   });
 
-  if (query.isSuccess && query.data === null && !initial.isPending && !initial.isSuccess && !initial.isError) {
+  if (
+    query.isSuccess &&
+    query.data === null &&
+    !initial.isPending &&
+    !initial.isSuccess &&
+    !initial.isError
+  ) {
     // Fire-and-forget; mutation state prevents duplicates on re-render.
     initial.mutate();
   }

@@ -18,13 +18,13 @@ function PricingPage() {
   const { data: region, isLoading } = useAccountRegion();
   useTrackOnce("pricing_viewed");
 
-
   return (
     <div className="animate-fade-in-up space-y-6">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Plans & pricing</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Prices are shown in your account's billing currency. Pricing region is assigned automatically and cannot be changed manually.
+          Prices are shown in your account's billing currency. Pricing region is assigned
+          automatically and cannot be changed manually.
         </p>
       </div>
 

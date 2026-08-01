@@ -82,13 +82,21 @@ async function hashString(input: string): Promise<string> {
 async function recordScan(qr: QrRow): Promise<string | null> {
   try {
     let existingId: string | null = null;
-    try { existingId = sessionStorage.getItem(sessionStorageKey(qr.id)); } catch { /* ignore */ }
+    try {
+      existingId = sessionStorage.getItem(sessionStorageKey(qr.id));
+    } catch {
+      /* ignore */
+    }
     if (existingId) return existingId;
 
     const ua = navigator.userAgent;
     const parsed = parseUserAgent(ua);
     let timezone: string | null = null;
-    try { timezone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? null; } catch { /* ignore */ }
+    try {
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? null;
+    } catch {
+      /* ignore */
+    }
     const sessionId = getOrCreateSessionId();
     const visitorHash = await hashString(`${ua}-${sessionId}`);
 
@@ -114,9 +122,16 @@ async function recordScan(qr: QrRow): Promise<string | null> {
       .single();
 
     if (!inserted) return null;
-    try { sessionStorage.setItem(sessionStorageKey(qr.id), inserted.id); } catch { /* ignore */ }
+    try {
+      sessionStorage.setItem(sessionStorageKey(qr.id), inserted.id);
+    } catch {
+      /* ignore */
+    }
     // fire-and-forget: never block the guest redirect on the counter
-    void supabase.rpc("increment_qr_scans", { p_qr_id: qr.id }).then(() => {}, () => {});
+    void supabase.rpc("increment_qr_scans", { p_qr_id: qr.id }).then(
+      () => {},
+      () => {},
+    );
     return inserted.id;
   } catch {
     return null;
@@ -148,10 +163,17 @@ function GuestLanding() {
       }
       const qr = data as unknown as QrRow;
 
-      if (qr.status === "archived") { setState({ kind: "archived", qr }); return; }
-      if (qr.status === "paused") { setState({ kind: "paused", qr }); return; }
+      if (qr.status === "archived") {
+        setState({ kind: "archived", qr });
+        return;
+      }
+      if (qr.status === "paused") {
+        setState({ kind: "paused", qr });
+        return;
+      }
       if (qr.expires_at && new Date(qr.expires_at).getTime() < Date.now()) {
-        setState({ kind: "expired", qr }); return;
+        setState({ kind: "expired", qr });
+        return;
       }
 
       const resolved = resolveQrDestination({
@@ -173,11 +195,16 @@ function GuestLanding() {
           const id = await recordScan(qr);
           if (id) {
             const sid = getOrCreateSessionId();
-            void supabase.rpc("mark_scan_clicked", {
-              p_event_id: id,
-              p_session_id: sid,
-              p_is_review: qr.destination_type === "google_review",
-            }).then(() => {}, () => {});
+            void supabase
+              .rpc("mark_scan_clicked", {
+                p_event_id: id,
+                p_session_id: sid,
+                p_is_review: qr.destination_type === "google_review",
+              })
+              .then(
+                () => {},
+                () => {},
+              );
           }
         })();
         window.location.replace(resolved.url);
@@ -198,25 +225,71 @@ function GuestLanding() {
     );
   }
   if (state.kind === "notFound") {
-    return <StatusPage title="Link not found" message="This QR is invalid or has been removed." onHome={() => navigate({ to: "/" })} />;
+    return (
+      <StatusPage
+        title="Link not found"
+        message="This QR is invalid or has been removed."
+        onHome={() => navigate({ to: "/" })}
+      />
+    );
   }
   if (state.kind === "paused") {
-    return <StatusPage icon={<PauseCircle className="h-8 w-8" />} brand={state.qr.businesses?.brand_primary ?? undefined} businessName={state.qr.businesses?.name} title="Temporarily unavailable" message="This link has been paused by the owner. Please check back soon." />;
+    return (
+      <StatusPage
+        icon={<PauseCircle className="h-8 w-8" />}
+        brand={state.qr.businesses?.brand_primary ?? undefined}
+        businessName={state.qr.businesses?.name}
+        title="Temporarily unavailable"
+        message="This link has been paused by the owner. Please check back soon."
+      />
+    );
   }
   if (state.kind === "expired") {
-    return <StatusPage icon={<Clock className="h-8 w-8" />} brand={state.qr.businesses?.brand_primary ?? undefined} businessName={state.qr.businesses?.name} title="This link has expired" message="Please contact the business for an up-to-date link." />;
+    return (
+      <StatusPage
+        icon={<Clock className="h-8 w-8" />}
+        brand={state.qr.businesses?.brand_primary ?? undefined}
+        businessName={state.qr.businesses?.name}
+        title="This link has expired"
+        message="Please contact the business for an up-to-date link."
+      />
+    );
   }
   if (state.kind === "archived") {
-    return <StatusPage icon={<ArchiveX className="h-8 w-8" />} brand={state.qr.businesses?.brand_primary ?? undefined} businessName={state.qr.businesses?.name} title="Not available" message="This QR code is no longer active." />;
+    return (
+      <StatusPage
+        icon={<ArchiveX className="h-8 w-8" />}
+        brand={state.qr.businesses?.brand_primary ?? undefined}
+        businessName={state.qr.businesses?.name}
+        title="Not available"
+        message="This QR code is no longer active."
+      />
+    );
   }
   if (state.kind === "invalidDestination") {
-    return <StatusPage icon={<ArchiveX className="h-8 w-8" />} brand={state.qr.businesses?.brand_primary ?? undefined} businessName={state.qr.businesses?.name} title="Review link unavailable" message="This business's review link needs to be updated. Please contact the business." />;
+    return (
+      <StatusPage
+        icon={<ArchiveX className="h-8 w-8" />}
+        brand={state.qr.businesses?.brand_primary ?? undefined}
+        businessName={state.qr.businesses?.name}
+        title="Review link unavailable"
+        message="This business's review link needs to be updated. Please contact the business."
+      />
+    );
   }
 
   return <ActiveLanding qr={state.qr} eventId={eventId} finalUrl={state.finalUrl} />;
 }
 
-function ActiveLanding({ qr, eventId, finalUrl }: { qr: QrRow; eventId: string | null; finalUrl: string }) {
+function ActiveLanding({
+  qr,
+  eventId,
+  finalUrl,
+}: {
+  qr: QrRow;
+  eventId: string | null;
+  finalUrl: string;
+}) {
   const b = qr.businesses!;
   const brand = b.brand_primary || "#0071e3";
   const dtype = qr.destination_type as DestinationType;
@@ -224,18 +297,25 @@ function ActiveLanding({ qr, eventId, finalUrl }: { qr: QrRow; eventId: string |
   async function goDestination() {
     if (eventId) {
       const sid = getOrCreateSessionId();
-      await supabase.rpc("mark_scan_clicked", {
-        p_event_id: eventId,
-        p_session_id: sid,
-        p_is_review: dtype === "google_review",
-      }).then(() => {}, () => {});
+      await supabase
+        .rpc("mark_scan_clicked", {
+          p_event_id: eventId,
+          p_session_id: sid,
+          p_is_review: dtype === "google_review",
+        })
+        .then(
+          () => {},
+          () => {},
+        );
     }
     if (finalUrl) window.location.href = finalUrl;
   }
 
   const ctaLabel =
     qr.destination_label ||
-    (dtype === "google_review" ? "Leave a Google review" : `Continue to ${destinationLabel(dtype)}`);
+    (dtype === "google_review"
+      ? "Leave a Google review"
+      : `Continue to ${destinationLabel(dtype)}`);
 
   return (
     <div
@@ -245,14 +325,23 @@ function ActiveLanding({ qr, eventId, finalUrl }: { qr: QrRow; eventId: string |
       <div className="mx-auto max-w-md px-6 py-12">
         <div className="animate-fade-in-up rounded-4xl border border-border/60 bg-card p-8 text-center shadow-[var(--shadow-elevated)]">
           {b.logo_url ? (
-            <img src={b.logo_url} alt={b.name} className="mx-auto h-16 w-16 rounded-2xl object-cover"/>
+            <img
+              src={b.logo_url}
+              alt={b.name}
+              className="mx-auto h-16 w-16 rounded-2xl object-cover"
+            />
           ) : (
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-2xl font-semibold text-white" style={{ background: brand }}>
+            <div
+              className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-2xl font-semibold text-white"
+              style={{ background: brand }}
+            >
               {b.name.slice(0, 1)}
             </div>
           )}
           <h1 className="mt-5 text-2xl font-semibold tracking-tight">{b.name}</h1>
-          {qr.locations?.name && (<p className="mt-1 text-sm text-muted-foreground">{qr.locations.name}</p>)}
+          {qr.locations?.name && (
+            <p className="mt-1 text-sm text-muted-foreground">{qr.locations.name}</p>
+          )}
           <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
             {b.welcome_message || "Loved your experience? We'd love your feedback."}
           </p>
@@ -264,29 +353,41 @@ function ActiveLanding({ qr, eventId, finalUrl }: { qr: QrRow; eventId: string |
             className="mt-8 w-full rounded-full text-base font-semibold"
             style={{ background: brand }}
           >
-            {dtype === "google_review" && <Star className="mr-2 h-5 w-5 fill-current"/>}
+            {dtype === "google_review" && <Star className="mr-2 h-5 w-5 fill-current" />}
             {ctaLabel}
           </Button>
 
           <div className="mt-4 grid grid-cols-1 gap-2">
             {b.website && (
               <a href={b.website} target="_blank" rel="noreferrer">
-                <Button variant="outline" className="w-full rounded-full bg-card"><Globe className="mr-2 h-4 w-4"/> Visit website</Button>
+                <Button variant="outline" className="w-full rounded-full bg-card">
+                  <Globe className="mr-2 h-4 w-4" /> Visit website
+                </Button>
               </a>
             )}
             {b.phone && (
               <a href={`tel:${b.phone}`}>
-                <Button variant="outline" className="w-full rounded-full bg-card"><Phone className="mr-2 h-4 w-4"/> Call us</Button>
+                <Button variant="outline" className="w-full rounded-full bg-card">
+                  <Phone className="mr-2 h-4 w-4" /> Call us
+                </Button>
               </a>
             )}
             {b.address && (
-              <a href={`https://maps.google.com/?q=${encodeURIComponent(b.address)}`} target="_blank" rel="noreferrer">
-                <Button variant="outline" className="w-full rounded-full bg-card"><MapPin className="mr-2 h-4 w-4"/> Get directions</Button>
+              <a
+                href={`https://maps.google.com/?q=${encodeURIComponent(b.address)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button variant="outline" className="w-full rounded-full bg-card">
+                  <MapPin className="mr-2 h-4 w-4" /> Get directions
+                </Button>
               </a>
             )}
           </div>
 
-          <p className="mt-8 text-[10px] uppercase tracking-widest text-muted-foreground">Powered by GuestReview Pro</p>
+          <p className="mt-8 text-[10px] uppercase tracking-widest text-muted-foreground">
+            Powered by GuestReview Pro
+          </p>
         </div>
       </div>
     </div>
@@ -310,11 +411,17 @@ function StatusPage({
 }) {
   const bg = brand || "#0071e3";
   return (
-    <div className="min-h-screen" style={{ background: `linear-gradient(180deg, ${bg}22 0%, var(--color-background) 45%)` }}>
+    <div
+      className="min-h-screen"
+      style={{ background: `linear-gradient(180deg, ${bg}22 0%, var(--color-background) 45%)` }}
+    >
       <div className="mx-auto max-w-md px-6 py-16">
         <div className="rounded-4xl border border-border/60 bg-card p-10 text-center shadow-[var(--shadow-elevated)]">
           {icon && (
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-white" style={{ background: bg }}>
+            <div
+              className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-white"
+              style={{ background: bg }}
+            >
               {icon}
             </div>
           )}
@@ -322,7 +429,9 @@ function StatusPage({
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="mt-3 text-sm text-muted-foreground">{message}</p>
           {onHome && (
-            <Button onClick={onHome} className="mt-8 rounded-full">Home</Button>
+            <Button onClick={onHome} className="mt-8 rounded-full">
+              Home
+            </Button>
           )}
         </div>
       </div>

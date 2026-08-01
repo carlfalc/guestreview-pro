@@ -26,7 +26,10 @@ function NewMarketingPack() {
   const { data: businesses } = useQuery({
     queryKey: ["businesses-min"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("businesses").select("id, name, brand_primary, logo_url").order("name");
+      const { data, error } = await supabase
+        .from("businesses")
+        .select("id, name, brand_primary, logo_url")
+        .order("name");
       if (error) throw error;
       return data ?? [];
     },
@@ -47,7 +50,10 @@ function NewMarketingPack() {
     },
   });
 
-  const business = useMemo(() => businesses?.find((b) => b.id === businessId) ?? null, [businesses, businessId]);
+  const business = useMemo(
+    () => businesses?.find((b) => b.id === businessId) ?? null,
+    [businesses, businessId],
+  );
   const qr = useMemo(() => qrs?.find((q) => q.id === qrId) ?? null, [qrs, qrId]);
 
   function next() {
@@ -60,14 +66,19 @@ function NewMarketingPack() {
     }
     setStep((s) => Math.min(5, s + 1));
   }
-  function prev() { setStep((s) => Math.max(1, s - 1)); }
+  function prev() {
+    setStep((s) => Math.max(1, s - 1));
+  }
 
   async function create() {
     const finalName = projectName.trim() || defaultProjectName(packType, business?.name ?? "");
     const template = PACK_TYPES.find((p) => p.id === packType)!;
     setCreating(true);
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) { setCreating(false); return toast.error("Not signed in"); }
+    if (!userData.user) {
+      setCreating(false);
+      return toast.error("Not signed in");
+    }
     const { data, error } = await supabase
       .from("marketing_packs")
       .insert({
@@ -93,17 +104,27 @@ function NewMarketingPack() {
 
   return (
     <div className="animate-fade-in-up space-y-6">
-      <Link to="/marketing-packs" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4"/> Back to packs
+      <Link
+        to="/marketing-packs"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back to packs
       </Link>
 
       <div className="flex items-center gap-3">
-        {[1,2,3,4].map((n) => (
-          <div key={n} className={`flex items-center gap-2 text-xs ${step >= n ? "text-foreground" : "text-muted-foreground"}`}>
-            <div className={`grid h-6 w-6 place-items-center rounded-full text-[11px] ${step > n ? "bg-primary text-primary-foreground" : step === n ? "bg-primary/20 text-primary" : "bg-muted"}`}>
-              {step > n ? <Check className="h-3 w-3"/> : n}
+        {[1, 2, 3, 4].map((n) => (
+          <div
+            key={n}
+            className={`flex items-center gap-2 text-xs ${step >= n ? "text-foreground" : "text-muted-foreground"}`}
+          >
+            <div
+              className={`grid h-6 w-6 place-items-center rounded-full text-[11px] ${step > n ? "bg-primary text-primary-foreground" : step === n ? "bg-primary/20 text-primary" : "bg-muted"}`}
+            >
+              {step > n ? <Check className="h-3 w-3" /> : n}
             </div>
-            <span className="hidden sm:inline">{["Business","QR code","Starting pack","Project name"][n-1]}</span>
+            <span className="hidden sm:inline">
+              {["Business", "QR code", "Starting pack", "Project name"][n - 1]}
+            </span>
           </div>
         ))}
       </div>
@@ -115,7 +136,11 @@ function NewMarketingPack() {
               <h2 className="text-lg font-semibold">Choose a business</h2>
               {(businesses ?? []).length === 0 && (
                 <div className="rounded-2xl border border-dashed border-border/70 p-6 text-center text-sm text-muted-foreground">
-                  You don't have any businesses yet. <Link to="/businesses" className="text-primary underline">Create one</Link> first.
+                  You don't have any businesses yet.{" "}
+                  <Link to="/businesses" className="text-primary underline">
+                    Create one
+                  </Link>{" "}
+                  first.
                 </div>
               )}
               <div className="grid gap-2 md:grid-cols-2">
@@ -123,15 +148,23 @@ function NewMarketingPack() {
                   <button
                     key={b.id}
                     type="button"
-                    onClick={() => { setBusinessId(b.id); setQrId(""); }}
+                    onClick={() => {
+                      setBusinessId(b.id);
+                      setQrId("");
+                    }}
                     className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition-colors ${businessId === b.id ? "border-primary bg-primary/5" : "border-border/70 hover:bg-accent/40"}`}
                   >
                     {b.logo_url ? (
-                      <img src={b.logo_url} alt="" className="h-10 w-10 rounded-xl object-cover"/>
+                      <img src={b.logo_url} alt="" className="h-10 w-10 rounded-xl object-cover" />
                     ) : (
-                      <div className="h-10 w-10 rounded-xl" style={{ background: b.brand_primary ?? "hsl(var(--muted))" }}/>
+                      <div
+                        className="h-10 w-10 rounded-xl"
+                        style={{ background: b.brand_primary ?? "hsl(var(--muted))" }}
+                      />
                     )}
-                    <div className="min-w-0"><p className="truncate text-sm font-medium">{b.name}</p></div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{b.name}</p>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -143,7 +176,11 @@ function NewMarketingPack() {
               <h2 className="text-lg font-semibold">Choose a QR code</h2>
               {(qrs ?? []).length === 0 && (
                 <div className="rounded-2xl border border-dashed border-border/70 p-6 text-center text-sm text-muted-foreground">
-                  No active QR codes for this business. <Link to="/qr" className="text-primary underline">Create one</Link>.
+                  No active QR codes for this business.{" "}
+                  <Link to="/qr" className="text-primary underline">
+                    Create one
+                  </Link>
+                  .
                 </div>
               )}
               <div className="grid gap-2 md:grid-cols-2">
@@ -156,7 +193,9 @@ function NewMarketingPack() {
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{q.label ?? "Untitled QR"}</p>
-                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">/{q.short_code} · {q.destination_type}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                        /{q.short_code} · {q.destination_type}
+                      </p>
                     </div>
                   </button>
                 ))}
@@ -177,7 +216,9 @@ function NewMarketingPack() {
                   >
                     <p className="text-sm font-semibold">{p.label}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{p.description}</p>
-                    <p className="mt-2 text-[10px] uppercase tracking-wide text-muted-foreground">{p.formatIds.length} format{p.formatIds.length === 1 ? "" : "s"}</p>
+                    <p className="mt-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+                      {p.formatIds.length} format{p.formatIds.length === 1 ? "" : "s"}
+                    </p>
                   </button>
                 ))}
               </div>
@@ -201,15 +242,15 @@ function NewMarketingPack() {
 
           <div className="flex items-center justify-between border-t border-border pt-4">
             <Button variant="outline" onClick={prev} disabled={step === 1} className="rounded-full">
-              <ArrowLeft className="mr-1 h-4 w-4"/> Back
+              <ArrowLeft className="mr-1 h-4 w-4" /> Back
             </Button>
             {step < 4 ? (
               <Button onClick={next} className="rounded-full">
-                Next <ArrowRight className="ml-1 h-4 w-4"/>
+                Next <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             ) : (
               <Button onClick={create} disabled={creating} className="rounded-full">
-                {creating ? <Loader2 className="mr-1 h-4 w-4 animate-spin"/> : null} Open editor
+                {creating ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null} Open editor
               </Button>
             )}
           </div>

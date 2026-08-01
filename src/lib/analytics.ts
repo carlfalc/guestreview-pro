@@ -26,6 +26,8 @@ export const PRODUCT_EVENTS = [
   "public_cta_clicked",
   "template_viewed",
   "lead_captured",
+  "resource_viewed",
+  "resource_cta_clicked",
 ] as const;
 
 export type ProductEventName = (typeof PRODUCT_EVENTS)[number];

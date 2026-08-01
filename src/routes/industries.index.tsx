@@ -53,7 +53,9 @@ function IndustriesIndex() {
               key={industry.slug}
               to="/industries/$slug"
               params={{ slug: industry.slug }}
-              onClick={() => track("public_cta_clicked", { cta: "industry_card", industry: industry.slug })}
+              onClick={() =>
+                track("public_cta_clicked", { cta: "industry_card", industry: industry.slug })
+              }
               className="group rounded-3xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-white/25 hover:bg-white/[0.06]"
             >
               <p className="text-lg font-semibold">{industry.name}</p>
@@ -69,7 +71,10 @@ function IndustriesIndex() {
         </div>
       </Section>
 
-      <Section title="Not sure where to start?" intro="The placement guide covers every trade on this page in a single PDF.">
+      <Section
+        title="Not sure where to start?"
+        intro="The placement guide covers every trade on this page in a single PDF."
+      >
         <div className="mx-auto max-w-2xl">
           <LeadCaptureForm sourcePath="/industries" />
         </div>

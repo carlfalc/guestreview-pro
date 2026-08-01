@@ -1,53 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
-import { INDUSTRY_SLUGS } from "@/lib/industries";
+import { PUBLIC_ROUTES } from "@/lib/public-routes";
 
 const BASE_URL = "https://googlereviewpro.com";
 
-interface SitemapEntry {
-  path: string;
-  changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
-  priority?: string;
-}
-
 // Only public, indexable routes. Everything under the authenticated layout
-// and the per-code scan routes (/r/$code) are excluded on purpose.
-const entries: SitemapEntry[] = [
-  { path: "/", changefreq: "weekly", priority: "1.0" },
-  { path: "/google-review-qr-code", changefreq: "weekly", priority: "0.9" },
-  { path: "/features", changefreq: "monthly", priority: "0.8" },
-  { path: "/industries", changefreq: "monthly", priority: "0.8" },
-  ...INDUSTRY_SLUGS.map((slug) => ({
-    path: `/industries/${slug}`,
-    changefreq: "monthly" as const,
-    priority: "0.8",
-  })),
-  { path: "/templates", changefreq: "weekly", priority: "0.8" },
-  { path: "/examples", changefreq: "weekly", priority: "0.7" },
-  { path: "/pricing", changefreq: "monthly", priority: "0.8" },
-  { path: "/how-it-works", changefreq: "monthly", priority: "0.7" },
-  { path: "/compare", changefreq: "monthly", priority: "0.6" },
-  { path: "/contact", changefreq: "yearly", priority: "0.4" },
-  { path: "/privacy", changefreq: "yearly", priority: "0.3" },
-  { path: "/terms", changefreq: "yearly", priority: "0.3" },
-  { path: "/auth", changefreq: "monthly", priority: "0.5" },
-];
-
+// and the per-code scan routes (/r/$code) are excluded on purpose. The
+// inventory itself lives in src/lib/public-routes.ts so the internal SEO
+// admin view and this sitemap can never disagree.
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const urls = entries.map((e) =>
+        const urls = PUBLIC_ROUTES.map((e) =>
           [
             `  <url>`,
             `    <loc>${BASE_URL}${e.path}</loc>`,
-            e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
-            e.priority ? `    <priority>${e.priority}</priority>` : null,
+            `    <changefreq>${e.changefreq}</changefreq>`,
+            `    <priority>${e.priority}</priority>`,
             `  </url>`,
-          ]
-            .filter(Boolean)
-            .join("\n"),
+          ].join("\n"),
         );
 
         const xml = [

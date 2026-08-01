@@ -83,27 +83,39 @@ function ExamplesGallery() {
         </div>
 
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {industry.placements.map((p) => (
-            <article key={p.where} className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-              <h3 className="text-base font-semibold">{p.where}</h3>
-              <p className="mt-1 text-xs uppercase tracking-wide text-white/40">{p.format}</p>
-              <p className="mt-3 text-sm leading-relaxed text-white/60">{p.why}</p>
-            </article>
-          ))}
+          {industry.placements.map((p, index) => {
+            const suggested = packPreview[index % Math.max(packPreview.length, 1)];
+            return (
+              <article
+                key={p.where}
+                className="flex flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-6"
+              >
+                <h3 className="text-base font-semibold">{p.where}</h3>
+                <p className="mt-1 text-xs uppercase tracking-wide text-white/40">{p.format}</p>
+                <p className="mt-3 text-sm leading-relaxed text-white/60">{p.why}</p>
+                {suggested && (
+                  <p className="mt-4 border-t border-white/10 pt-4 text-xs text-white/45">
+                    Closest template: <span className="text-white/70">{suggested.name}</span> ·{" "}
+                    {templateDimensions(suggested)}
+                  </p>
+                )}
+              </article>
+            );
+          })}
         </div>
       </Section>
 
-      <Section
-        title={`${industry.packName} preview`}
-        intro={industry.packBlurb}
-      >
+      <Section title={`${industry.packName} preview`} intro={industry.packBlurb}>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {packPreview.map((t) => (
             <div key={t.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
               <div className="grid h-52 place-items-center overflow-hidden rounded-2xl bg-white/5 p-4">
                 <TemplatePreview template={t} />
               </div>
-              <p className="mt-4 text-sm font-semibold">{t.name}</p>
+              <p className="mt-2 text-center text-[11px] uppercase tracking-wide text-white/35">
+                Sample preview — demo business, not a scannable code
+              </p>
+              <p className="mt-3 text-sm font-semibold">{t.name}</p>
               <p className="mt-1 text-xs text-white/50">
                 {templateDimensions(t)} · {t.placement}
               </p>
@@ -114,7 +126,9 @@ function ExamplesGallery() {
           <Link
             to="/industries/$slug"
             params={{ slug: industry.slug }}
-            onClick={() => track("public_cta_clicked", { cta: "examples_to_industry", industry: industry.slug })}
+            onClick={() =>
+              track("public_cta_clicked", { cta: "examples_to_industry", industry: industry.slug })
+            }
           >
             <Button className="rounded-full bg-white text-[#0a0f3d] hover:bg-white/90">
               Read the {industry.shortName.toLowerCase()} guide

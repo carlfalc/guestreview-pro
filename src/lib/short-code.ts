@@ -1,5 +1,4 @@
-const ALPHABET =
-  "0123456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
+const ALPHABET = "0123456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
 
 export function generateShortCode(length = 7): string {
   let result = "";

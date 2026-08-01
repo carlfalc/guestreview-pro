@@ -21,7 +21,12 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 function SettingsPage() {
-  const [profile, setProfile] = useState<{ full_name?: string; timezone?: string; language?: string; theme?: string } | null>(null);
+  const [profile, setProfile] = useState<{
+    full_name?: string;
+    timezone?: string;
+    language?: string;
+    theme?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const { data: region } = useAccountRegion();
 
@@ -39,17 +44,19 @@ function SettingsPage() {
     })();
   }, []);
 
-
   async function save() {
     setLoading(true);
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
-    const { error } = await supabase.from("profiles").update({
-      full_name: profile?.full_name ?? null,
-      timezone: profile?.timezone ?? "UTC",
-      language: profile?.language ?? "en",
-      theme: profile?.theme ?? "light",
-    }).eq("id", user.user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: profile?.full_name ?? null,
+        timezone: profile?.timezone ?? "UTC",
+        language: profile?.language ?? "en",
+        theme: profile?.theme ?? "light",
+      })
+      .eq("id", user.user.id);
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Settings saved");
@@ -67,20 +74,32 @@ function SettingsPage() {
       {region ? <AccountRegionCard region={region} /> : null}
 
       <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
-
         <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Full name</Label>
-            <Input value={profile?.full_name ?? ""} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} className="rounded-xl"/>
+            <Input
+              value={profile?.full_name ?? ""}
+              onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Timezone</Label>
-            <Input value={profile?.timezone ?? "UTC"} onChange={(e) => setProfile({ ...profile, timezone: e.target.value })} className="rounded-xl"/>
+            <Input
+              value={profile?.timezone ?? "UTC"}
+              onChange={(e) => setProfile({ ...profile, timezone: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Language</Label>
-            <Select value={profile?.language ?? "en"} onValueChange={(v) => setProfile({ ...profile, language: v })}>
-              <SelectTrigger className="rounded-xl"><SelectValue/></SelectTrigger>
+            <Select
+              value={profile?.language ?? "en"}
+              onValueChange={(v) => setProfile({ ...profile, language: v })}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="en">English</SelectItem>
                 <SelectItem value="es">Español</SelectItem>
@@ -92,8 +111,13 @@ function SettingsPage() {
           </div>
           <div className="space-y-1.5">
             <Label>Appearance</Label>
-            <Select value={profile?.theme ?? "light"} onValueChange={(v) => setProfile({ ...profile, theme: v })}>
-              <SelectTrigger className="rounded-xl"><SelectValue/></SelectTrigger>
+            <Select
+              value={profile?.theme ?? "light"}
+              onValueChange={(v) => setProfile({ ...profile, theme: v })}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="light">Light</SelectItem>
                 <SelectItem value="dark">Dark</SelectItem>

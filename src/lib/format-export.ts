@@ -3,16 +3,20 @@ import JSZip from "jszip";
 import type { BusinessFormat, LayoutTemplate } from "@/lib/qr-formats";
 import type { QrDesign } from "@/lib/qr-design";
 import {
-  renderFormatSvg, renderDielineSvg, svgToPng, pxFor, circularSafeRadius,
-  DIELINE_COLOR, DIELINE_LAYER, type FormatContent,
+  renderFormatSvg,
+  renderDielineSvg,
+  svgToPng,
+  pxFor,
+  circularSafeRadius,
+  DIELINE_COLOR,
+  DIELINE_LAYER,
+  type FormatContent,
 } from "@/lib/format-render";
 import type { FoldedConfig } from "@/lib/marketing-packs";
 import type { FoldedDecodeResult } from "@/lib/folded-validation";
 import type { ValidationResult } from "@/lib/format-validation";
 import { getFoldedLayout } from "@/lib/folded-layouts";
-import {
-  renderFoldedFormatSvg, renderFoldedMockupSvg,
-} from "@/lib/folded-render";
+import { renderFoldedFormatSvg, renderFoldedMockupSvg } from "@/lib/folded-render";
 import { buildFoldedPdf, foldedPrintNotes } from "@/lib/folded-export";
 
 const MM_TO_PT = 2.83464567;
@@ -32,35 +36,99 @@ async function getPngForFormat(
   extras: { transparentOutside?: boolean; includeDieline?: boolean } = {},
 ): Promise<Blob> {
   const svg = await renderFormatSvg(format, template, content, qrDesign, qrData, logoUrl, brand, {
-    includeBleed, showBoundaries: false,
+    includeBleed,
+    showBoundaries: false,
     transparentOutside: extras.transparentOutside,
     includeDieline: extras.includeDieline,
   });
   const px = pxFor(format, dpi);
-  const totalW = px.w + (includeBleed && format.medium === "print" ? Math.round(format.bleed * dpi / 25.4) * 2 : 0);
-  const totalH = px.h + (includeBleed && format.medium === "print" ? Math.round(format.bleed * dpi / 25.4) * 2 : 0);
+  const totalW =
+    px.w +
+    (includeBleed && format.medium === "print" ? Math.round((format.bleed * dpi) / 25.4) * 2 : 0);
+  const totalH =
+    px.h +
+    (includeBleed && format.medium === "print" ? Math.round((format.bleed * dpi) / 25.4) * 2 : 0);
   return await svgToPng(svg, totalW, totalH);
 }
 
-export async function downloadFormatPng(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
-  const blob = await getPngForFormat(format, template, content, qrDesign, qrData, logoUrl, brand, false);
+export async function downloadFormatPng(
+  format: BusinessFormat,
+  template: LayoutTemplate,
+  content: FormatContent,
+  qrDesign: QrDesign,
+  qrData: string,
+  logoUrl: string | null,
+  brand: string,
+): Promise<void> {
+  const blob = await getPngForFormat(
+    format,
+    template,
+    content,
+    qrDesign,
+    qrData,
+    logoUrl,
+    brand,
+    false,
+  );
   triggerDownload(blob, `${format.id}.png`);
 }
 
 /** Transparent-background PNG for circular stickers — outside-of-trim stays transparent. */
-export async function downloadFormatPngTransparent(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
-  const blob = await getPngForFormat(format, template, content, qrDesign, qrData, logoUrl, brand, false, 300, { transparentOutside: true });
+export async function downloadFormatPngTransparent(
+  format: BusinessFormat,
+  template: LayoutTemplate,
+  content: FormatContent,
+  qrDesign: QrDesign,
+  qrData: string,
+  logoUrl: string | null,
+  brand: string,
+): Promise<void> {
+  const blob = await getPngForFormat(
+    format,
+    template,
+    content,
+    qrDesign,
+    qrData,
+    logoUrl,
+    brand,
+    false,
+    300,
+    { transparentOutside: true },
+  );
   triggerDownload(blob, `${format.id}-transparent.png`);
 }
 
-export async function downloadFormatSvg(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
-  const svg = await renderFormatSvg(format, template, content, qrDesign, qrData, logoUrl, brand, { includeBleed: false, showBoundaries: false });
+export async function downloadFormatSvg(
+  format: BusinessFormat,
+  template: LayoutTemplate,
+  content: FormatContent,
+  qrDesign: QrDesign,
+  qrData: string,
+  logoUrl: string | null,
+  brand: string,
+): Promise<void> {
+  const svg = await renderFormatSvg(format, template, content, qrDesign, qrData, logoUrl, brand, {
+    includeBleed: false,
+    showBoundaries: false,
+  });
   triggerDownload(new Blob([svg], { type: "image/svg+xml" }), `${format.id}.svg`);
 }
 
 /** SVG with CutContour dieline embedded on its own layer (for circular formats). */
-export async function downloadFormatSvgWithDieline(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
-  const svg = await renderFormatSvg(format, template, content, qrDesign, qrData, logoUrl, brand, { includeBleed: true, showBoundaries: false, includeDieline: true });
+export async function downloadFormatSvgWithDieline(
+  format: BusinessFormat,
+  template: LayoutTemplate,
+  content: FormatContent,
+  qrDesign: QrDesign,
+  qrData: string,
+  logoUrl: string | null,
+  brand: string,
+): Promise<void> {
+  const svg = await renderFormatSvg(format, template, content, qrDesign, qrData, logoUrl, brand, {
+    includeBleed: true,
+    showBoundaries: false,
+    includeDieline: true,
+  });
   triggerDownload(new Blob([svg], { type: "image/svg+xml" }), `${format.id}-with-dieline.svg`);
 }
 
@@ -71,8 +139,13 @@ export async function downloadDielineSvg(format: BusinessFormat): Promise<void> 
 }
 
 export async function buildFormatPdf(
-  format: BusinessFormat, template: LayoutTemplate, content: FormatContent,
-  qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string,
+  format: BusinessFormat,
+  template: LayoutTemplate,
+  content: FormatContent,
+  qrDesign: QrDesign,
+  qrData: string,
+  logoUrl: string | null,
+  brand: string,
   opts: { includeDieline?: boolean } = {},
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
@@ -85,7 +158,17 @@ export async function buildFormatPdf(
   const isCircular = format.shape === "circular";
   const includeDieline = opts.includeDieline !== false && isCircular; // default ON for circular
 
-  const png = await getPngForFormat(format, template, content, qrDesign, qrData, logoUrl, brand, isPrint, 300);
+  const png = await getPngForFormat(
+    format,
+    template,
+    content,
+    qrDesign,
+    qrData,
+    logoUrl,
+    brand,
+    isPrint,
+    300,
+  );
   const pngBytes = new Uint8Array(await png.arrayBuffer());
   const image = await doc.embedPng(pngBytes);
   const page = doc.addPage([pageW, pageH]);
@@ -107,7 +190,14 @@ export async function buildFormatPdf(
       [inner.r + 1, inner.t, inner.r + markLen, inner.t],
       [inner.r, inner.t + 1, inner.r, inner.t + markLen],
     ];
-    marks.forEach(([x1, y1, x2, y2]) => page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: thick, color: stroke }));
+    marks.forEach(([x1, y1, x2, y2]) =>
+      page.drawLine({
+        start: { x: x1, y: y1 },
+        end: { x: x2, y: y2 },
+        thickness: thick,
+        color: stroke,
+      }),
+    );
   }
 
   // Vector CutContour dieline for circular formats. Drawn as a true vector on top of
@@ -118,17 +208,42 @@ export async function buildFormatPdf(
     const cy = pageH / 2;
     const rMm = format.width / 2;
     const rPt = rMm * MM_TO_PT;
-    page.drawEllipse({ x: cx, y: cy, xScale: rPt, yScale: rPt, borderColor: magenta, borderWidth: 0.25, opacity: 0, borderOpacity: 1 });
+    page.drawEllipse({
+      x: cx,
+      y: cy,
+      xScale: rPt,
+      yScale: rPt,
+      borderColor: magenta,
+      borderWidth: 0.25,
+      opacity: 0,
+      borderOpacity: 1,
+    });
   }
 
   if (isPrint) {
     const notes = doc.addPage([595, 842]);
     const w = 595;
     let y = 800;
-    notes.drawText("Print notes", { x: 40, y, size: 20, font: helvBold, color: rgb(0.05, 0.05, 0.05) });
+    notes.drawText("Print notes", {
+      x: 40,
+      y,
+      size: 20,
+      font: helvBold,
+      color: rgb(0.05, 0.05, 0.05),
+    });
     y -= 30;
     const lines = printNotesLines(format);
-    lines.forEach((l) => { notes.drawText(l, { x: 40, y, size: 11, font: helv, color: rgb(0.15, 0.15, 0.15), maxWidth: w - 80 }); y -= 16; });
+    lines.forEach((l) => {
+      notes.drawText(l, {
+        x: 40,
+        y,
+        size: 11,
+        font: helv,
+        color: rgb(0.15, 0.15, 0.15),
+        maxWidth: w - 80,
+      });
+      y -= 16;
+    });
   }
   return await doc.save();
 }
@@ -158,13 +273,20 @@ function printNotesLines(f: BusinessFormat): string[] {
       `Cut path (SVG): named "${DIELINE_LAYER}" group, 100% magenta (${DIELINE_COLOR}), stroke only.`,
       `Cut path (PDF): vector "${DIELINE_LAYER}" path, 100% magenta (${DIELINE_COLOR}), stroke only — not a named OCG/spot-colour layer.`,
       `Do NOT print the ${DIELINE_LAYER} path — use for die cutting only.`,
-
     );
   }
   return lines;
 }
 
-export async function downloadFormatPdf(format: BusinessFormat, template: LayoutTemplate, content: FormatContent, qrDesign: QrDesign, qrData: string, logoUrl: string | null, brand: string): Promise<void> {
+export async function downloadFormatPdf(
+  format: BusinessFormat,
+  template: LayoutTemplate,
+  content: FormatContent,
+  qrDesign: QrDesign,
+  qrData: string,
+  logoUrl: string | null,
+  brand: string,
+): Promise<void> {
   const bytes = await buildFormatPdf(format, template, content, qrDesign, qrData, logoUrl, brand);
   triggerDownload(new Blob([bytes as BlobPart], { type: "application/pdf" }), `${format.id}.pdf`);
 }
@@ -180,7 +302,12 @@ export type ZipManifest = {
     status: string | null;
   };
   business: { id: string | null; name: string | null };
-  qr: { id: string | null; short_code: string | null; label: string | null; destination_type: string | null };
+  qr: {
+    id: string | null;
+    short_code: string | null;
+    label: string | null;
+    destination_type: string | null;
+  };
   layout_template: string;
   exported_at: string;
   formats: {
@@ -200,7 +327,15 @@ export type ZipManifest = {
       mode: FoldedConfig["mode"];
       flat: { width: number; height: number };
       assembled: { width: number; height: number };
-      panels: { panel: string; x: number; y: number; w: number; h: number; rotation: number; label: string }[];
+      panels: {
+        panel: string;
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+        rotation: number;
+        label: string;
+      }[];
       production_rotation: { front: number; back: number };
       fold_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
       score_lines: { type: string; x1: number; y1: number; x2: number; y2: number }[];
@@ -211,8 +346,20 @@ export type ZipManifest = {
         back: { pass: boolean; reason?: string };
       };
       panel_validation?: {
-        front: { level: string; title: string; message: string; element?: string; suggestedFix?: string }[];
-        back: { level: string; title: string; message: string; element?: string; suggestedFix?: string }[];
+        front: {
+          level: string;
+          title: string;
+          message: string;
+          element?: string;
+          suggestedFix?: string;
+        }[];
+        back: {
+          level: string;
+          title: string;
+          message: string;
+          element?: string;
+          suggestedFix?: string;
+        }[];
       };
     };
   }[];
@@ -312,12 +459,24 @@ export async function downloadPackZip(
     const folder = f.medium === "print" ? "print" : "digital";
     const files: string[] = [];
 
-    const png = await getPngForFormat(f, template, content, qrDesign, qrData, logoUrl, brand, false);
+    const png = await getPngForFormat(
+      f,
+      template,
+      content,
+      qrDesign,
+      qrData,
+      logoUrl,
+      brand,
+      false,
+    );
     const pngPath = `${folder}/png/${f.id}.png`;
     zip.file(pngPath, new Uint8Array(await png.arrayBuffer()));
     files.push(pngPath);
 
-    const svg = await renderFormatSvg(f, template, content, qrDesign, qrData, logoUrl, brand, { includeBleed: false, showBoundaries: false });
+    const svg = await renderFormatSvg(f, template, content, qrDesign, qrData, logoUrl, brand, {
+      includeBleed: false,
+      showBoundaries: false,
+    });
     const svgPath = `${folder}/svg/${f.id}.svg`;
     zip.file(svgPath, svg);
     files.push(svgPath);
@@ -336,7 +495,18 @@ export async function downloadPackZip(
     // Circular sticker production extras: transparent PNG + CutContour dieline (SVG),
     // plus an artwork+dieline variant for print shops that prefer one file.
     if (f.shape === "circular") {
-      const transparent = await getPngForFormat(f, template, content, qrDesign, qrData, logoUrl, brand, false, 300, { transparentOutside: true });
+      const transparent = await getPngForFormat(
+        f,
+        template,
+        content,
+        qrDesign,
+        qrData,
+        logoUrl,
+        brand,
+        false,
+        300,
+        { transparentOutside: true },
+      );
       const tPath = `${folder}/png/${f.id}-transparent.png`;
       zip.file(tPath, new Uint8Array(await transparent.arrayBuffer()));
       files.push(tPath);
@@ -346,7 +516,16 @@ export async function downloadPackZip(
       zip.file(dPath, dielineSvg);
       files.push(dPath);
 
-      const withDieline = await renderFormatSvg(f, template, content, qrDesign, qrData, logoUrl, brand, { includeBleed: true, showBoundaries: false, includeDieline: true });
+      const withDieline = await renderFormatSvg(
+        f,
+        template,
+        content,
+        qrDesign,
+        qrData,
+        logoUrl,
+        brand,
+        { includeBleed: true, showBoundaries: false, includeDieline: true },
+      );
       const wPath = `${folder}/svg/${f.id}-with-dieline.svg`;
       zip.file(wPath, withDieline);
       files.push(wPath);
@@ -357,20 +536,28 @@ export async function downloadPackZip(
       const foldedCfg = meta.foldedResolver?.(f);
       if (foldedCfg) {
         const foldedInput = {
-          format: f, template, brand,
+          format: f,
+          template,
+          brand,
           business: { name: meta.business_name ?? "", logoUrl: meta.business_logo_url ?? null },
-          qrDesign, qrData, qrLogoUrl: meta.qr_logo_url ?? logoUrl, config: foldedCfg,
+          qrDesign,
+          qrData,
+          qrLogoUrl: meta.qr_logo_url ?? logoUrl,
+          config: foldedCfg,
         };
         const layout = getFoldedLayout(f);
 
         // Front / Back / Flat PNGs
         for (const facing of ["front", "back", "flat"] as const) {
-          const svgStr = await renderFoldedFormatSvg(foldedInput, { facing, includeBleed: facing === "flat" });
+          const svgStr = await renderFoldedFormatSvg(foldedInput, {
+            facing,
+            includeBleed: facing === "flat",
+          });
           const isFlat = facing === "flat";
-          const wMm = isFlat ? (layout!.flatWidth + layout!.bleed * 2) : layout!.assembledWidth;
-          const hMm = isFlat ? (layout!.flatHeight + layout!.bleed * 2) : layout!.assembledHeight;
+          const wMm = isFlat ? layout!.flatWidth + layout!.bleed * 2 : layout!.assembledWidth;
+          const hMm = isFlat ? layout!.flatHeight + layout!.bleed * 2 : layout!.assembledHeight;
           const dpi = 300;
-          const px = { w: Math.round(wMm * dpi / 25.4), h: Math.round(hMm * dpi / 25.4) };
+          const px = { w: Math.round((wMm * dpi) / 25.4), h: Math.round((hMm * dpi) / 25.4) };
           const blob = await svgToPng(svgStr, px.w, px.h);
           const key = facing === "flat" ? "flat" : facing;
           const p = `artwork/${key}/${f.id}.png`;
@@ -380,7 +567,12 @@ export async function downloadPackZip(
 
         // Flat SVG with production guides
         const guidesSvg = await renderFoldedFormatSvg(foldedInput, {
-          includeBleed: true, showCut: true, showFold: true, showScore: true, showPanelLabels: true, showSafe: true,
+          includeBleed: true,
+          showCut: true,
+          showFold: true,
+          showScore: true,
+          showPanelLabels: true,
+          showSafe: true,
         });
         const guidesPath = `production/svg/${f.id}-guides.svg`;
         zip.file(guidesPath, guidesSvg);
@@ -407,45 +599,84 @@ export async function downloadPackZip(
     }
 
     const v = validationsMap.get(f.id);
-    const foldedCfg = f.folded ? meta.foldedResolver?.(f) ?? null : null;
+    const foldedCfg = f.folded ? (meta.foldedResolver?.(f) ?? null) : null;
     const layout = f.folded ? getFoldedLayout(f) : null;
     manifest.formats.push({
-      id: f.id, name: f.name, medium: f.medium, shape: f.shape, category: f.category,
-      width: f.width, height: f.height,
+      id: f.id,
+      name: f.name,
+      medium: f.medium,
+      shape: f.shape,
+      category: f.category,
+      width: f.width,
+      height: f.height,
       unit: f.medium === "print" ? "mm" : "px",
       bleed: f.bleed,
       material: f.material,
       qr_validation: v ? { pass: v.pass, reason: v.reason } : undefined,
       files,
-      folded: layout && foldedCfg ? (() => {
-        const frontP = layout.panels.find((p) => p.panel === "front");
-        const backP = layout.panels.find((p) => p.panel === "back");
-        const decode = meta.foldedDecode?.[f.id];
-        const panelVs = meta.foldedPanelValidations?.[f.id];
-        const splitPanel = (results: ValidationResult[] | undefined, key: "Front" | "Back") =>
-          (results ?? [])
-            .filter((r) => (r.formatName ?? "").endsWith(`· ${key}`))
-            .map((r) => ({ level: r.level, title: r.title, message: r.message, element: r.element, suggestedFix: r.suggestedFix }));
-        return {
-          mode: foldedCfg.mode,
-          flat: { width: layout.flatWidth, height: layout.flatHeight },
-          assembled: { width: layout.assembledWidth, height: layout.assembledHeight },
-          panels: layout.panels.map((p) => ({ panel: p.panel, x: p.x, y: p.y, w: p.w, h: p.h, rotation: p.rotation, label: p.label })),
-          production_rotation: { front: frontP?.rotation ?? 0, back: backP?.rotation ?? 0 },
-          fold_lines: layout.segments.filter((s) => s.type === "fold"),
-          score_lines: layout.segments.filter((s) => s.type === "score"),
-          cut_lines: layout.segments.filter((s) => s.type === "cut"),
-          ...(layout.glue ? { glue_area: { x: layout.glue.x, y: layout.glue.y, w: layout.glue.w, h: layout.glue.h } } : {}),
-          ...(decode ? { qr_decode: {
-            front: { pass: decode.front.pass, reason: decode.front.reason },
-            back: { pass: decode.back.pass, reason: decode.back.reason },
-          } } : {}),
-          ...(panelVs ? { panel_validation: {
-            front: splitPanel(panelVs, "Front"),
-            back: splitPanel(panelVs, "Back"),
-          } } : {}),
-        };
-      })() : undefined,
+      folded:
+        layout && foldedCfg
+          ? (() => {
+              const frontP = layout.panels.find((p) => p.panel === "front");
+              const backP = layout.panels.find((p) => p.panel === "back");
+              const decode = meta.foldedDecode?.[f.id];
+              const panelVs = meta.foldedPanelValidations?.[f.id];
+              const splitPanel = (results: ValidationResult[] | undefined, key: "Front" | "Back") =>
+                (results ?? [])
+                  .filter((r) => (r.formatName ?? "").endsWith(`· ${key}`))
+                  .map((r) => ({
+                    level: r.level,
+                    title: r.title,
+                    message: r.message,
+                    element: r.element,
+                    suggestedFix: r.suggestedFix,
+                  }));
+              return {
+                mode: foldedCfg.mode,
+                flat: { width: layout.flatWidth, height: layout.flatHeight },
+                assembled: { width: layout.assembledWidth, height: layout.assembledHeight },
+                panels: layout.panels.map((p) => ({
+                  panel: p.panel,
+                  x: p.x,
+                  y: p.y,
+                  w: p.w,
+                  h: p.h,
+                  rotation: p.rotation,
+                  label: p.label,
+                })),
+                production_rotation: { front: frontP?.rotation ?? 0, back: backP?.rotation ?? 0 },
+                fold_lines: layout.segments.filter((s) => s.type === "fold"),
+                score_lines: layout.segments.filter((s) => s.type === "score"),
+                cut_lines: layout.segments.filter((s) => s.type === "cut"),
+                ...(layout.glue
+                  ? {
+                      glue_area: {
+                        x: layout.glue.x,
+                        y: layout.glue.y,
+                        w: layout.glue.w,
+                        h: layout.glue.h,
+                      },
+                    }
+                  : {}),
+                ...(decode
+                  ? {
+                      qr_decode: {
+                        front: { pass: decode.front.pass, reason: decode.front.reason },
+                        back: { pass: decode.back.pass, reason: decode.back.reason },
+                      },
+                    }
+                  : {}),
+                ...(panelVs
+                  ? {
+                      panel_validation: {
+                        front: splitPanel(panelVs, "Front"),
+                        back: splitPanel(panelVs, "Back"),
+                      },
+                    }
+                  : {}),
+              };
+            })()
+          : undefined,
     });
   }
 
@@ -493,7 +724,13 @@ function dataUrlToBytes(dataUrl: string): Uint8Array | null {
 }
 
 function slugify(s: string): string {
-  return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "pack";
+  return (
+    s
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "pack"
+  );
 }
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);

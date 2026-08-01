@@ -7,8 +7,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  detectSafetyIssues, summariseInput, limitsFor,
-  type Alternative, type CopyResponse, type GenerateInput, type Placement,
+  detectSafetyIssues,
+  summariseInput,
+  limitsFor,
+  type Alternative,
+  type CopyResponse,
+  type GenerateInput,
+  type Placement,
 } from "./ai-copy";
 
 // --- Limits (temporary; wired into UI copy) --------------------------------
@@ -52,10 +57,13 @@ function buildUserPrompt(input: GenerateInput): string {
     `Recommended maximum characters — headline ${lim.headline}, supporting text ${lim.supportingText}, CTA ${lim.ctaText}, footer ${lim.footerText}. Stay within these.`,
   ];
   if (input.keyMessage) lines.push(`Key message: ${input.keyMessage}`);
-  if (input.audience || p.targetAudience) lines.push(`Target audience: ${input.audience ?? p.targetAudience}`);
-  if (input.businessDescription || p.businessDescription) lines.push(`About the business: ${input.businessDescription ?? p.businessDescription}`);
+  if (input.audience || p.targetAudience)
+    lines.push(`Target audience: ${input.audience ?? p.targetAudience}`);
+  if (input.businessDescription || p.businessDescription)
+    lines.push(`About the business: ${input.businessDescription ?? p.businessDescription}`);
   if (p.localArea) lines.push(`Local area: ${p.localArea}`);
-  if (p.signaturePhrase) lines.push(`Signature phrase (may reuse if it fits): ${p.signaturePhrase}`);
+  if (p.signaturePhrase)
+    lines.push(`Signature phrase (may reuse if it fits): ${p.signaturePhrase}`);
   if (p.preferredWords?.length) lines.push(`Preferred vocabulary: ${p.preferredWords.join(", ")}`);
   if (p.bannedWords?.length) lines.push(`Never use these words: ${p.bannedWords.join(", ")}`);
   if (input.existingWording) {
@@ -95,8 +103,11 @@ async function callGateway(input: GenerateInput): Promise<CopyResponse> {
   const raw = await res.json();
   const content: string = raw?.choices?.[0]?.message?.content ?? "";
   let parsed: unknown;
-  try { parsed = JSON.parse(content); }
-  catch { throw new Error("invalid_response_format"); }
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new Error("invalid_response_format");
+  }
   return validateResponse(parsed);
 }
 
@@ -108,10 +119,17 @@ function validateResponse(v: unknown): CopyResponse {
   const alternatives: Alternative[] = alt.slice(0, 5).map((a): Alternative => {
     const x = (a ?? {}) as Record<string, unknown>;
     const s = (k: string): string => (typeof x[k] === "string" ? (x[k] as string) : "");
-    const headline = s("headline"), supportingText = s("supportingText"), ctaText = s("ctaText"), footerText = s("footerText");
+    const headline = s("headline"),
+      supportingText = s("supportingText"),
+      ctaText = s("ctaText"),
+      footerText = s("footerText");
     return {
-      headline, supportingText, ctaText, footerText,
-      tone: s("tone"), rationale: s("rationale"),
+      headline,
+      supportingText,
+      ctaText,
+      footerText,
+      tone: s("tone"),
+      rationale: s("rationale"),
       characterCounts: {
         headline: headline.length,
         supportingText: supportingText.length,
@@ -135,42 +153,61 @@ function validateResponse(v: unknown): CopyResponse {
 
 export const generateMarketingCopy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { businessId?: string | null; packId?: string | null; input: GenerateInput }) => data)
+  .inputValidator(
+    (data: { businessId?: string | null; packId?: string | null; input: GenerateInput }) => data,
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const input = data.input;
 
-    if (!input?.businessName || !input?.placement || !input?.tone) throw new Error("Missing required fields");
+    if (!input?.businessName || !input?.placement || !input?.tone)
+      throw new Error("Missing required fields");
     if ((input.businessName ?? "").length > 200) throw new Error("Business name too long");
     if ((input.keyMessage ?? "").length > 600) throw new Error("Key message too long");
-    if ((input.businessDescription ?? "").length > 800) throw new Error("Business description too long");
+    if ((input.businessDescription ?? "").length > 800)
+      throw new Error("Business description too long");
 
     // Ownership check (RLS also enforces this, belt-and-braces).
     if (data.businessId) {
-      const { data: b, error } = await supabase.from("businesses").select("id, owner_id").eq("id", data.businessId).maybeSingle();
+      const { data: b, error } = await supabase
+        .from("businesses")
+        .select("id, owner_id")
+        .eq("id", data.businessId)
+        .maybeSingle();
       if (error || !b || b.owner_id !== userId) throw new Error("Business not found");
     }
 
     // Rate limits (RLS ensures scope).
     const nowIso = new Date().toISOString();
-    const monthStart = new Date(); monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
     const hourStart = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
     const [{ count: monthCount }, { count: hourCount }] = await Promise.all([
-      supabase.from("ai_copy_generations").select("id", { head: true, count: "exact" }).gte("created_at", monthStart.toISOString()),
-      supabase.from("ai_copy_generations").select("id", { head: true, count: "exact" }).gte("created_at", hourStart),
+      supabase
+        .from("ai_copy_generations")
+        .select("id", { head: true, count: "exact" })
+        .gte("created_at", monthStart.toISOString()),
+      supabase
+        .from("ai_copy_generations")
+        .select("id", { head: true, count: "exact" })
+        .gte("created_at", hourStart),
     ]);
     if ((monthCount ?? 0) >= MONTHLY_LIMIT) throw new Error("monthly_limit_reached");
     if ((hourCount ?? 0) >= HOURLY_LIMIT) throw new Error("rate_limit_reached");
 
     // Call gateway with a single upstream retry on transient 5xx.
     let result: CopyResponse;
-    try { result = await callGateway(input); }
-    catch (e) {
+    try {
+      result = await callGateway(input);
+    } catch (e) {
       const msg = (e as Error).message;
       if (msg === "invalid_response_format") throw e;
-      if (msg === "rate_limit_upstream") { await new Promise((r) => setTimeout(r, 400)); result = await callGateway(input); }
-      else throw e;
+      if (msg === "rate_limit_upstream") {
+        await new Promise((r) => setTimeout(r, 400));
+        result = await callGateway(input);
+      } else throw e;
     }
 
     // Client-side style safety pass — merge with model self-report.
@@ -184,17 +221,21 @@ export const generateMarketingCopy = createServerFn({ method: "POST" })
     result.safety = merged;
 
     // Log (never store the raw prompt/system text — only summary + generated output).
-    const { data: row } = await supabase.from("ai_copy_generations").insert({
-      owner_id: userId,
-      business_id: data.businessId ?? null,
-      marketing_pack_id: data.packId ?? null,
-      format_id: input.formatId ?? null,
-      placement: input.placement,
-      tone: input.tone,
-      language: input.language ?? "en",
-      input_summary: summariseInput(input),
-      generated_output: result as unknown as never,
-    }).select("id").maybeSingle();
+    const { data: row } = await supabase
+      .from("ai_copy_generations")
+      .insert({
+        owner_id: userId,
+        business_id: data.businessId ?? null,
+        marketing_pack_id: data.packId ?? null,
+        format_id: input.formatId ?? null,
+        placement: input.placement,
+        tone: input.tone,
+        language: input.language ?? "en",
+        input_summary: summariseInput(input),
+        generated_output: result as unknown as never,
+      })
+      .select("id")
+      .maybeSingle();
 
     return { result, generationId: row?.id ?? null, createdAt: nowIso };
   });
@@ -203,7 +244,9 @@ export const markGenerationSelection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { generationId: string; alternativeIndex: number | null }) => d)
   .handler(async ({ data, context }) => {
-    await context.supabase.from("ai_copy_generations")
-      .update({ selected_alternative: data.alternativeIndex }).eq("id", data.generationId);
+    await context.supabase
+      .from("ai_copy_generations")
+      .update({ selected_alternative: data.alternativeIndex })
+      .eq("id", data.generationId);
     return { ok: true };
   });

@@ -3,14 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Building2,
-  QrCode,
-  MousePointerClick,
-  Star,
-  TrendingUp,
-  Plus,
-} from "lucide-react";
+import { Building2, QrCode, MousePointerClick, Star, TrendingUp, Plus } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -43,10 +36,19 @@ function Dashboard() {
     queryFn: async () => {
       const [biz, qr, scans, clicks, recent] = await Promise.all([
         supabase.from("businesses").select("id", { count: "exact", head: true }),
-        supabase.from("qr_codes").select("id", { count: "exact", head: true }).eq("status", "active"),
+        supabase
+          .from("qr_codes")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "active"),
         supabase.from("scan_events").select("id", { count: "exact", head: true }),
-        supabase.from("scan_events").select("id", { count: "exact", head: true }).eq("clicked_review", true),
-        supabase.from("scan_events").select("created_at, clicked_review").gte("created_at", subDays(new Date(), 30).toISOString()),
+        supabase
+          .from("scan_events")
+          .select("id", { count: "exact", head: true })
+          .eq("clicked_review", true),
+        supabase
+          .from("scan_events")
+          .select("created_at, clicked_review")
+          .gte("created_at", subDays(new Date(), 30).toISOString()),
       ]);
       const byDay = new Map<string, { scans: number; clicks: number }>();
       for (let i = 29; i >= 0; i--) {
@@ -98,12 +100,8 @@ function Dashboard() {
       <OnboardingChecklist />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
         {cards.map((c) => (
-          <Card
-            key={c.label}
-            className="rounded-2xl border-border/70 shadow-[var(--shadow-card)]"
-          >
+          <Card key={c.label} className="rounded-2xl border-border/70 shadow-[var(--shadow-card)]">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -123,12 +121,8 @@ function Dashboard() {
         <CardContent className="p-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold tracking-tight">
-                Scans, last 30 days
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Total scans vs review clicks
-              </p>
+              <h3 className="text-lg font-semibold tracking-tight">Scans, last 30 days</h3>
+              <p className="text-xs text-muted-foreground">Total scans vs review clicks</p>
             </div>
             <div className="hidden items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground sm:flex">
               <TrendingUp className="h-3.5 w-3.5" /> Live
@@ -147,8 +141,18 @@ function Dashboard() {
                     <stop offset="100%" stopColor="var(--color-chart-3)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} interval={4} axisLine={false} tickLine={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="var(--color-border)"
+                />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11 }}
+                  interval={4}
+                  axisLine={false}
+                  tickLine={false}
+                />
                 <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
                 <Tooltip
                   contentStyle={{
@@ -158,8 +162,20 @@ function Dashboard() {
                     fontSize: 12,
                   }}
                 />
-                <Area type="monotone" dataKey="scans" stroke="var(--color-chart-1)" strokeWidth={2} fill="url(#scans)" />
-                <Area type="monotone" dataKey="clicks" stroke="var(--color-chart-3)" strokeWidth={2} fill="url(#clicks)" />
+                <Area
+                  type="monotone"
+                  dataKey="scans"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={2}
+                  fill="url(#scans)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="clicks"
+                  stroke="var(--color-chart-3)"
+                  strokeWidth={2}
+                  fill="url(#clicks)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>

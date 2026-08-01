@@ -21,10 +21,18 @@ export interface AccountRegionDTO {
 }
 
 interface AccountRegionRow {
-  country_code: string; country_name: string; currency_code: string;
-  currency_symbol: string; currency_name: string; pricing_region: string;
-  detection_source: string; confidence: string; is_locked: boolean;
-  detected_at: string; confirmed_at: string | null; stripe_billing_country: string | null;
+  country_code: string;
+  country_name: string;
+  currency_code: string;
+  currency_symbol: string;
+  currency_name: string;
+  pricing_region: string;
+  detection_source: string;
+  confidence: string;
+  is_locked: boolean;
+  detected_at: string;
+  confirmed_at: string | null;
+  stripe_billing_country: string | null;
 }
 
 function rowToDto(row: AccountRegionRow): AccountRegionDTO {
@@ -70,11 +78,8 @@ export const resolveAccountRegion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AccountRegionDTO> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const {
-      detectAccountCountry,
-      toAccountRegionRow,
-      writeRegionAudit,
-    } = await import("./account-region.server");
+    const { detectAccountCountry, toAccountRegionRow, writeRegionAudit } =
+      await import("./account-region.server");
 
     // If a row already exists, respect it — ordinary detection cannot mutate
     // an existing region (locked semantics).
@@ -86,7 +91,11 @@ export const resolveAccountRegion = createServerFn({ method: "POST" })
     if (existing) return rowToDto(existing);
 
     let request: Request | undefined;
-    try { request = getRequest(); } catch { request = undefined; }
+    try {
+      request = getRequest();
+    } catch {
+      request = undefined;
+    }
 
     const detection = await detectAccountCountry(supabaseAdmin, context.userId, request);
     const row = toAccountRegionRow(context.userId, detection);
@@ -123,11 +132,12 @@ export const resolveAccountRegion = createServerFn({ method: "POST" })
         .from("profiles")
         .update({
           registration_country_code: detection.region.countryCode,
-          registration_country_source: detection.source === "business_address"
-            ? "business_address"
-            : detection.source === "ip_geolocation"
-              ? "ip_geolocation"
-              : "browser_locale",
+          registration_country_source:
+            detection.source === "business_address"
+              ? "business_address"
+              : detection.source === "ip_geolocation"
+                ? "ip_geolocation"
+                : "browser_locale",
           registration_country_recorded_at: new Date().toISOString(),
         })
         .eq("id", context.userId);
@@ -139,21 +149,21 @@ export const resolveAccountRegion = createServerFn({ method: "POST" })
 /** Submit a country-correction request. Currency is NOT changed here. */
 export const createRegionCorrectionRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: {
-    requestedCountryCode: string;
-    reason: string;
-    supportingInformation?: string;
-  }) => {
-    const cc = String(data?.requestedCountryCode ?? "").trim().toUpperCase();
-    const reason = String(data?.reason ?? "").trim();
-    if (!isValidCountryCode(cc)) throw new Error("Requested country is not a valid ISO code.");
-    if (reason.length < 5) throw new Error("Please provide a reason (min 5 characters).");
-    return {
-      requestedCountryCode: cc,
-      reason,
-      supportingInformation: data.supportingInformation?.trim() || null,
-    };
-  })
+  .inputValidator(
+    (data: { requestedCountryCode: string; reason: string; supportingInformation?: string }) => {
+      const cc = String(data?.requestedCountryCode ?? "")
+        .trim()
+        .toUpperCase();
+      const reason = String(data?.reason ?? "").trim();
+      if (!isValidCountryCode(cc)) throw new Error("Requested country is not a valid ISO code.");
+      if (reason.length < 5) throw new Error("Please provide a reason (min 5 characters).");
+      return {
+        requestedCountryCode: cc,
+        reason,
+        supportingInformation: data.supportingInformation?.trim() || null,
+      };
+    },
+  )
   .handler(async ({ data, context }) => {
     const { data: region } = await context.supabase
       .from("account_regions")
@@ -176,15 +186,13 @@ export const createRegionCorrectionRequest = createServerFn({ method: "POST" })
       throw new Error("You already have a billing-region correction awaiting review.");
     }
 
-    const { error } = await context.supabase
-      .from("region_correction_requests")
-      .insert({
-        owner_id: context.userId,
-        current_country_code: region?.country_code ?? null,
-        requested_country_code: data.requestedCountryCode,
-        reason: data.reason,
-        supporting_information: data.supportingInformation,
-      });
+    const { error } = await context.supabase.from("region_correction_requests").insert({
+      owner_id: context.userId,
+      current_country_code: region?.country_code ?? null,
+      requested_country_code: data.requestedCountryCode,
+      reason: data.reason,
+      supporting_information: data.supportingInformation,
+    });
     if (error) {
       if (/rcr_one_pending_per_owner/i.test(error.message)) {
         throw new Error("You already have a billing-region correction awaiting review.");
@@ -200,7 +208,9 @@ export const listMyRegionCorrectionRequests = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("region_correction_requests")
-      .select("id, current_country_code, requested_country_code, reason, status, created_at, reviewed_at")
+      .select(
+        "id, current_country_code, requested_country_code, reason, status, created_at, reviewed_at",
+      )
       .eq("owner_id", context.userId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -213,7 +223,9 @@ export const listMyRegionAuditLog = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("account_region_audit_log")
-      .select("id, previous_country_code, new_country_code, previous_currency_code, new_currency_code, change_source, reason, created_at")
+      .select(
+        "id, previous_country_code, new_country_code, previous_currency_code, new_currency_code, change_source, reason, created_at",
+      )
       .eq("owner_id", context.userId)
       .order("created_at", { ascending: false })
       .limit(50);

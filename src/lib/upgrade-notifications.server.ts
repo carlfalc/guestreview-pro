@@ -20,9 +20,9 @@ async function sendWelcomeEmail(email: string, name: string | null, plan: PaidPl
   // exist yet; it appears when app emails are scaffolded.
   const specifier = "@/lib/email-templates/send-email";
   try {
-    const mod = (await import(/* @vite-ignore */ specifier).catch(() => null)) as
-      | { sendTemplateEmail?: (t: string, to: string, o?: unknown) => Promise<unknown> }
-      | null;
+    const mod = (await import(/* @vite-ignore */ specifier).catch(() => null)) as {
+      sendTemplateEmail?: (t: string, to: string, o?: unknown) => Promise<unknown>;
+    } | null;
     if (!mod?.sendTemplateEmail) return false;
     await mod.sendTemplateEmail("upgrade-welcome", email, {
       templateData: { name: name ?? undefined, planName: PLAN_LABEL[plan] },
@@ -52,9 +52,11 @@ export async function onSubscriptionActivated(
     .select("email, full_name, upgrade_welcome_plan_key")
     .eq("id", ownerId)
     .maybeSingle();
-  const profile = data as
-    | { email: string | null; full_name: string | null; upgrade_welcome_plan_key: string | null }
-    | null;
+  const profile = data as {
+    email: string | null;
+    full_name: string | null;
+    upgrade_welcome_plan_key: string | null;
+  } | null;
   if (!profile) return;
   if (profile.upgrade_welcome_plan_key === planKey) return; // already welcomed on this plan
 

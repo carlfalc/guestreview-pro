@@ -73,8 +73,7 @@ export interface SubscriptionSnapshot {
 /** Resolve the effective plan from a raw subscription row. */
 export function effectivePlan(sub: SubscriptionSnapshot | null | undefined): PlanTierKey {
   if (!sub || sub.planKey === "free") return "free";
-  const periodLive =
-    !sub.currentPeriodEnd || new Date(sub.currentPeriodEnd).getTime() > Date.now();
+  const periodLive = !sub.currentPeriodEnd || new Date(sub.currentPeriodEnd).getTime() > Date.now();
   if ((ENTITLING_STATUSES as readonly string[]).includes(sub.status) && periodLive) {
     return sub.planKey;
   }
@@ -151,7 +150,9 @@ export function markLegacyOverLimit<T extends { id: string; created_at: string; 
   );
 }
 
-export function markBusinessesOverLimit<T extends { id: string; created_at: string; status: string }>(
+export function markBusinessesOverLimit<
+  T extends { id: string; created_at: string; status: string },
+>(
   businesses: T[],
   plan: PlanTierKey,
   options: OverLimitOptions = {},

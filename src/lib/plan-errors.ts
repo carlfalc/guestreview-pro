@@ -4,9 +4,7 @@
  */
 export function planLimitMessage(error: unknown): string | null {
   const message =
-    typeof error === "string"
-      ? error
-      : (error as { message?: string } | null)?.message ?? "";
+    typeof error === "string" ? error : ((error as { message?: string } | null)?.message ?? "");
   if (!message.includes("PLAN_LIMIT_")) return null;
   if (message.includes("PLAN_LIMIT_QR_CODES")) {
     return "The Free plan includes 1 active QR code. Upgrade to Pro for unlimited QR codes, campaigns and advanced analytics.";
@@ -19,8 +17,5 @@ export function planLimitMessage(error: unknown): string | null {
 
 /** Message to surface for any failed create/update, plan-aware. */
 export function friendlyMutationError(error: unknown, fallback = "Something went wrong."): string {
-  return (
-    planLimitMessage(error) ??
-    ((error as { message?: string } | null)?.message || fallback)
-  );
+  return planLimitMessage(error) ?? ((error as { message?: string } | null)?.message || fallback);
 }

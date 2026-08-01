@@ -25,7 +25,12 @@ export type AutoFixSnapshot = {
 
 export type AutoFixMutation =
   | { kind: "override"; formatId: string; patch: Partial<FormatOverride> }
-  | { kind: "folded"; formatId: string; panel: "front" | "back" | "both"; patch: Partial<FoldedPanelContent> }
+  | {
+      kind: "folded";
+      formatId: string;
+      panel: "front" | "back" | "both";
+      patch: Partial<FoldedPanelContent>;
+    }
   | { kind: "qrDesign"; patch: Partial<QrDesign> }
   | { kind: "global"; patch: Partial<GlobalSettings> };
 
@@ -62,7 +67,8 @@ function mutationKey(m: AutoFixMutation): string {
   if (m.kind === "qrDesign" || m.kind === "global") {
     return `${m.kind}:${Object.keys(m.patch).sort().join(",")}`;
   }
-  if (m.kind === "override") return `override:${m.formatId}:${Object.keys(m.patch).sort().join(",")}`;
+  if (m.kind === "override")
+    return `override:${m.formatId}:${Object.keys(m.patch).sort().join(",")}`;
   return `folded:${m.formatId}:${m.panel}:${Object.keys(m.patch).sort().join(",")}`;
 }
 
@@ -70,7 +76,10 @@ function mutationKey(m: AutoFixMutation): string {
  * Convert validation results into concrete, reversible fix proposals.
  * Proposals are deterministic — no AI rewriting.
  */
-export function buildAutoFixProposals(results: ValidationResult[], ctx: BuildContext): AutoFixProposal[] {
+export function buildAutoFixProposals(
+  results: ValidationResult[],
+  ctx: BuildContext,
+): AutoFixProposal[] {
   const out: AutoFixProposal[] = [];
   const { snapshot, formatById } = ctx;
 
@@ -83,23 +92,29 @@ export function buildAutoFixProposals(results: ValidationResult[], ctx: BuildCon
     const isFront = r.formatName?.includes("Front") ?? false;
     const isBack = r.formatName?.includes("Back") ?? false;
     const foldedPanel: "front" | "back" = isBack ? "back" : "front";
-    const foldedCfg: FoldedConfig | null = fid && format?.folded
-      ? (override.folded ?? defaultFoldedConfig(ctx.contentBase))
-      : null;
+    const foldedCfg: FoldedConfig | null =
+      fid && format?.folded ? (override.folded ?? defaultFoldedConfig(ctx.contentBase)) : null;
 
     // === QR contrast: switch to black on white ===
     if (r.id === "qr-contrast" || r.id === "qr-contrast-soft") {
       const d = snapshot.qrDesign;
       out.push({
         id: `fix-${r.id}-${fid ?? "pack"}`,
-        formatId: fid, formatName, panel: null,
-        validationId: r.id, category: "qr", element: "qr",
+        formatId: fid,
+        formatName,
+        panel: null,
+        validationId: r.id,
+        category: "qr",
+        element: "qr",
         description: "Switch QR to solid black on white",
         before: `fg ${d.fg} / bg ${d.transparentBg ? "transparent" : d.bg} · ${d.colorMode}`,
         after: "fg #000000 / bg #ffffff · solid",
         reason: "Guarantees a scan-safe contrast ratio.",
         severity: r.level,
-        mutation: { kind: "qrDesign", patch: { fg: "#000000", bg: "#ffffff", transparentBg: false, colorMode: "solid" } },
+        mutation: {
+          kind: "qrDesign",
+          patch: { fg: "#000000", bg: "#ffffff", transparentBg: false, colorMode: "solid" },
+        },
       });
       continue;
     }
@@ -110,10 +125,15 @@ export function buildAutoFixProposals(results: ValidationResult[], ctx: BuildCon
       const next = Math.min(0.7, Math.max(cur + 0.15, 0.55));
       out.push({
         id: `fix-qr-min-${fid}`,
-        formatId: fid, formatName, panel: null,
-        validationId: r.id, category: "qr", element: "qr",
+        formatId: fid,
+        formatName,
+        panel: null,
+        validationId: r.id,
+        category: "qr",
+        element: "qr",
         description: "Increase QR scale to meet minimum size",
-        before: fmtPct(cur), after: fmtPct(next),
+        before: fmtPct(cur),
+        after: fmtPct(next),
         reason: `Rendered QR is below the ${format.minQrSize}${format.medium === "print" ? " mm" : " px"} minimum.`,
         severity: r.level,
         mutation: { kind: "override", formatId: format.id, patch: { qrScale: next } },
@@ -122,34 +142,58 @@ export function buildAutoFixProposals(results: ValidationResult[], ctx: BuildCon
     }
 
     // === Geometry: QR outside safe / trim ===
-    if ((r.id.startsWith("geom-safe-") || r.id.startsWith("geom-trim-")) && r.element === "qr" && format && !format.folded) {
+    if (
+      (r.id.startsWith("geom-safe-") || r.id.startsWith("geom-trim-")) &&
+      r.element === "qr" &&
+      format &&
+      !format.folded
+    ) {
       const cur = override.qrScale ?? 0.45;
       const next = Math.max(0.35, cur - 0.1);
       const hadOff = (override.qrOffsetX ?? 0) !== 0 || (override.qrOffsetY ?? 0) !== 0;
       out.push({
         id: `fix-qr-safe-${fid}`,
-        formatId: fid, formatName, panel: null,
-        validationId: r.id, category: "qr", element: "qr",
-        description: hadOff ? "Reset QR offsets and reduce scale" : "Reduce QR scale to fit safe area",
+        formatId: fid,
+        formatName,
+        panel: null,
+        validationId: r.id,
+        category: "qr",
+        element: "qr",
+        description: hadOff
+          ? "Reset QR offsets and reduce scale"
+          : "Reduce QR scale to fit safe area",
         before: `${fmtPct(cur)} · offset ${Math.round((override.qrOffsetX ?? 0) * 100)}/${Math.round((override.qrOffsetY ?? 0) * 100)}`,
         after: `${fmtPct(next)} · offset 0/0`,
         reason: "Keeps the QR inside the format's safe area.",
         severity: r.level,
-        mutation: { kind: "override", formatId: format.id, patch: { qrScale: next, qrOffsetX: 0, qrOffsetY: 0 } },
+        mutation: {
+          kind: "override",
+          formatId: format.id,
+          patch: { qrScale: next, qrOffsetX: 0, qrOffsetY: 0 },
+        },
       });
       continue;
     }
 
     // === Geometry: logo outside safe / trim → reduce logo ===
-    if ((r.id.startsWith("geom-safe-") || r.id.startsWith("geom-trim-")) && r.element === "logo" && format) {
+    if (
+      (r.id.startsWith("geom-safe-") || r.id.startsWith("geom-trim-")) &&
+      r.element === "logo" &&
+      format
+    ) {
       const cur = override.logoSize ?? snapshot.globalSettings.logoSize ?? 0.18;
       const next = Math.max(0.1, cur - 0.05);
       out.push({
         id: `fix-logo-safe-${fid}`,
-        formatId: fid, formatName, panel: null,
-        validationId: r.id, category: "image", element: "logo",
+        formatId: fid,
+        formatName,
+        panel: null,
+        validationId: r.id,
+        category: "image",
+        element: "logo",
         description: "Reduce logo size to fit inside safe area",
-        before: fmtPct(cur), after: fmtPct(next),
+        before: fmtPct(cur),
+        after: fmtPct(next),
         reason: "Prevents the logo from crossing the trim / safe boundary.",
         severity: r.level,
         mutation: { kind: "override", formatId: format.id, patch: { logoSize: next } },
@@ -162,10 +206,15 @@ export function buildAutoFixProposals(results: ValidationResult[], ctx: BuildCon
       const cur = override.logoSize ?? snapshot.globalSettings.logoSize ?? 0.18;
       out.push({
         id: `fix-logo-large-${fid}`,
-        formatId: fid, formatName, panel: null,
-        validationId: r.id, category: "image", element: "logo",
+        formatId: fid,
+        formatName,
+        panel: null,
+        validationId: r.id,
+        category: "image",
+        element: "logo",
         description: "Reduce logo size to 22%",
-        before: fmtPct(cur), after: "22%",
+        before: fmtPct(cur),
+        after: "22%",
         reason: "Prevents the logo from crowding the QR quiet zone.",
         severity: "warning",
         mutation: { kind: "override", formatId: format.id, patch: { logoSize: 0.22 } },
@@ -175,13 +224,19 @@ export function buildAutoFixProposals(results: ValidationResult[], ctx: BuildCon
 
     // === Background image very opaque ===
     if (r.id === "bg-image-opaque" && format) {
-      const cur = override.backgroundImageOpacity ?? snapshot.globalSettings.backgroundImageOpacity ?? 1;
+      const cur =
+        override.backgroundImageOpacity ?? snapshot.globalSettings.backgroundImageOpacity ?? 1;
       out.push({
         id: `fix-bg-opaque-${fid}`,
-        formatId: fid, formatName, panel: null,
-        validationId: r.id, category: "image", element: "background",
+        formatId: fid,
+        formatName,
+        panel: null,
+        validationId: r.id,
+        category: "image",
+        element: "background",
         description: "Reduce background image opacity to 40%",
-        before: fmtPct(cur), after: "40%",
+        before: fmtPct(cur),
+        after: "40%",
         reason: "Improves QR scan reliability and text legibility.",
         severity: "warning",
         mutation: { kind: "override", formatId: format.id, patch: { backgroundImageOpacity: 0.4 } },
@@ -194,10 +249,15 @@ export function buildAutoFixProposals(results: ValidationResult[], ctx: BuildCon
       const cur = override.borderStyle ?? snapshot.globalSettings.borderStyle ?? "thin";
       out.push({
         id: `fix-border-${fid}`,
-        formatId: fid, formatName, panel: null,
-        validationId: r.id, category: "qr", element: "qr",
+        formatId: fid,
+        formatName,
+        panel: null,
+        validationId: r.id,
+        category: "qr",
+        element: "qr",
         description: "Remove decorative border",
-        before: String(cur), after: "none",
+        before: String(cur),
+        after: "none",
         reason: "Restores the QR quiet zone.",
         severity: "warning",
         mutation: { kind: "override", formatId: format.id, patch: { borderStyle: "none" } },
@@ -211,27 +271,35 @@ export function buildAutoFixProposals(results: ValidationResult[], ctx: BuildCon
 
       // QR crossing fold / score / glue / trim / safe / overlap → reduce & reset offsets
       const foldedQrIssue =
-        r.element === "qr" && (
-          r.id.includes("fold-cross") ||
+        r.element === "qr" &&
+        (r.id.includes("fold-cross") ||
           r.id.includes("score-cross") ||
           r.id.includes("glue-overlap") ||
           r.id.includes("overlap-qr") ||
           r.id.includes("safe") ||
-          r.id.includes("trim")
-        );
+          r.id.includes("trim"));
       if (foldedQrIssue) {
         const cur = pc.qrScale ?? 0.45;
         const next = Math.max(0.35, cur - 0.08);
         out.push({
           id: `fix-folded-qr-${fid}-${foldedPanel}-${r.id}`,
-          formatId: fid, formatName, panel: foldedPanel,
-          validationId: r.id, category: "qr", element: "qr",
+          formatId: fid,
+          formatName,
+          panel: foldedPanel,
+          validationId: r.id,
+          category: "qr",
+          element: "qr",
           description: `Reset ${foldedPanel} QR offsets and reduce scale`,
           before: `${fmtPct(cur)} · offset ${Math.round((pc.qrOffsetX ?? 0) * 100)}/${Math.round((pc.qrOffsetY ?? 0) * 100)}`,
           after: `${fmtPct(next)} · offset 0/0`,
           reason: "Keeps the QR clear of folds, score lines and the glue area.",
           severity: r.level,
-          mutation: { kind: "folded", formatId: fid, panel: foldedPanel, patch: { qrScale: next, qrOffsetX: 0, qrOffsetY: 0 } },
+          mutation: {
+            kind: "folded",
+            formatId: fid,
+            panel: foldedPanel,
+            patch: { qrScale: next, qrOffsetX: 0, qrOffsetY: 0 },
+          },
         });
         continue;
       }
@@ -242,10 +310,15 @@ export function buildAutoFixProposals(results: ValidationResult[], ctx: BuildCon
         const next = Math.min(0.7, cur + 0.15);
         out.push({
           id: `fix-folded-qr-min-${fid}-${foldedPanel}`,
-          formatId: fid, formatName, panel: foldedPanel,
-          validationId: r.id, category: "qr", element: "qr",
+          formatId: fid,
+          formatName,
+          panel: foldedPanel,
+          validationId: r.id,
+          category: "qr",
+          element: "qr",
           description: `Increase ${foldedPanel} QR scale to minimum`,
-          before: fmtPct(cur), after: fmtPct(next),
+          before: fmtPct(cur),
+          after: fmtPct(next),
           reason: `Rendered QR is below the ${format.minQrSize} mm minimum on this panel.`,
           severity: r.level,
           mutation: { kind: "folded", formatId: fid, panel: foldedPanel, patch: { qrScale: next } },
@@ -294,7 +367,10 @@ export function applyAutoFixes(
         front: m.panel === "front" || m.panel === "both" ? { ...fc.front, ...m.patch } : fc.front,
         back: m.panel === "back" || m.panel === "both" ? { ...fc.back, ...m.patch } : fc.back,
       };
-      s.formatCustomizations = { ...s.formatCustomizations, [m.formatId]: { ...prev, folded: next } };
+      s.formatCustomizations = {
+        ...s.formatCustomizations,
+        [m.formatId]: { ...prev, folded: next },
+      };
     }
   }
   return s;

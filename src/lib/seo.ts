@@ -119,4 +119,23 @@ export const jsonLd = {
       })),
     };
   },
+  article(input: {
+    headline: string;
+    description: string;
+    path: string;
+    datePublished: string;
+    dateModified?: string;
+  }): JsonLd {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: input.headline,
+      description: input.description,
+      mainEntityOfPage: absoluteUrl(input.path),
+      datePublished: input.datePublished,
+      dateModified: input.dateModified ?? input.datePublished,
+      author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+      publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    };
+  },
 };

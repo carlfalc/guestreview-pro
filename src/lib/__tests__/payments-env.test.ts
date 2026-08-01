@@ -59,8 +59,12 @@ describe("return URL locking", () => {
   it("allows only allow-listed paths", () => {
     expect(buildReturnUrl("/billing", host)).toBe("https://www.guestreviewpro.com/billing");
     expect(buildReturnUrl("/dashboard", host)).toBe("https://www.guestreviewpro.com/dashboard");
-    expect(buildReturnUrl("/billing/success", host)).toBe("https://www.guestreviewpro.com/billing/success");
-    expect(buildReturnUrl("/billing/cancel", host)).toBe("https://www.guestreviewpro.com/billing/cancel");
+    expect(buildReturnUrl("/billing/success", host)).toBe(
+      "https://www.guestreviewpro.com/billing/success",
+    );
+    expect(buildReturnUrl("/billing/cancel", host)).toBe(
+      "https://www.guestreviewpro.com/billing/cancel",
+    );
   });
 
   it("rejects external origins and falls back to /billing", () => {

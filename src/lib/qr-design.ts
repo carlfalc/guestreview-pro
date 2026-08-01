@@ -134,15 +134,31 @@ export function computeWarnings(d: QrDesign): ScanWarning[] {
 
 // --- Presets ---------------------------------------------------------------
 
-export const PRESETS: { id: string; label: string; apply: (d: QrDesign, brand?: string | null) => QrDesign }[] = [
+export const PRESETS: {
+  id: string;
+  label: string;
+  apply: (d: QrDesign, brand?: string | null) => QrDesign;
+}[] = [
   {
     id: "mono",
     label: "High-contrast mono",
-    apply: (d) => ({ ...d, colorMode: "solid", fg: "#000000", bg: "#ffffff", transparentBg: false }),
+    apply: (d) => ({
+      ...d,
+      colorMode: "solid",
+      fg: "#000000",
+      bg: "#ffffff",
+      transparentBg: false,
+    }),
   },
   {
     id: "brand",
     label: "Brand colour",
-    apply: (d, brand) => ({ ...d, colorMode: "solid", fg: brand || "#111111", bg: "#ffffff", transparentBg: false }),
+    apply: (d, brand) => ({
+      ...d,
+      colorMode: "solid",
+      fg: brand || "#111111",
+      bg: "#ffffff",
+      transparentBg: false,
+    }),
   },
 ];

@@ -69,7 +69,16 @@ export async function findTrustedPriceByLookupKey(
  */
 export async function resolveTrustedPlanForPrice(
   admin: SupabaseClient,
-  price: { id?: string | null; lookup_key?: string | null; currency?: string | null; unit_amount?: number | null; metadata?: Record<string, string> | null } | null | undefined,
+  price:
+    | {
+        id?: string | null;
+        lookup_key?: string | null;
+        currency?: string | null;
+        unit_amount?: number | null;
+        metadata?: Record<string, string> | null;
+      }
+    | null
+    | undefined,
   environment: StripeEnv,
 ): Promise<TrustedPlanPrice> {
   const priceId = price?.id ?? null;

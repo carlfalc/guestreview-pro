@@ -6,14 +6,32 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  Plus, Copy, Archive, Trash2, Package, Search, RotateCw, AlertTriangle,
+  Plus,
+  Copy,
+  Archive,
+  Trash2,
+  Package,
+  Search,
+  RotateCw,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
@@ -54,12 +72,19 @@ function MarketingPacksList() {
     },
   });
 
-  const { data: packs, isLoading, error, refetch } = useQuery({
+  const {
+    data: packs,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["marketing-packs"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("marketing_packs")
-        .select("id, project_name, pack_type, layout_template, status, selected_formats, preview_url, updated_at, archived_at, business_id, qr_code_id, businesses(name), qr_codes(label, short_code)")
+        .select(
+          "id, project_name, pack_type, layout_template, status, selected_formats, preview_url, updated_at, archived_at, business_id, qr_code_id, businesses(name), qr_codes(label, short_code)",
+        )
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as (PackRow & { business_id: string; qr_code_id: string })[];
@@ -74,25 +99,37 @@ function MarketingPacksList() {
     const paths = (packs ?? [])
       .map((p) => p.preview_url)
       .filter((p): p is string => !!p && !p.startsWith("http"));
-    if (paths.length === 0) { setSignedThumbs({}); setThumbError(null); return; }
+    if (paths.length === 0) {
+      setSignedThumbs({});
+      setThumbError(null);
+      return;
+    }
     let cancelled = false;
     (async () => {
       // Prefer new bucket; fall back to legacy bucket for older previews.
-      const primary = await supabase.storage.from("marketing-pack-previews").createSignedUrls(paths, 60 * 60);
+      const primary = await supabase.storage
+        .from("marketing-pack-previews")
+        .createSignedUrls(paths, 60 * 60);
       let resolved = primary.data ?? [];
       const missing = paths.filter((p) => !resolved.find((r) => r.path === p && r.signedUrl));
       if (missing.length) {
-        const legacy = await supabase.storage.from("pack-previews").createSignedUrls(missing, 60 * 60);
+        const legacy = await supabase.storage
+          .from("pack-previews")
+          .createSignedUrls(missing, 60 * 60);
         if (legacy.data) resolved = [...resolved, ...legacy.data];
       }
       if (cancelled) return;
       if (primary.error && !resolved.length) setThumbError(primary.error.message);
       else setThumbError(null);
       const map: Record<string, string> = {};
-      resolved.forEach((r) => { if (r.path && r.signedUrl) map[r.path] = r.signedUrl; });
+      resolved.forEach((r) => {
+        if (r.path && r.signedUrl) map[r.path] = r.signedUrl;
+      });
       setSignedThumbs(map);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [packs, thumbNonce]);
 
   const filtered = useMemo(() => {
@@ -100,7 +137,11 @@ function MarketingPacksList() {
     return packs.filter((p) => {
       if (statusFilter === "archived" && p.status !== "archived") return false;
       if (statusFilter === "active" && p.status === "archived") return false;
-      if (businessFilter !== "all" && (p as { business_id?: string }).business_id !== businessFilter) return false;
+      if (
+        businessFilter !== "all" &&
+        (p as { business_id?: string }).business_id !== businessFilter
+      )
+        return false;
       if (packTypeFilter !== "all" && p.pack_type !== packTypeFilter) return false;
       if (search && !p.project_name.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
@@ -110,7 +151,11 @@ function MarketingPacksList() {
   async function duplicatePack(id: string) {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return toast.error("Not signed in");
-    const { data: src, error } = await supabase.from("marketing_packs").select("*").eq("id", id).single();
+    const { data: src, error } = await supabase
+      .from("marketing_packs")
+      .select("*")
+      .eq("id", id)
+      .single();
     if (error || !src) return toast.error(error?.message ?? "Not found");
     const row = src as Record<string, unknown>;
     const insert = {
@@ -134,7 +179,11 @@ function MarketingPacksList() {
       format_customizations: row.format_customizations ?? {},
       status: "draft",
     };
-    const { data, error: err2 } = await supabase.from("marketing_packs").insert(insert as never).select("id").single();
+    const { data, error: err2 } = await supabase
+      .from("marketing_packs")
+      .insert(insert as never)
+      .select("id")
+      .single();
     if (err2 || !data) return toast.error(err2?.message ?? "Duplicate failed");
     toast.success("Duplicated");
     qc.invalidateQueries({ queryKey: ["marketing-packs"] });
@@ -142,10 +191,13 @@ function MarketingPacksList() {
   }
 
   async function archivePack(id: string, archive: boolean) {
-    const { error } = await supabase.from("marketing_packs").update({
-      status: archive ? "archived" : "draft",
-      archived_at: archive ? new Date().toISOString() : null,
-    }).eq("id", id);
+    const { error } = await supabase
+      .from("marketing_packs")
+      .update({
+        status: archive ? "archived" : "draft",
+        archived_at: archive ? new Date().toISOString() : null,
+      })
+      .eq("id", id);
     if (error) return toast.error(error.message);
     toast.success(archive ? "Archived" : "Restored");
     qc.invalidateQueries({ queryKey: ["marketing-packs"] });
@@ -154,8 +206,14 @@ function MarketingPacksList() {
   async function deletePack(id: string) {
     const { data: userData } = await supabase.auth.getUser();
     if (userData.user) {
-      await supabase.storage.from("marketing-pack-previews").remove([`${userData.user.id}/${id}.png`]).catch(() => undefined);
-      await supabase.storage.from("pack-previews").remove([`${userData.user.id}/${id}.png`]).catch(() => undefined);
+      await supabase.storage
+        .from("marketing-pack-previews")
+        .remove([`${userData.user.id}/${id}.png`])
+        .catch(() => undefined);
+      await supabase.storage
+        .from("pack-previews")
+        .remove([`${userData.user.id}/${id}.png`])
+        .catch(() => undefined);
     }
     const { error } = await supabase.from("marketing_packs").delete().eq("id", id);
     if (error) return toast.error(error.message);
@@ -173,7 +231,10 @@ function MarketingPacksList() {
           </p>
         </div>
         <Button asChild className="rounded-full">
-          <Link to="/marketing-packs/new"><Plus className="mr-1 h-4 w-4"/>New pack</Link>
+          <Link to="/marketing-packs/new">
+            <Plus className="mr-1 h-4 w-4" />
+            New pack
+          </Link>
         </Button>
       </div>
 
@@ -181,29 +242,44 @@ function MarketingPacksList() {
         <CardContent className="space-y-4 p-6">
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search packs" className="rounded-xl pl-9"/>
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search packs"
+                className="rounded-xl pl-9"
+              />
             </div>
             <Select value={businessFilter} onValueChange={setBusinessFilter}>
-              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Business"/></SelectTrigger>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="Business" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All businesses</SelectItem>
                 {(businesses ?? []).map((b) => (
-                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={packTypeFilter} onValueChange={setPackTypeFilter}>
-              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Pack type"/></SelectTrigger>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="Pack type" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All types</SelectItem>
                 {PACK_TYPES.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="rounded-xl"><SelectValue/></SelectTrigger>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="archived">Archived</SelectItem>
@@ -212,60 +288,92 @@ function MarketingPacksList() {
             </Select>
           </div>
 
-          {isLoading && <div className="h-32 rounded-2xl bg-muted shimmer"/>}
+          {isLoading && <div className="h-32 rounded-2xl bg-muted shimmer" />}
 
           {thumbError && (
             <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs text-amber-500">
-              <AlertTriangle className="h-4 w-4"/>Preview thumbnails failed to load: {thumbError}
-              <Button size="sm" variant="ghost" onClick={() => setThumbNonce((n) => n + 1)} className="ml-auto rounded-full text-xs">
-                <RotateCw className="mr-1 h-3 w-3"/>Retry
+              <AlertTriangle className="h-4 w-4" />
+              Preview thumbnails failed to load: {thumbError}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setThumbNonce((n) => n + 1)}
+                className="ml-auto rounded-full text-xs"
+              >
+                <RotateCw className="mr-1 h-3 w-3" />
+                Retry
               </Button>
             </div>
           )}
 
           {!isLoading && error && (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-12 text-center">
-              <AlertTriangle className="h-8 w-8 text-destructive"/>
+              <AlertTriangle className="h-8 w-8 text-destructive" />
               <p className="text-sm font-medium text-destructive">Couldn't load your packs</p>
               <p className="max-w-sm text-xs text-muted-foreground">{(error as Error).message}</p>
               <Button onClick={() => refetch()} className="mt-1 rounded-full" variant="outline">
-                <RotateCw className="mr-1 h-4 w-4"/>Retry
+                <RotateCw className="mr-1 h-4 w-4" />
+                Retry
               </Button>
             </div>
           )}
 
           {!isLoading && !error && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/70 p-12 text-center">
-              <Package className="h-10 w-10 text-muted-foreground"/>
+              <Package className="h-10 w-10 text-muted-foreground" />
               <p className="text-sm font-medium">No marketing packs yet</p>
               <p className="max-w-sm text-xs text-muted-foreground">
-                Create a pack for a business + QR code to save formats, design and copy in one project.
+                Create a pack for a business + QR code to save formats, design and copy in one
+                project.
               </p>
               <Button asChild className="mt-2 rounded-full">
-                <Link to="/marketing-packs/new"><Plus className="mr-1 h-4 w-4"/>Create your first pack</Link>
+                <Link to="/marketing-packs/new">
+                  <Plus className="mr-1 h-4 w-4" />
+                  Create your first pack
+                </Link>
               </Button>
             </div>
           )}
 
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((p) => {
-              const formats = Array.isArray(p.selected_formats) ? (p.selected_formats as string[]) : [];
+              const formats = Array.isArray(p.selected_formats)
+                ? (p.selected_formats as string[])
+                : [];
               const meta = statusMeta(p.status as PackStatus);
               const thumb = p.preview_url
-                ? (p.preview_url.startsWith("http") ? p.preview_url : signedThumbs[p.preview_url])
+                ? p.preview_url.startsWith("http")
+                  ? p.preview_url
+                  : signedThumbs[p.preview_url]
                 : null;
               return (
-                <div key={p.id} className="group flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/50">
+                <div
+                  key={p.id}
+                  className="group flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/50"
+                >
                   <Link to="/marketing-packs/$id" params={{ id: p.id }} className="block">
                     <div className="relative aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-accent/50 to-accent">
                       {thumb ? (
-                        <img src={thumb} alt="" className="h-full w-full object-cover" onError={() => setThumbNonce((n) => n + 1)}/>
+                        <img
+                          src={thumb}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          onError={() => setThumbNonce((n) => n + 1)}
+                        />
                       ) : (
                         <div className="flex h-full flex-col items-center justify-center gap-1 text-muted-foreground">
-                          <Package className="h-8 w-8"/>
+                          <Package className="h-8 w-8" />
                           {p.preview_url && (
-                            <button type="button" onClick={(e) => { e.preventDefault(); setThumbNonce((n) => n + 1); }} className="inline-flex items-center gap-1 text-[10px] underline">
-                              <RotateCw className="h-3 w-3"/>Retry preview
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setThumbNonce((n) => n + 1);
+                              }}
+                              className="inline-flex items-center gap-1 text-[10px] underline"
+                            >
+                              <RotateCw className="h-3 w-3" />
+                              Retry preview
                             </button>
                           )}
                         </div>
@@ -275,41 +383,74 @@ function MarketingPacksList() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">{p.project_name}</p>
                         <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                          {p.businesses?.name ?? "—"} · {p.qr_codes?.label ?? p.qr_codes?.short_code ?? "QR"}
+                          {p.businesses?.name ?? "—"} ·{" "}
+                          {p.qr_codes?.label ?? p.qr_codes?.short_code ?? "QR"}
                         </p>
                       </div>
-                      <Badge variant={meta.badge} className="shrink-0 rounded-full text-[10px]">{meta.label}</Badge>
+                      <Badge variant={meta.badge} className="shrink-0 rounded-full text-[10px]">
+                        {meta.label}
+                      </Badge>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1 text-[10px] text-muted-foreground">
-                      <Badge variant="outline" className="rounded-full">{PACK_TYPES.find((t) => t.id === p.pack_type)?.label ?? "Custom"}</Badge>
-                      <Badge variant="outline" className="rounded-full">{formats.length} formats</Badge>
-                      <Badge variant="outline" className="rounded-full">{p.layout_template}</Badge>
+                      <Badge variant="outline" className="rounded-full">
+                        {PACK_TYPES.find((t) => t.id === p.pack_type)?.label ?? "Custom"}
+                      </Badge>
+                      <Badge variant="outline" className="rounded-full">
+                        {formats.length} formats
+                      </Badge>
+                      <Badge variant="outline" className="rounded-full">
+                        {p.layout_template}
+                      </Badge>
                     </div>
-                    <p className="mt-2 text-[10px] text-muted-foreground">Edited {new Date(p.updated_at).toLocaleDateString()}</p>
+                    <p className="mt-2 text-[10px] text-muted-foreground">
+                      Edited {new Date(p.updated_at).toLocaleDateString()}
+                    </p>
                   </Link>
                   <div className="flex gap-1.5 border-t border-border/60 pt-2">
-                    <Button size="sm" variant="ghost" onClick={() => duplicatePack(p.id)} className="flex-1 rounded-full text-[11px]">
-                      <Copy className="mr-1 h-3 w-3"/>Duplicate
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => duplicatePack(p.id)}
+                      className="flex-1 rounded-full text-[11px]"
+                    >
+                      <Copy className="mr-1 h-3 w-3" />
+                      Duplicate
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => archivePack(p.id, p.status !== "archived")} className="flex-1 rounded-full text-[11px]">
-                      <Archive className="mr-1 h-3 w-3"/>{p.status === "archived" ? "Restore" : "Archive"}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => archivePack(p.id, p.status !== "archived")}
+                      className="flex-1 rounded-full text-[11px]"
+                    >
+                      <Archive className="mr-1 h-3 w-3" />
+                      {p.status === "archived" ? "Restore" : "Archive"}
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="ghost" className="rounded-full text-destructive hover:text-destructive">
-                          <Trash2 className="h-3 w-3"/>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="rounded-full text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete "{p.project_name}"?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This removes the pack, its saved content and its preview thumbnail. This cannot be undone.
+                            This removes the pack, its saved content and its preview thumbnail. This
+                            cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deletePack(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                          <AlertDialogAction
+                            onClick={() => deletePack(p.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

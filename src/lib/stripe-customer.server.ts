@@ -2,11 +2,12 @@
 import type Stripe from "stripe";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-
 export interface CustomerContext {
   stripe: Stripe;
   admin: unknown;
-  supabase: { auth: { getUser: () => Promise<{ data: { user: { email?: string | null } | null } }> } };
+  supabase: {
+    auth: { getUser: () => Promise<{ data: { user: { email?: string | null } | null } }> };
+  };
   ownerId: string;
   environment: "sandbox" | "live";
   countryCode: string;

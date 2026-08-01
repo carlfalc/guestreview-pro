@@ -41,10 +41,7 @@ export function isValidHttpsUrl(url: string | null | undefined): boolean {
 
 export type EffectiveStatus = "active" | "paused" | "expired" | "archived";
 
-export function computeEffectiveStatus(
-  status: string,
-  expires_at: string | null,
-): EffectiveStatus {
+export function computeEffectiveStatus(status: string, expires_at: string | null): EffectiveStatus {
   if (status === "archived") return "archived";
   if (status === "paused") return "paused";
   if (expires_at && new Date(expires_at).getTime() < Date.now()) return "expired";

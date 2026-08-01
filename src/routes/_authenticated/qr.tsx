@@ -91,7 +91,11 @@ function QrList() {
   const [editing, setEditing] = useState<QrRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const { data: qrs, isLoading, error } = useQuery({
+  const {
+    data: qrs,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["all-qr"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -117,7 +121,8 @@ function QrList() {
 
   const hasBusinesses = !!businesses?.length;
   const billing = useBilling();
-  const atQrLimit = !billing.isPaid && billing.usage.activeQrCodes >= billing.entitlements.activeQrCodesMax;
+  const atQrLimit =
+    !billing.isPaid && billing.usage.activeQrCodes >= billing.entitlements.activeQrCodesMax;
 
   return (
     <div className="animate-fade-in-up space-y-8">
@@ -176,10 +181,15 @@ function QrList() {
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <Badge variant={statusBadgeVariant(effectiveStatus)} className="rounded-full text-[10px]">
+                      <Badge
+                        variant={statusBadgeVariant(effectiveStatus)}
+                        className="rounded-full text-[10px]"
+                      >
                         {statusLabel(effectiveStatus)}
                       </Badge>
-                      <span className="text-[11px] text-muted-foreground">{q.scans_count} scans</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {q.scans_count} scans
+                      </span>
                       <ArrowRight className="h-3 w-3 text-muted-foreground transition group-hover:translate-x-0.5" />
                     </div>
                   </CardContent>
@@ -203,7 +213,9 @@ function QrList() {
                 <Plus className="mr-1 h-4 w-4" /> Create QR Code
               </Button>
               <Link to="/businesses">
-                <Button variant="outline" className="rounded-full">Manage Businesses</Button>
+                <Button variant="outline" className="rounded-full">
+                  Manage Businesses
+                </Button>
               </Link>
             </div>
           </CardContent>
@@ -219,7 +231,9 @@ function QrList() {
               Add your business details before generating a QR code.
             </p>
             <Link to="/businesses" className="mt-2">
-              <Button className="rounded-full"><Plus className="mr-1 h-4 w-4" /> Create Business</Button>
+              <Button className="rounded-full">
+                <Plus className="mr-1 h-4 w-4" /> Create Business
+              </Button>
             </Link>
           </CardContent>
         </Card>
@@ -272,7 +286,6 @@ function QrList() {
     </div>
   );
 }
-
 
 function CreateQrDialog({
   open,
@@ -367,7 +380,9 @@ function CreateQrDialog({
         return toast.error("QR-specific review URL is not a valid https:// URL.");
       }
       if (!resolvedPreview.url) {
-        return toast.error("No valid Google review URL. Add one on the business or enter a QR-specific override.");
+        return toast.error(
+          "No valid Google review URL. Add one on the business or enter a QR-specific override.",
+        );
       }
     } else {
       if (!isValidDestinationUrl(trimmedDestinationUrl)) {
@@ -380,9 +395,10 @@ function CreateQrDialog({
       if (!userData.user) throw new Error("Not signed in");
       // Persist QR-specific override when the user entered one; otherwise leave null so it falls back to business.
       const qrDestinationUrl = isGoogleReview
-        ? (trimmedDestinationUrl && trimmedDestinationUrl !== (business.google_review_url ?? "").trim()
-            ? trimmedDestinationUrl
-            : null)
+        ? trimmedDestinationUrl &&
+          trimmedDestinationUrl !== (business.google_review_url ?? "").trim()
+          ? trimmedDestinationUrl
+          : null
         : trimmedDestinationUrl;
       const { data, error } = await supabase
         .from("qr_codes")
@@ -426,10 +442,14 @@ function CreateQrDialog({
           <div className="space-y-1.5">
             <Label>Business</Label>
             <Select value={businessId} onValueChange={setBusinessId}>
-              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select a business" /></SelectTrigger>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="Select a business" />
+              </SelectTrigger>
               <SelectContent>
                 {businesses.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -437,11 +457,18 @@ function CreateQrDialog({
 
           <div className="space-y-1.5">
             <Label>Destination type</Label>
-            <Select value={destinationType} onValueChange={(v) => setDestinationType(v as DestinationType)}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <Select
+              value={destinationType}
+              onValueChange={(v) => setDestinationType(v as DestinationType)}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {DESTINATION_TYPES.map((t: { value: DestinationType; label: string }) => (
-                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -450,21 +477,26 @@ function CreateQrDialog({
           {missingReviewUrl && (
             <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>This business has no Google review URL. Add one in Business Details, or pick another destination type.</span>
+              <span>
+                This business has no Google review URL. Add one in Business Details, or pick another
+                destination type.
+              </span>
             </div>
           )}
 
           <div className="space-y-1.5">
             <Label>Destination URL</Label>
             <Input
-              value={isGoogleReview ? business?.google_review_url ?? "" : destinationUrl}
+              value={isGoogleReview ? (business?.google_review_url ?? "") : destinationUrl}
               onChange={(e) => setDestinationUrl(e.target.value)}
               disabled={isGoogleReview}
               placeholder="https://..."
               className="rounded-xl font-mono text-xs"
             />
             {isGoogleReview && (
-              <p className="text-[11px] text-muted-foreground">Uses the business's Google review URL. Switch to Custom to override.</p>
+              <p className="text-[11px] text-muted-foreground">
+                Uses the business's Google review URL. Switch to Custom to override.
+              </p>
             )}
             {!isGoogleReview && destinationUrl && !urlValid && (
               <p className="text-[11px] text-destructive">Enter a valid https:// URL.</p>
@@ -474,24 +506,44 @@ function CreateQrDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Label</Label>
-              <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Front desk" className="rounded-xl" />
+              <Input
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="Front desk"
+                className="rounded-xl"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Destination label</Label>
-              <Input value={destinationLabelValue} onChange={(e) => setDestinationLabelValue(e.target.value)} placeholder="View menu" className="rounded-xl" />
+              <Input
+                value={destinationLabelValue}
+                onChange={(e) => setDestinationLabelValue(e.target.value)}
+                placeholder="View menu"
+                className="rounded-xl"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Campaign</Label>
-              <Input value={campaign} onChange={(e) => setCampaign(e.target.value)} placeholder="Summer 2025" className="rounded-xl" />
+              <Input
+                value={campaign}
+                onChange={(e) => setCampaign(e.target.value)}
+                placeholder="Summer 2025"
+                className="rounded-xl"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Location</Label>
               <Select value={locationId} onValueChange={setLocationId} disabled={!businessId}>
-                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Entire business" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="Entire business" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Entire business</SelectItem>
                   {locations?.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>{l.name}{l.location_type ? ` · ${l.location_type}` : ""}</SelectItem>
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name}
+                      {l.location_type ? ` · ${l.location_type}` : ""}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -499,7 +551,9 @@ function CreateQrDialog({
             <div className="space-y-1.5">
               <Label>Status</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
-                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="paused">Paused</SelectItem>
@@ -508,8 +562,13 @@ function CreateQrDialog({
             </div>
             <div className="space-y-1.5">
               <Label>Landing behaviour</Label>
-              <Select value={landingMode} onValueChange={(v) => setLandingMode(v as typeof landingMode)}>
-                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <Select
+                value={landingMode}
+                onValueChange={(v) => setLandingMode(v as typeof landingMode)}
+              >
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="landing">Show landing page</SelectItem>
                   <SelectItem value="redirect">Redirect immediately</SelectItem>
@@ -518,12 +577,19 @@ function CreateQrDialog({
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>Expires at (optional)</Label>
-              <Input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="rounded-xl" />
+              <Input
+                type="datetime-local"
+                value={expiresAt}
+                onChange={(e) => setExpiresAt(e.target.value)}
+                className="rounded-xl"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>QR style</Label>
               <Select value={style} onValueChange={(v) => setStyle(v as typeof style)}>
-                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="square">Square</SelectItem>
                   <SelectItem value="rounded">Rounded</SelectItem>
@@ -533,17 +599,33 @@ function CreateQrDialog({
             </div>
             <div className="space-y-1.5">
               <Label>Foreground</Label>
-              <Input type="color" value={fg} onChange={(e) => setFg(e.target.value)} className="h-10 rounded-xl p-1" />
+              <Input
+                type="color"
+                value={fg}
+                onChange={(e) => setFg(e.target.value)}
+                className="h-10 rounded-xl p-1"
+              />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>Background</Label>
-              <Input type="color" value={bg} onChange={(e) => setBg(e.target.value)} className="h-10 rounded-xl p-1" />
+              <Input
+                type="color"
+                value={bg}
+                onChange={(e) => setBg(e.target.value)}
+                className="h-10 rounded-xl p-1"
+              />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-full">Cancel</Button>
-          <Button onClick={submit} disabled={!businessId || missingReviewUrl || !urlValid || saving} className="rounded-full">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-full">
+            Cancel
+          </Button>
+          <Button
+            onClick={submit}
+            disabled={!businessId || missingReviewUrl || !urlValid || saving}
+            className="rounded-full"
+          >
             {saving ? "Creating..." : "Create QR Code"}
           </Button>
         </DialogFooter>
@@ -655,47 +737,87 @@ function EditQrDialog({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Label</Label>
-            <Input value={values.label} onChange={(e) => setValues({ ...values, label: e.target.value })} className="rounded-xl" />
+            <Input
+              value={values.label}
+              onChange={(e) => setValues({ ...values, label: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Destination type</Label>
-            <Select value={values.destination_type} onValueChange={(v) => setValues({ ...values, destination_type: v as DestinationType })}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <Select
+              value={values.destination_type}
+              onValueChange={(v) =>
+                setValues({ ...values, destination_type: v as DestinationType })
+              }
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {DESTINATION_TYPES.map((t: { value: DestinationType; label: string }) => (
-                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Destination label</Label>
-            <Input value={values.destination_label} onChange={(e) => setValues({ ...values, destination_label: e.target.value })} placeholder="View menu" className="rounded-xl" />
+            <Input
+              value={values.destination_label}
+              onChange={(e) => setValues({ ...values, destination_label: e.target.value })}
+              placeholder="View menu"
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Destination URL</Label>
-            <Input value={values.destination_url} onChange={(e) => setValues({ ...values, destination_url: e.target.value })} placeholder="https://..." className="rounded-xl font-mono text-xs" />
+            <Input
+              value={values.destination_url}
+              onChange={(e) => setValues({ ...values, destination_url: e.target.value })}
+              placeholder="https://..."
+              className="rounded-xl font-mono text-xs"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Campaign</Label>
-            <Input value={values.campaign} onChange={(e) => setValues({ ...values, campaign: e.target.value })} className="rounded-xl" />
+            <Input
+              value={values.campaign}
+              onChange={(e) => setValues({ ...values, campaign: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Location</Label>
-            <Select value={values.location_id} onValueChange={(v) => setValues({ ...values, location_id: v })}>
-              <SelectTrigger className="rounded-xl"><SelectValue placeholder="Entire business" /></SelectTrigger>
+            <Select
+              value={values.location_id}
+              onValueChange={(v) => setValues({ ...values, location_id: v })}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="Entire business" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Entire business</SelectItem>
                 {locations?.map((l) => (
-                  <SelectItem key={l.id} value={l.id}>{l.name}{l.location_type ? ` · ${l.location_type}` : ""}</SelectItem>
+                  <SelectItem key={l.id} value={l.id}>
+                    {l.name}
+                    {l.location_type ? ` · ${l.location_type}` : ""}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Status</Label>
-            <Select value={values.status} onValueChange={(v) => setValues({ ...values, status: v as "active" | "paused" })}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <Select
+              value={values.status}
+              onValueChange={(v) => setValues({ ...values, status: v as "active" | "paused" })}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="paused">Paused</SelectItem>
@@ -704,8 +826,15 @@ function EditQrDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Landing behaviour</Label>
-            <Select value={values.landing_mode} onValueChange={(v) => setValues({ ...values, landing_mode: v as "landing" | "redirect" })}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <Select
+              value={values.landing_mode}
+              onValueChange={(v) =>
+                setValues({ ...values, landing_mode: v as "landing" | "redirect" })
+              }
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="landing">Show landing page</SelectItem>
                 <SelectItem value="redirect">Redirect immediately</SelectItem>
@@ -714,7 +843,12 @@ function EditQrDialog({
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Expires at (optional)</Label>
-            <Input type="datetime-local" value={values.expires_at} onChange={(e) => setValues({ ...values, expires_at: e.target.value })} className="rounded-xl" />
+            <Input
+              type="datetime-local"
+              value={values.expires_at}
+              onChange={(e) => setValues({ ...values, expires_at: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
         </div>
 
@@ -738,7 +872,9 @@ function EditQrDialog({
             <Trash2 className="mr-1 h-4 w-4" /> Delete QR
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose} className="rounded-full">Cancel</Button>
+            <Button variant="outline" onClick={onClose} className="rounded-full">
+              Cancel
+            </Button>
             <Button onClick={save} disabled={saving} className="rounded-full">
               <Save className="mr-1 h-4 w-4" /> {saving ? "Saving…" : "Save"}
             </Button>

@@ -99,8 +99,7 @@ function AdminFunnelPage() {
                   <div className="flex items-baseline justify-between gap-4 text-sm">
                     <span className="font-medium">{LABELS[step.step] ?? step.step}</span>
                     <span className="tabular-nums text-muted-foreground">
-                      {step.accounts} · {share}%
-                      {index > 0 && dropOff > 0 ? ` · −${dropOff}` : ""}
+                      {step.accounts} · {share}%{index > 0 && dropOff > 0 ? ` · −${dropOff}` : ""}
                     </span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-muted">

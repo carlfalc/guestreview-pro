@@ -46,7 +46,8 @@ class EventStore {
     const claimable =
       existing.processing_status === "received" ||
       existing.processing_status === "failed" ||
-      (existing.processing_status === "processing" && existing.last_attempt_at < this.now - STALE_MS);
+      (existing.processing_status === "processing" &&
+        existing.last_attempt_at < this.now - STALE_MS);
     if (claimable) {
       existing.processing_status = "processing";
       existing.retry_count += 1;
@@ -76,11 +77,7 @@ interface Sub {
  * Runs one delivery attempt exactly the way the route handler does and
  * returns the HTTP status Stripe would see.
  */
-function deliver(
-  store: EventStore,
-  event: { id: string; type: string },
-  work: () => void,
-): number {
+function deliver(store: EventStore, event: { id: string; type: string }, work: () => void): number {
   const claim = store.claim(event.id, event.type, "sandbox");
   if (claim === "processed") return 200;
   if (claim === "locked") return 409;
@@ -100,9 +97,21 @@ describe("webhook retry safety", () => {
   it("processes an event exactly once and no-ops on duplicate delivery", () => {
     const store = new EventStore();
     let applied = 0;
-    expect(deliver(store, event, () => { applied += 1; })).toBe(200);
-    expect(deliver(store, event, () => { applied += 1; })).toBe(200);
-    expect(deliver(store, event, () => { applied += 1; })).toBe(200);
+    expect(
+      deliver(store, event, () => {
+        applied += 1;
+      }),
+    ).toBe(200);
+    expect(
+      deliver(store, event, () => {
+        applied += 1;
+      }),
+    ).toBe(200);
+    expect(
+      deliver(store, event, () => {
+        applied += 1;
+      }),
+    ).toBe(200);
     expect(applied).toBe(1);
     expect(store.rows.get(event.id)!.processing_status).toBe("processed");
   });
@@ -144,7 +153,9 @@ describe("webhook retry safety", () => {
 
   it("increments retry_count on every attempt", () => {
     const store = new EventStore();
-    const boom = () => { throw new Error("temporary"); };
+    const boom = () => {
+      throw new Error("temporary");
+    };
     deliver(store, event, boom);
     deliver(store, event, boom);
     deliver(store, event, boom);
@@ -154,7 +165,9 @@ describe("webhook retry safety", () => {
   it("prevents two simultaneous deliveries from processing twice", () => {
     const store = new EventStore();
     let applied = 0;
-    const slow = () => { applied += 1; };
+    const slow = () => {
+      applied += 1;
+    };
 
     // Worker A claims and is still in flight.
     const claimA = store.claim(event.id, event.type, "sandbox");

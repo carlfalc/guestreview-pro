@@ -119,7 +119,9 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
         owner_id: ownerId,
         environment: env,
         stripe_customer_id:
-          typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id,
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer?.id,
         stripe_subscription_id: subscription.id,
         stripe_price_id: price?.lookup_key ?? price?.id ?? null,
         plan_key: planKey,
@@ -243,7 +245,6 @@ async function dispatch(event: { type: string; data: { object: any } }, env: Str
       }
       break;
     }
-
 
     default:
       console.log("Unhandled Stripe event:", event.type);

@@ -10,16 +10,19 @@ import type { QrDesign } from "@/lib/qr-design";
 import { mapCornerDot, mapCornerSquare } from "@/lib/qr-design";
 import QRCodeStyling from "qr-code-styling";
 import {
-  getFoldedLayout, type FoldedLayout, type PanelRect, type FoldSegment,
+  getFoldedLayout,
+  type FoldedLayout,
+  type PanelRect,
+  type FoldSegment,
 } from "@/lib/folded-layouts";
 import type { FoldedConfig, FoldedPanelContent } from "@/lib/marketing-packs";
 
 /** Production path colours (spot-style, printer-recognised). */
 export const FOLDED_COLORS = {
-  cut: "#ff00ff",       // CutContour, 100% magenta
-  fold: "#00a651",      // FoldLine, distinct green
-  score: "#f59e0b",     // ScoreLine, amber
-  glue: "#3b82f6",      // GlueArea guide (preview only)
+  cut: "#ff00ff", // CutContour, 100% magenta
+  fold: "#00a651", // FoldLine, distinct green
+  score: "#f59e0b", // ScoreLine, amber
+  glue: "#3b82f6", // GlueArea guide (preview only)
   safe: "#22c55e",
   panelLabel: "#64748b",
 };
@@ -50,7 +53,10 @@ export type FoldedRenderInput = {
   fontFamily?: string;
 };
 
-export async function renderFoldedFormatSvg(input: FoldedRenderInput, opts: FoldedRenderOpts = {}): Promise<string> {
+export async function renderFoldedFormatSvg(
+  input: FoldedRenderInput,
+  opts: FoldedRenderOpts = {},
+): Promise<string> {
   const { format, template, brand, business, qrDesign, qrData, qrLogoUrl, config } = input;
   const layout = getFoldedLayout(format);
   if (!layout) throw new Error(`No folded layout for ${format.id}`);
@@ -87,8 +93,12 @@ export async function renderFoldedFormatSvg(input: FoldedRenderInput, opts: Fold
   const targetPanel = facing !== "flat" ? layout.panels.find((p) => p.panel === facing) : null;
 
   for (const panel of panelsToDraw) {
-    const src = panel.panel === "back" ? (config.mode === "different_sides" ? config.back : config.front)
-      : config.front;
+    const src =
+      panel.panel === "back"
+        ? config.mode === "different_sides"
+          ? config.back
+          : config.front
+        : config.front;
     const panelContent = mergeWithDefaults(src);
     const bgFill = panelContent.backgroundColor ?? tpl.bg;
     const textColor = panelContent.textColor ?? tpl.fg;
@@ -100,7 +110,9 @@ export async function renderFoldedFormatSvg(input: FoldedRenderInput, opts: Fold
     const drawX = facing === "flat" ? offX + panel.x : offX;
     const drawY = facing === "flat" ? offY + panel.y : offY;
 
-    parts.push(`<g id="Artwork${cap(panel.panel)}" data-layer="Artwork${cap(panel.panel)}"><title>Artwork ${panel.label}</title>`);
+    parts.push(
+      `<g id="Artwork${cap(panel.panel)}" data-layer="Artwork${cap(panel.panel)}"><title>Artwork ${panel.label}</title>`,
+    );
 
     if (rotation !== 0) {
       const cx = drawX + panel.w / 2;
@@ -109,7 +121,9 @@ export async function renderFoldedFormatSvg(input: FoldedRenderInput, opts: Fold
     }
 
     // Panel background
-    parts.push(`<rect x="${drawX}" y="${drawY}" width="${panel.w}" height="${panel.h}" fill="${bgFill}"/>`);
+    parts.push(
+      `<rect x="${drawX}" y="${drawY}" width="${panel.w}" height="${panel.h}" fill="${bgFill}"/>`,
+    );
 
     // Background image
     if (panelContent.backgroundImage) {
@@ -121,10 +135,16 @@ export async function renderFoldedFormatSvg(input: FoldedRenderInput, opts: Fold
 
     // Panel content
     drawPanelContent(parts, panel, {
-      drawX, drawY, w: panel.w, h: panel.h,
+      drawX,
+      drawY,
+      w: panel.w,
+      h: panel.h,
       content: panelContent,
-      qrInner, isPrint: format.medium === "print",
-      textColor, accent, fontFamily,
+      qrInner,
+      isPrint: format.medium === "print",
+      textColor,
+      accent,
+      fontFamily,
       businessName: panelContent.showBusinessName ? business.name : "",
       logoUrl: panelContent.showLogo ? business.logoUrl : null,
       minQrSize: format.minQrSize,
@@ -140,7 +160,9 @@ export async function renderFoldedFormatSvg(input: FoldedRenderInput, opts: Fold
       parts.push(`<g id="SafeArea" data-layer="SafeArea"><title>SafeArea</title>`);
       for (const p of layout.panels) {
         const s = layout.safeInset;
-        parts.push(`<rect x="${offX + p.x + s}" y="${offY + p.y + s}" width="${p.w - s * 2}" height="${p.h - s * 2}" fill="none" stroke="${FOLDED_COLORS.safe}" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`);
+        parts.push(
+          `<rect x="${offX + p.x + s}" y="${offY + p.y + s}" width="${p.w - s * 2}" height="${p.h - s * 2}" fill="none" stroke="${FOLDED_COLORS.safe}" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`,
+        );
       }
       parts.push(`</g>`);
     }
@@ -196,19 +218,25 @@ export function renderFoldedProductionSvg(format: BusinessFormat): string {
   const bleed = layout.bleed;
   const totalW = layout.flatWidth + bleed * 2;
   const totalH = layout.flatHeight + bleed * 2;
-  const offX = bleed, offY = bleed;
+  const offX = bleed,
+    offY = bleed;
   const unit = format.medium === "print" ? "mm" : "px";
   const parts: string[] = [];
   parts.push(`<?xml version="1.0" encoding="UTF-8"?>`);
-  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}${unit}" height="${totalH}${unit}" viewBox="0 0 ${totalW} ${totalH}">`);
+  parts.push(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}${unit}" height="${totalH}${unit}" viewBox="0 0 ${totalW} ${totalH}">`,
+  );
   parts.push(`<g id="CutContour" data-layer="CutContour"><title>CutContour</title>`);
-  for (const s of layout.segments.filter((x) => x.type === "cut")) parts.push(segmentPath(s, offX, offY, FOLDED_COLORS.cut, undefined, 0.25));
+  for (const s of layout.segments.filter((x) => x.type === "cut"))
+    parts.push(segmentPath(s, offX, offY, FOLDED_COLORS.cut, undefined, 0.25));
   parts.push(`</g>`);
   parts.push(`<g id="FoldLine" data-layer="FoldLine"><title>FoldLine</title>`);
-  for (const s of layout.segments.filter((x) => x.type === "fold")) parts.push(segmentPath(s, offX, offY, FOLDED_COLORS.fold, "3 2"));
+  for (const s of layout.segments.filter((x) => x.type === "fold"))
+    parts.push(segmentPath(s, offX, offY, FOLDED_COLORS.fold, "3 2"));
   parts.push(`</g>`);
   parts.push(`<g id="ScoreLine" data-layer="ScoreLine"><title>ScoreLine</title>`);
-  for (const s of layout.segments.filter((x) => x.type === "score")) parts.push(segmentPath(s, offX, offY, FOLDED_COLORS.score, "1 1"));
+  for (const s of layout.segments.filter((x) => x.type === "score"))
+    parts.push(segmentPath(s, offX, offY, FOLDED_COLORS.score, "1 1"));
   parts.push(`</g>`);
   parts.push(`</svg>`);
   return parts.join("");
@@ -250,16 +278,36 @@ function drawPanelContent(
   parts: string[],
   panel: PanelRect,
   ctx: {
-    drawX: number; drawY: number; w: number; h: number;
+    drawX: number;
+    drawY: number;
+    w: number;
+    h: number;
     content: FoldedPanelContent;
     qrInner: { body: string; vb: number };
     isPrint: boolean;
-    textColor: string; accent: string; fontFamily: string;
-    businessName: string; logoUrl: string | null;
+    textColor: string;
+    accent: string;
+    fontFamily: string;
+    businessName: string;
+    logoUrl: string | null;
     minQrSize: number;
   },
 ) {
-  const { drawX, drawY, w, h, content, qrInner, isPrint, textColor, accent, fontFamily, businessName, logoUrl, minQrSize } = ctx;
+  const {
+    drawX,
+    drawY,
+    w,
+    h,
+    content,
+    qrInner,
+    isPrint,
+    textColor,
+    accent,
+    fontFamily,
+    businessName,
+    logoUrl,
+    minQrSize,
+  } = ctx;
   const align = content.textAlign ?? "center";
   const inset = isPrint ? 4 : 40;
   const cx = drawX + w / 2;
@@ -270,13 +318,17 @@ function drawPanelContent(
   if (logoUrl) {
     const logoSize = Math.min(w * 0.18, h * 0.14);
     const lx = tx - (align === "center" ? logoSize / 2 : align === "right" ? logoSize : 0);
-    parts.push(`<image href="${escapeAttr(logoUrl)}" x="${lx}" y="${drawY + h * 0.08}" width="${logoSize}" height="${logoSize}" preserveAspectRatio="xMidYMid meet"/>`);
+    parts.push(
+      `<image href="${escapeAttr(logoUrl)}" x="${lx}" y="${drawY + h * 0.08}" width="${logoSize}" height="${logoSize}" preserveAspectRatio="xMidYMid meet"/>`,
+    );
   }
 
   // Business name
   if (businessName) {
     const font = Math.max(h * 0.045, isPrint ? 4 : 24);
-    parts.push(`<text x="${tx}" y="${drawY + h * 0.24}" fill="${textColor}" font-family="${escapeAttr(fontFamily)}" font-size="${font}" font-weight="700" text-anchor="${anchor}">${escapeText(businessName)}</text>`);
+    parts.push(
+      `<text x="${tx}" y="${drawY + h * 0.24}" fill="${textColor}" font-family="${escapeAttr(fontFamily)}" font-size="${font}" font-weight="700" text-anchor="${anchor}">${escapeText(businessName)}</text>`,
+    );
   }
 
   // QR
@@ -285,7 +337,9 @@ function drawPanelContent(
     const size = Math.max(Math.min(w, h) * scale, Math.min(minQrSize, Math.min(w, h) * 0.7));
     const qrX = drawX + (w - size) / 2 + (content.qrOffsetX ?? 0) * w;
     const qrY = drawY + h * 0.34 + (content.qrOffsetY ?? 0) * h;
-    parts.push(`<g transform="translate(${qrX} ${qrY})"><svg width="${size}" height="${size}" viewBox="0 0 ${qrInner.vb} ${qrInner.vb}" xmlns="http://www.w3.org/2000/svg">${qrInner.body}</svg></g>`);
+    parts.push(
+      `<g transform="translate(${qrX} ${qrY})"><svg width="${size}" height="${size}" viewBox="0 0 ${qrInner.vb} ${qrInner.vb}" xmlns="http://www.w3.org/2000/svg">${qrInner.body}</svg></g>`,
+    );
   }
 
   // Stars
@@ -296,18 +350,27 @@ function drawPanelContent(
     const gap = starSize * 1.2;
     const totalW = gap * 5;
     const startX = cx - totalW / 2 + gap / 2;
-    for (let i = 0; i < 5; i++) parts.push(starGlyph(startX + i * gap, starsY, starSize / 2, accent));
+    for (let i = 0; i < 5; i++)
+      parts.push(starGlyph(startX + i * gap, starsY, starSize / 2, accent));
   }
 
   // Headline
   const headlineY = starsY + (showStars ? starSize * 1.8 : h * 0.04);
   const hf = Math.max(h * 0.055, isPrint ? 5 : 28);
-  if (content.headline) parts.push(`<text x="${tx}" y="${headlineY}" fill="${textColor}" font-family="${escapeAttr(fontFamily)}" font-size="${hf}" font-weight="700" text-anchor="${anchor}">${escapeText(content.headline)}</text>`);
+  if (content.headline)
+    parts.push(
+      `<text x="${tx}" y="${headlineY}" fill="${textColor}" font-family="${escapeAttr(fontFamily)}" font-size="${hf}" font-weight="700" text-anchor="${anchor}">${escapeText(content.headline)}</text>`,
+    );
   const sf = Math.max(h * 0.028, isPrint ? 2.8 : 16);
-  if (content.supportText) parts.push(`<text x="${tx}" y="${headlineY + sf * 1.8}" fill="${textColor}" fill-opacity="0.72" font-family="${escapeAttr(fontFamily)}" font-size="${sf}" text-anchor="${anchor}">${escapeText(content.supportText)}</text>`);
+  if (content.supportText)
+    parts.push(
+      `<text x="${tx}" y="${headlineY + sf * 1.8}" fill="${textColor}" fill-opacity="0.72" font-family="${escapeAttr(fontFamily)}" font-size="${sf}" text-anchor="${anchor}">${escapeText(content.supportText)}</text>`,
+    );
   if (content.showGoogleBadge !== false) {
     const gf = Math.max(h * 0.02, isPrint ? 2 : 12);
-    parts.push(`<text x="${tx}" y="${headlineY + sf * 1.8 + gf * 2}" fill="${textColor}" fill-opacity="0.55" font-family="${escapeAttr(fontFamily)}" font-size="${gf}" text-anchor="${anchor}">on Google Reviews</text>`);
+    parts.push(
+      `<text x="${tx}" y="${headlineY + sf * 1.8 + gf * 2}" fill="${textColor}" fill-opacity="0.55" font-family="${escapeAttr(fontFamily)}" font-size="${gf}" text-anchor="${anchor}">on Google Reviews</text>`,
+    );
   }
 
   // CTA pill
@@ -318,43 +381,83 @@ function drawPanelContent(
     const ch = cf * 2.4;
     const cxx = tx - (align === "center" ? cw / 2 : align === "right" ? cw : 0);
     const cy = drawY + h - ch - h * 0.06 - (content.footerText ? cf * 1.8 : 0);
-    parts.push(`<rect x="${cxx}" y="${cy}" width="${cw}" height="${ch}" rx="${ch / 2}" fill="${accent}"/>`);
-    parts.push(`<text x="${tx}" y="${cy + ch / 2 + cf * 0.35}" fill="${pickReadable(accent)}" font-family="${escapeAttr(fontFamily)}" font-size="${cf}" font-weight="700" text-anchor="${anchor}">${escapeText(content.ctaText)}</text>`);
+    parts.push(
+      `<rect x="${cxx}" y="${cy}" width="${cw}" height="${ch}" rx="${ch / 2}" fill="${accent}"/>`,
+    );
+    parts.push(
+      `<text x="${tx}" y="${cy + ch / 2 + cf * 0.35}" fill="${pickReadable(accent)}" font-family="${escapeAttr(fontFamily)}" font-size="${cf}" font-weight="700" text-anchor="${anchor}">${escapeText(content.ctaText)}</text>`,
+    );
   }
   if (content.footerText) {
     const ff = Math.max(h * 0.022, isPrint ? 2.2 : 13);
-    parts.push(`<text x="${tx}" y="${drawY + h - h * 0.03}" fill="${textColor}" fill-opacity="0.55" font-family="${escapeAttr(fontFamily)}" font-size="${ff}" text-anchor="${anchor}">${escapeText(content.footerText)}</text>`);
+    parts.push(
+      `<text x="${tx}" y="${drawY + h - h * 0.03}" fill="${textColor}" fill-opacity="0.55" font-family="${escapeAttr(fontFamily)}" font-size="${ff}" text-anchor="${anchor}">${escapeText(content.footerText)}</text>`,
+    );
   }
   void panel;
 }
 
 function mergeWithDefaults(c: FoldedPanelContent): FoldedPanelContent {
   return {
-    showQr: true, showLogo: true, showBusinessName: true,
-    showStars: true, showGoogleBadge: true,
-    qrScale: 0.45, qrOffsetX: 0, qrOffsetY: 0,
+    showQr: true,
+    showLogo: true,
+    showBusinessName: true,
+    showStars: true,
+    showGoogleBadge: true,
+    qrScale: 0.45,
+    qrOffsetX: 0,
+    qrOffsetY: 0,
     textAlign: "center",
-    backgroundColor: null, textColor: null, accentColor: null,
-    backgroundImage: null, backgroundImageOpacity: 1,
+    backgroundColor: null,
+    textColor: null,
+    accentColor: null,
+    backgroundImage: null,
+    backgroundImageOpacity: 1,
     ...c,
   };
 }
 
-function segmentPath(s: FoldSegment, offX: number, offY: number, color: string, dash?: string, width = 0.4): string {
+function segmentPath(
+  s: FoldSegment,
+  offX: number,
+  offY: number,
+  color: string,
+  dash?: string,
+  width = 0.4,
+): string {
   return `<line x1="${offX + s.x1}" y1="${offY + s.y1}" x2="${offX + s.x2}" y2="${offY + s.y2}" stroke="${color}" stroke-width="${width}"${dash ? ` stroke-dasharray="${dash}"` : ""} fill="none"/>`;
 }
 
 async function renderQrSvg(d: QrDesign, url: string, logoUrl: string | null): Promise<string> {
   const size = 512;
-  const fgColorOption = d.colorMode === "gradient"
-    ? { gradient: { type: d.gradientType, rotation: d.gradientRotation, colorStops: [{ offset: 0, color: d.fg }, { offset: 1, color: d.fg2 }] } }
-    : { color: d.fg };
+  const fgColorOption =
+    d.colorMode === "gradient"
+      ? {
+          gradient: {
+            type: d.gradientType,
+            rotation: d.gradientRotation,
+            colorStops: [
+              { offset: 0, color: d.fg },
+              { offset: 1, color: d.fg2 },
+            ],
+          },
+        }
+      : { color: d.fg };
   const bgColorOption = d.transparentBg ? { color: "rgba(0,0,0,0)" } : { color: d.bg };
   const qr = new QRCodeStyling({
-    width: size, height: size, type: "svg", data: url || " ", margin: d.margin,
+    width: size,
+    height: size,
+    type: "svg",
+    data: url || " ",
+    margin: d.margin,
     qrOptions: { errorCorrectionLevel: d.errorCorrection },
     image: d.logoEnabled && logoUrl ? logoUrl : undefined,
-    imageOptions: { hideBackgroundDots: d.logoWhitePad, imageSize: d.logoSize, margin: d.logoMargin, crossOrigin: "anonymous" },
+    imageOptions: {
+      hideBackgroundDots: d.logoWhitePad,
+      imageSize: d.logoSize,
+      margin: d.logoMargin,
+      crossOrigin: "anonymous",
+    },
     dotsOptions: { type: d.dotStyle, ...fgColorOption },
     backgroundOptions: bgColorOption,
     cornersSquareOptions: { type: mapCornerSquare(d.cornerSquareStyle), color: d.fg },
@@ -384,11 +487,21 @@ function starGlyph(cx: number, cy: number, r: number, color: string): string {
   }
   return `<polygon points="${pts.join(" ")}" fill="${color}"/>`;
 }
-function estimateTextWidth(s: string, f: number): number { return (s?.length ?? 0) * f * 0.55; }
-function escapeText(s: string): string { return s.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]!)); }
-function escapeAttr(s: string): string { return s.replace(/"/g, "&quot;"); }
-function clamp(v: number, lo: number, hi: number): number { return Math.max(lo, Math.min(hi, v)); }
-function cap(s: string): string { return s.charAt(0).toUpperCase() + s.slice(1); }
+function estimateTextWidth(s: string, f: number): number {
+  return (s?.length ?? 0) * f * 0.55;
+}
+function escapeText(s: string): string {
+  return s.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]!);
+}
+function escapeAttr(s: string): string {
+  return s.replace(/"/g, "&quot;");
+}
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+function cap(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 function pickReadable(bg: string): string {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(bg.trim());
   if (!m) return "#ffffff";

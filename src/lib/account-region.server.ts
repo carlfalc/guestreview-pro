@@ -145,10 +145,7 @@ export async function detectAccountCountry(
   };
 }
 
-export function toAccountRegionRow(
-  ownerId: string,
-  det: DetectionResult,
-) {
+export function toAccountRegionRow(ownerId: string, det: DetectionResult) {
   return {
     owner_id: ownerId,
     country_code: det.region.countryCode,
@@ -232,10 +229,7 @@ export async function applyVerifiedBillingRegion(
      *  a conflicting currency. Defaults to false — safe. */
     allowCurrencyChange?: boolean;
   },
-): Promise<
-  | { ok: true; conflict: false }
-  | { ok: false; conflict: true; reason: string }
-> {
+): Promise<{ ok: true; conflict: false } | { ok: false; conflict: true; reason: string }> {
   const cc = String(args.stripeBillingCountry ?? "").toUpperCase();
   if (!/^[A-Z]{2}$/.test(cc)) {
     return { ok: false, conflict: true, reason: "Invalid ISO country code." };
@@ -248,8 +242,7 @@ export async function applyVerifiedBillingRegion(
     .eq("owner_id", args.ownerId)
     .maybeSingle();
 
-  const currencyWouldChange =
-    existing && existing.currency_code !== region.currencyCode;
+  const currencyWouldChange = existing && existing.currency_code !== region.currencyCode;
 
   if (currencyWouldChange && args.allowCurrencyChange !== true) {
     // Flag for review — do not silently switch currency of a running account.

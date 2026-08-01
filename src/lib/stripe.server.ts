@@ -14,9 +14,7 @@ export type StripeEnv = "sandbox" | "live";
 const GATEWAY_STRIPE_BASE = "https://connector-gateway.lovable.dev/stripe";
 
 export function getConnectionApiKey(env: StripeEnv): string {
-  return env === "sandbox"
-    ? getEnv("STRIPE_SANDBOX_API_KEY")
-    : getEnv("STRIPE_LIVE_API_KEY");
+  return env === "sandbox" ? getEnv("STRIPE_SANDBOX_API_KEY") : getEnv("STRIPE_LIVE_API_KEY");
 }
 
 export function createStripeClient(env: StripeEnv): Stripe {
@@ -47,9 +45,20 @@ export function createStripeClient(env: StripeEnv): Stripe {
 export function getStripeErrorMessage(error: unknown): string {
   if (error && typeof error === "object") {
     const stripeError = error as {
-      message?: string; type?: string; code?: string; decline_code?: string;
-      param?: string; requestId?: string;
-      raw?: { message?: string; type?: string; code?: string; decline_code?: string; param?: string; requestId?: string };
+      message?: string;
+      type?: string;
+      code?: string;
+      decline_code?: string;
+      param?: string;
+      requestId?: string;
+      raw?: {
+        message?: string;
+        type?: string;
+        code?: string;
+        decline_code?: string;
+        param?: string;
+        requestId?: string;
+      };
     };
     const message = stripeError.raw?.message ?? stripeError.message;
     if (message) {
@@ -85,7 +94,12 @@ export function automaticTaxEnabled(): boolean {
 export async function verifyWebhook(
   req: Request,
   env: StripeEnv,
-): Promise<{ id: string; type: string; livemode?: boolean; data: { object: Record<string, unknown> } }> {
+): Promise<{
+  id: string;
+  type: string;
+  livemode?: boolean;
+  data: { object: Record<string, unknown> };
+}> {
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();
   const secret =

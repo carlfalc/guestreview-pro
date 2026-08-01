@@ -28,19 +28,24 @@ function isCategory(v: string): v is FeedbackCategory {
 /** Submit one piece of beta feedback. */
 export const submitBetaFeedback = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { category: string; message: string; rating?: number | null; path?: string }) => {
-    const category = String(data?.category ?? "other");
-    if (!isCategory(category)) throw new Error("Invalid category");
-    const message = String(data?.message ?? "").trim();
-    if (message.length < 3) throw new Error("Please add a little more detail.");
-    if (message.length > 4000) throw new Error("Feedback is too long.");
-    const rawRating = data?.rating;
-    const rating =
-      typeof rawRating === "number" && Number.isInteger(rawRating) && rawRating >= 1 && rawRating <= 5
-        ? rawRating
-        : null;
-    return { category, message, rating, path: sanitisePath(data?.path) };
-  })
+  .inputValidator(
+    (data: { category: string; message: string; rating?: number | null; path?: string }) => {
+      const category = String(data?.category ?? "other");
+      if (!isCategory(category)) throw new Error("Invalid category");
+      const message = String(data?.message ?? "").trim();
+      if (message.length < 3) throw new Error("Please add a little more detail.");
+      if (message.length > 4000) throw new Error("Feedback is too long.");
+      const rawRating = data?.rating;
+      const rating =
+        typeof rawRating === "number" &&
+        Number.isInteger(rawRating) &&
+        rawRating >= 1 &&
+        rawRating <= 5
+          ? rawRating
+          : null;
+      return { category, message, rating, path: sanitisePath(data?.path) };
+    },
+  )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { error } = await context.supabase.from("beta_feedback").insert({
       owner_id: context.userId,
@@ -85,7 +90,8 @@ export const adminSetFeedbackStatus = createServerFn({ method: "POST" })
     const id = String(data?.id ?? "");
     if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Invalid id");
     const status = String(data?.status ?? "");
-    if (!(FEEDBACK_STATUSES as readonly string[]).includes(status)) throw new Error("Invalid status");
+    if (!(FEEDBACK_STATUSES as readonly string[]).includes(status))
+      throw new Error("Invalid status");
     return { id, status };
   })
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
