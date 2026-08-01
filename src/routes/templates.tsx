@@ -121,6 +121,9 @@ function TemplateGallery() {
               <div className="grid h-56 place-items-center overflow-hidden rounded-2xl bg-white/5 p-4">
                 <TemplatePreview template={t} />
               </div>
+              <p className="mt-2 text-center text-[11px] uppercase tracking-wide text-white/35">
+                Sample preview — demo business, not a scannable code
+              </p>
               <h3 className="mt-4 text-base font-semibold">{t.name}</h3>
               <dl className="mt-3 space-y-1.5 text-sm text-white/55">
                 <div className="flex gap-2">
@@ -141,6 +144,11 @@ function TemplateGallery() {
                   to="/auth"
                   data-cta="signup"
                   onClick={() => {
+                    try {
+                      window.sessionStorage.setItem("grp_intent_template", t.id);
+                    } catch {
+                      /* private mode — intent is a nicety, not a requirement */
+                    }
                     track("template_viewed", { template: t.id, category: t.category });
                     track("public_cta_clicked", { cta: "create_this_design", template: t.id });
                   }}

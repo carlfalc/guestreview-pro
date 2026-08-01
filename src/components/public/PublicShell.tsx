@@ -9,6 +9,7 @@ const NAV = [
   { to: "/templates", label: "Templates" },
   { to: "/examples", label: "Examples" },
   { to: "/google-review-qr-code", label: "Google review QR" },
+  { to: "/resources", label: "Resources" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
 
@@ -143,6 +144,7 @@ function PublicFooter() {
           title="Company"
           links={[
             { to: "/industries", label: "Industries" },
+            { to: "/resources", label: "Resource centre" },
             { to: "/compare", label: "Compare approaches" },
             { to: "/contact", label: "Contact" },
           ]}
