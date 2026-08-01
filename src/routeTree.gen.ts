@@ -32,14 +32,17 @@ import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
+import { Route as AuthenticatedPlacementWizardRouteImport } from './routes/_authenticated/placement-wizard'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBusinessesRouteImport } from './routes/_authenticated/businesses'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedPlacementPlansIndexRouteImport } from './routes/_authenticated/placement-plans.index'
 import { Route as AuthenticatedMarketingPacksIndexRouteImport } from './routes/_authenticated/marketing-packs.index'
 import { Route as ResourcesCategoryCategoryRouteImport } from './routes/resources.category.$category'
 import { Route as RCodeViewRouteImport } from './routes/r.$code_.view'
 import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/qr.$id'
+import { Route as AuthenticatedPlacementPlansIdRouteImport } from './routes/_authenticated/placement-plans.$id'
 import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
 import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
@@ -164,6 +167,12 @@ const AuthenticatedPlansRoute = AuthenticatedPlansRouteImport.update({
   path: '/plans',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlacementWizardRoute =
+  AuthenticatedPlacementWizardRouteImport.update({
+    id: '/placement-wizard',
+    path: '/placement-wizard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -184,6 +193,12 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlacementPlansIndexRoute =
+  AuthenticatedPlacementPlansIndexRouteImport.update({
+    id: '/placement-plans/',
+    path: '/placement-plans/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingPacksIndexRoute =
   AuthenticatedMarketingPacksIndexRouteImport.update({
     id: '/marketing-packs/',
@@ -206,6 +221,12 @@ const AuthenticatedQrIdRoute = AuthenticatedQrIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedQrRoute,
 } as any)
+const AuthenticatedPlacementPlansIdRoute =
+  AuthenticatedPlacementPlansIdRouteImport.update({
+    id: '/placement-plans/$id',
+    path: '/placement-plans/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingPacksNewRoute =
   AuthenticatedMarketingPacksNewRouteImport.update({
     id: '/marketing-packs/new',
@@ -279,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/billing': typeof AuthenticatedBillingRoute
   '/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
@@ -295,10 +317,12 @@ export interface FileRoutesByFullPath {
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
+  '/placement-plans/$id': typeof AuthenticatedPlacementPlansIdRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
+  '/placement-plans/': typeof AuthenticatedPlacementPlansIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -320,6 +344,7 @@ export interface FileRoutesByTo {
   '/billing': typeof AuthenticatedBillingRoute
   '/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
@@ -336,10 +361,12 @@ export interface FileRoutesByTo {
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
+  '/placement-plans/$id': typeof AuthenticatedPlacementPlansIdRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
+  '/placement-plans': typeof AuthenticatedPlacementPlansIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -363,6 +390,7 @@ export interface FileRoutesById {
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -379,10 +407,12 @@ export interface FileRoutesById {
   '/_authenticated/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/_authenticated/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
+  '/_authenticated/placement-plans/$id': typeof AuthenticatedPlacementPlansIdRoute
   '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code_/view': typeof RCodeViewRoute
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
+  '/_authenticated/placement-plans/': typeof AuthenticatedPlacementPlansIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -406,6 +436,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/businesses'
     | '/dashboard'
+    | '/placement-wizard'
     | '/plans'
     | '/qr'
     | '/settings'
@@ -422,10 +453,12 @@ export interface FileRouteTypes {
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
+    | '/placement-plans/$id'
     | '/qr/$id'
     | '/r/$code/view'
     | '/resources/category/$category'
     | '/marketing-packs/'
+    | '/placement-plans/'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -447,6 +480,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/businesses'
     | '/dashboard'
+    | '/placement-wizard'
     | '/plans'
     | '/qr'
     | '/settings'
@@ -463,10 +497,12 @@ export interface FileRouteTypes {
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
+    | '/placement-plans/$id'
     | '/qr/$id'
     | '/r/$code/view'
     | '/resources/category/$category'
     | '/marketing-packs'
+    | '/placement-plans'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -489,6 +525,7 @@ export interface FileRouteTypes {
     | '/_authenticated/billing'
     | '/_authenticated/businesses'
     | '/_authenticated/dashboard'
+    | '/_authenticated/placement-wizard'
     | '/_authenticated/plans'
     | '/_authenticated/qr'
     | '/_authenticated/settings'
@@ -505,10 +542,12 @@ export interface FileRouteTypes {
     | '/_authenticated/businesses/$id'
     | '/_authenticated/marketing-packs/$id'
     | '/_authenticated/marketing-packs/new'
+    | '/_authenticated/placement-plans/$id'
     | '/_authenticated/qr/$id'
     | '/r/$code_/view'
     | '/resources/category/$category'
     | '/_authenticated/marketing-packs/'
+    | '/_authenticated/placement-plans/'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -701,6 +740,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlansRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/placement-wizard': {
+      id: '/_authenticated/placement-wizard'
+      path: '/placement-wizard'
+      fullPath: '/placement-wizard'
+      preLoaderRoute: typeof AuthenticatedPlacementWizardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -727,6 +773,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/analytics'
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/placement-plans/': {
+      id: '/_authenticated/placement-plans/'
+      path: '/placement-plans'
+      fullPath: '/placement-plans/'
+      preLoaderRoute: typeof AuthenticatedPlacementPlansIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing-packs/': {
@@ -756,6 +809,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/qr/$id'
       preLoaderRoute: typeof AuthenticatedQrIdRouteImport
       parentRoute: typeof AuthenticatedQrRoute
+    }
+    '/_authenticated/placement-plans/$id': {
+      id: '/_authenticated/placement-plans/$id'
+      path: '/placement-plans/$id'
+      fullPath: '/placement-plans/$id'
+      preLoaderRoute: typeof AuthenticatedPlacementPlansIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing-packs/new': {
       id: '/_authenticated/marketing-packs/new'
@@ -854,6 +914,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedBusinessesRoute: typeof AuthenticatedBusinessesRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPlacementWizardRoute: typeof AuthenticatedPlacementWizardRoute
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -864,7 +925,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminWebhookEventsRoute: typeof AuthenticatedAdminWebhookEventsRoute
   AuthenticatedMarketingPacksIdRoute: typeof AuthenticatedMarketingPacksIdRoute
   AuthenticatedMarketingPacksNewRoute: typeof AuthenticatedMarketingPacksNewRoute
+  AuthenticatedPlacementPlansIdRoute: typeof AuthenticatedPlacementPlansIdRoute
   AuthenticatedMarketingPacksIndexRoute: typeof AuthenticatedMarketingPacksIndexRoute
+  AuthenticatedPlacementPlansIndexRoute: typeof AuthenticatedPlacementPlansIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -872,6 +935,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedBusinessesRoute: AuthenticatedBusinessesRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPlacementWizardRoute: AuthenticatedPlacementWizardRoute,
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -882,7 +946,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminWebhookEventsRoute: AuthenticatedAdminWebhookEventsRoute,
   AuthenticatedMarketingPacksIdRoute: AuthenticatedMarketingPacksIdRoute,
   AuthenticatedMarketingPacksNewRoute: AuthenticatedMarketingPacksNewRoute,
+  AuthenticatedPlacementPlansIdRoute: AuthenticatedPlacementPlansIdRoute,
   AuthenticatedMarketingPacksIndexRoute: AuthenticatedMarketingPacksIndexRoute,
+  AuthenticatedPlacementPlansIndexRoute: AuthenticatedPlacementPlansIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -916,3 +982,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
