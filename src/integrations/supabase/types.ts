@@ -567,6 +567,176 @@ export type Database = {
           },
         ]
       }
+      placement_plan_items: {
+        Row: {
+          business_id: string
+          created_at: string
+          cta_text: string | null
+          destination_type: string
+          destination_url: string | null
+          failure_reason: string | null
+          goal: string | null
+          headline: string | null
+          id: string
+          implementation_status: string
+          location_id: string | null
+          material: string | null
+          owner_id: string
+          placement_key: string
+          placement_name: string
+          placement_plan_id: string
+          priority: string
+          qr_code_id: string | null
+          recommended_format_id: string | null
+          sort_order: number
+          support_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          cta_text?: string | null
+          destination_type?: string
+          destination_url?: string | null
+          failure_reason?: string | null
+          goal?: string | null
+          headline?: string | null
+          id?: string
+          implementation_status?: string
+          location_id?: string | null
+          material?: string | null
+          owner_id: string
+          placement_key: string
+          placement_name: string
+          placement_plan_id: string
+          priority?: string
+          qr_code_id?: string | null
+          recommended_format_id?: string | null
+          sort_order?: number
+          support_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          cta_text?: string | null
+          destination_type?: string
+          destination_url?: string | null
+          failure_reason?: string | null
+          goal?: string | null
+          headline?: string | null
+          id?: string
+          implementation_status?: string
+          location_id?: string | null
+          material?: string | null
+          owner_id?: string
+          placement_key?: string
+          placement_name?: string
+          placement_plan_id?: string
+          priority?: string
+          qr_code_id?: string | null
+          recommended_format_id?: string | null
+          sort_order?: number
+          support_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placement_plan_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placement_plan_items_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placement_plan_items_placement_plan_id_fkey"
+            columns: ["placement_plan_id"]
+            isOneToOne: false
+            referencedRelation: "placement_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placement_plan_items_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      placement_plans: {
+        Row: {
+          business_id: string
+          checklist: Json
+          created_at: string
+          generated_qr_ids: Json
+          goals: Json
+          id: string
+          industry: string
+          marketing_pack_id: string | null
+          name: string
+          owner_id: string
+          recommendation_version: number
+          selected_placements: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          checklist?: Json
+          created_at?: string
+          generated_qr_ids?: Json
+          goals?: Json
+          id?: string
+          industry: string
+          marketing_pack_id?: string | null
+          name: string
+          owner_id: string
+          recommendation_version?: number
+          selected_placements?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          checklist?: Json
+          created_at?: string
+          generated_qr_ids?: Json
+          goals?: Json
+          id?: string
+          industry?: string
+          marketing_pack_id?: string | null
+          name?: string
+          owner_id?: string
+          recommendation_version?: number
+          selected_placements?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placement_plans_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placement_plans_marketing_pack_id_fkey"
+            columns: ["marketing_pack_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_events: {
         Row: {
           created_at: string
@@ -664,6 +834,7 @@ export type Database = {
         Row: {
           archived_at: string | null
           bg_color: string | null
+          business_goal: string | null
           business_id: string
           campaign: string | null
           created_at: string
@@ -684,6 +855,9 @@ export type Database = {
           location_id: string | null
           logo_url: string | null
           owner_id: string
+          placement_key: string | null
+          placement_plan_id: string | null
+          placement_plan_item_id: string | null
           project_name: string | null
           scans_count: number
           selected_formats: Json
@@ -696,6 +870,7 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           bg_color?: string | null
+          business_goal?: string | null
           business_id: string
           campaign?: string | null
           created_at?: string
@@ -716,6 +891,9 @@ export type Database = {
           location_id?: string | null
           logo_url?: string | null
           owner_id: string
+          placement_key?: string | null
+          placement_plan_id?: string | null
+          placement_plan_item_id?: string | null
           project_name?: string | null
           scans_count?: number
           selected_formats?: Json
@@ -728,6 +906,7 @@ export type Database = {
         Update: {
           archived_at?: string | null
           bg_color?: string | null
+          business_goal?: string | null
           business_id?: string
           campaign?: string | null
           created_at?: string
@@ -748,6 +927,9 @@ export type Database = {
           location_id?: string | null
           logo_url?: string | null
           owner_id?: string
+          placement_key?: string | null
+          placement_plan_id?: string | null
+          placement_plan_item_id?: string | null
           project_name?: string | null
           scans_count?: number
           selected_formats?: Json
@@ -770,6 +952,20 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_codes_placement_plan_id_fkey"
+            columns: ["placement_plan_id"]
+            isOneToOne: false
+            referencedRelation: "placement_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_codes_placement_plan_item_id_fkey"
+            columns: ["placement_plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "placement_plan_items"
             referencedColumns: ["id"]
           },
         ]
