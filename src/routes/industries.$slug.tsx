@@ -51,7 +51,7 @@ export const Route = createFileRoute("/industries/$slug")({
 });
 
 function IndustryPage() {
-  const { industry } = Route.useLoaderData();
+  const { industry } = Route.useLoaderData() as { industry: Industry };
   usePublicPageView({ page: "industry", industry: industry.slug });
   const track = usePublicTrack();
 
@@ -208,5 +208,3 @@ function IndustryPage() {
     </PublicShell>
   );
 }
-
-export type { Industry };

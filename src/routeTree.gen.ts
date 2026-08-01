@@ -24,6 +24,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
@@ -115,6 +116,11 @@ const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
 const RCodeRoute = RCodeRouteImport.update({
   id: '/r/$code',
   path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndustriesSlugRoute = IndustriesSlugRouteImport.update({
+  id: '/industries/$slug',
+  path: '/industries/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -237,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
+  '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/industries/': typeof IndustriesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
@@ -271,6 +278,7 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
+  '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/industries': typeof IndustriesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
@@ -307,6 +315,7 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/industries/': typeof IndustriesIndexRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
@@ -343,6 +352,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/qr'
     | '/settings'
+    | '/industries/$slug'
     | '/r/$code'
     | '/industries/'
     | '/admin/funnel'
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/qr'
     | '/settings'
+    | '/industries/$slug'
     | '/r/$code'
     | '/industries'
     | '/admin/funnel'
@@ -412,6 +423,7 @@ export interface FileRouteTypes {
     | '/_authenticated/plans'
     | '/_authenticated/qr'
     | '/_authenticated/settings'
+    | '/industries/$slug'
     | '/r/$code'
     | '/industries/'
     | '/_authenticated/admin/funnel'
@@ -441,6 +453,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  IndustriesSlugRoute: typeof IndustriesSlugRoute
   RCodeRoute: typeof RCodeRoute
   IndustriesIndexRoute: typeof IndustriesIndexRoute
   RCodeViewRoute: typeof RCodeViewRoute
@@ -552,6 +565,13 @@ declare module '@tanstack/react-router' {
       path: '/r/$code'
       fullPath: '/r/$code'
       preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/industries/$slug': {
+      id: '/industries/$slug'
+      path: '/industries/$slug'
+      fullPath: '/industries/$slug'
+      preLoaderRoute: typeof IndustriesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings': {
@@ -760,6 +780,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  IndustriesSlugRoute: IndustriesSlugRoute,
   RCodeRoute: RCodeRoute,
   IndustriesIndexRoute: IndustriesIndexRoute,
   RCodeViewRoute: RCodeViewRoute,
