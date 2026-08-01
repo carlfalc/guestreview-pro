@@ -24,6 +24,7 @@ import { Route as CompareRouteImport } from './routes/compare'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
@@ -118,6 +119,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesIndexRoute = ResourcesIndexRouteImport.update({
+  id: '/resources/',
+  path: '/resources/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
@@ -260,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -297,6 +304,7 @@ export interface FileRoutesByTo {
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/industries': typeof IndustriesIndexRoute
+  '/resources': typeof ResourcesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -336,6 +344,7 @@ export interface FileRoutesById {
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/health': typeof AuthenticatedAdminHealthRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -375,6 +384,7 @@ export interface FileRouteTypes {
     | '/industries/$slug'
     | '/r/$code'
     | '/industries/'
+    | '/resources/'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -412,6 +422,7 @@ export interface FileRouteTypes {
     | '/industries/$slug'
     | '/r/$code'
     | '/industries'
+    | '/resources'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -450,6 +461,7 @@ export interface FileRouteTypes {
     | '/industries/$slug'
     | '/r/$code'
     | '/industries/'
+    | '/resources/'
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/health'
     | '/_authenticated/admin/region-requests'
@@ -482,6 +494,7 @@ export interface RootRouteChildren {
   IndustriesSlugRoute: typeof IndustriesSlugRoute
   RCodeRoute: typeof RCodeRoute
   IndustriesIndexRoute: typeof IndustriesIndexRoute
+  ResourcesIndexRoute: typeof ResourcesIndexRoute
   RCodeViewRoute: typeof RCodeViewRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -591,6 +604,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/': {
+      id: '/resources/'
+      path: '/resources'
+      fullPath: '/resources/'
+      preLoaderRoute: typeof ResourcesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/industries/': {
@@ -825,6 +845,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndustriesSlugRoute: IndustriesSlugRoute,
   RCodeRoute: RCodeRoute,
   IndustriesIndexRoute: IndustriesIndexRoute,
+  ResourcesIndexRoute: ResourcesIndexRoute,
   RCodeViewRoute: RCodeViewRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
