@@ -74,7 +74,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
   {
     slug: "how-to-get-more-google-reviews",
     title: "How to get more Google reviews without breaking the rules",
-    metaTitle: "How to Get More Google Reviews (2026 Guide) | GuestReview Pro",
+    metaTitle: "How to Get More Google Reviews | GuestReview Pro",
     metaDescription:
       "A practical, policy-safe system for collecting more Google reviews: when to ask, how to ask, what never to do and how QR placement turns intent into published reviews.",
     category: "google-reviews",
@@ -164,7 +164,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
   {
     slug: "google-review-qr-code-guide",
     title: "Google review QR codes: how they work end to end",
-    metaTitle: "Google Review QR Code Guide: Setup, Links & Tracking | GuestReview Pro",
+    metaTitle: "Google Review QR Code Guide | GuestReview Pro",
     metaDescription:
       "What a Google review QR code actually does, how to find the correct review link, why dynamic codes matter and how to track scans per placement.",
     category: "qr-marketing",
@@ -403,7 +403,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
   {
     slug: "local-seo-and-reviews",
     title: "How Google reviews affect local search rankings",
-    metaTitle: "Do Google Reviews Affect Local Rankings? | GuestReview Pro",
+    metaTitle: "Do Google Reviews Affect Local Rankings | GuestReview Pro",
     metaDescription:
       "How review count, rating, recency and review text feed Google's local ranking signals, and what a realistic review cadence looks like for a small business.",
     category: "local-seo",
@@ -478,7 +478,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
   {
     slug: "responding-to-google-reviews",
     title: "Responding to Google reviews: templates and judgement calls",
-    metaTitle: "How to Respond to Google Reviews (With Examples) | GuestReview Pro",
+    metaTitle: "How to Respond to Google Reviews | GuestReview Pro",
     metaDescription:
       "Response frameworks for positive, mixed and negative Google reviews, including what never to say publicly and how to handle reviews you believe are fake.",
     category: "reputation-ops",
