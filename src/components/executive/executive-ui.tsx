@@ -115,7 +115,7 @@ export function DimensionCard({ dimension }: { dimension: DimensionResult }) {
     <Card className="rounded-3xl border-border/70">
       <CardContent className="space-y-2 p-5">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold">{d.title}</p>
+          <p className="text-sm font-semibold">{d.label}</p>
           <Badge variant={d.state === "good" ? "default" : "secondary"}>
             {stateLabel(d.state)}
           </Badge>
@@ -124,7 +124,7 @@ export function DimensionCard({ dimension }: { dimension: DimensionResult }) {
         <p className="text-xs text-muted-foreground">{d.whyItMatters}</p>
         <p className="text-xs text-muted-foreground">{d.summary}</p>
         {d.state !== "good" && (
-          <p className="text-xs font-medium text-foreground">Next: {d.suggestedAction}</p>
+          <p className="text-xs font-medium text-foreground">Next: {d.action}</p>
         )}
       </CardContent>
     </Card>
