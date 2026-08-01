@@ -970,6 +970,50 @@ export type Database = {
           },
         ]
       }
+      recommendation_actions: {
+        Row: {
+          action: string
+          business_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          owner_id: string
+          recommendation_key: string
+          snooze_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          owner_id: string
+          recommendation_key: string
+          snooze_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          owner_id?: string
+          recommendation_key?: string
+          snooze_until?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendation_actions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       region_correction_requests: {
         Row: {
           admin_notes: string | null

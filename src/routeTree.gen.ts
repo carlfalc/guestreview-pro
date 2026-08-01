@@ -30,6 +30,7 @@ import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedPlacementWizardRouteImport } from './routes/_authenticated/placement-wizard'
@@ -156,6 +157,11 @@ const IndustriesSlugRoute = IndustriesSlugRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedQrRoute = AuthenticatedQrRouteImport.update({
@@ -310,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
+  '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
@@ -355,6 +362,7 @@ export interface FileRoutesByTo {
   '/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
+  '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
@@ -402,6 +410,7 @@ export interface FileRoutesById {
   '/_authenticated/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
@@ -449,6 +458,7 @@ export interface FileRouteTypes {
     | '/placement-wizard'
     | '/plans'
     | '/qr'
+    | '/reports'
     | '/settings'
     | '/industries/$slug'
     | '/r/$code'
@@ -494,6 +504,7 @@ export interface FileRouteTypes {
     | '/placement-wizard'
     | '/plans'
     | '/qr'
+    | '/reports'
     | '/settings'
     | '/industries/$slug'
     | '/r/$code'
@@ -540,6 +551,7 @@ export interface FileRouteTypes {
     | '/_authenticated/placement-wizard'
     | '/_authenticated/plans'
     | '/_authenticated/qr'
+    | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/industries/$slug'
     | '/r/$code'
@@ -736,6 +748,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/qr': {
@@ -937,6 +956,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlacementWizardRoute: typeof AuthenticatedPlacementWizardRoute
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminHealthRoute: typeof AuthenticatedAdminHealthRoute
@@ -959,6 +979,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlacementWizardRoute: AuthenticatedPlacementWizardRoute,
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminHealthRoute: AuthenticatedAdminHealthRoute,
@@ -1003,13 +1024,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
