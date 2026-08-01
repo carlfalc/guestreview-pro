@@ -13,4 +13,4 @@ Disallow: /r/
 Disallow: /reset-password
 Disallow: /api/
 
-Sitemap: https://www.guestreviewpro.com/sitemap.xml
+Sitemap: https://googlereviewpro.com/sitemap.xml
