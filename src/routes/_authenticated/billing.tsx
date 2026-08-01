@@ -124,7 +124,7 @@ function BillingPage() {
 
           <div className="flex flex-wrap gap-3">
             <Button asChild variant={billing.isPaid ? "outline" : "default"}>
-              <Link to="/pricing">{billing.isPaid ? "Change plan" : "Upgrade"}</Link>
+              <Link to="/plans">{billing.isPaid ? "Change plan" : "Upgrade"}</Link>
             </Button>
             {sub?.stripeCustomerId && (
               <Button variant="outline" onClick={openPortal} disabled={openingPortal}>

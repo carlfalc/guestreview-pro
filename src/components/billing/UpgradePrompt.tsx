@@ -28,7 +28,7 @@ export function UpgradePrompt({
           <span className="text-muted-foreground">{copy.body}</span>
         </p>
         <Button asChild size="sm" className="ml-auto">
-          <Link to="/pricing">See plans</Link>
+          <Link to="/plans">See plans</Link>
         </Button>
       </div>
     );
@@ -43,7 +43,7 @@ export function UpgradePrompt({
         </div>
         <p className="text-sm text-muted-foreground">{copy.body}</p>
         <Button asChild className="self-start">
-          <Link to="/pricing">Compare plans</Link>
+          <Link to="/plans">Compare plans</Link>
         </Button>
       </CardContent>
     </Card>
