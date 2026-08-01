@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 
 const NAV = [
   { to: "/features", label: "Features" },
-  { to: "/how-it-works", label: "How it works" },
+  { to: "/industries", label: "Industries" },
+  { to: "/templates", label: "Templates" },
+  { to: "/examples", label: "Examples" },
   { to: "/google-review-qr-code", label: "Google review QR" },
-  { to: "/compare", label: "Compare" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
+
 
 /**
  * Public marketing chrome. Deliberately independent of the authenticated
