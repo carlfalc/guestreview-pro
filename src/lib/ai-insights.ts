@@ -11,7 +11,7 @@ import type {
   Recommendation,
   Trend,
 } from "@/lib/executive";
-import { DIMENSION_COPY, confidenceNote } from "@/lib/executive";
+import { confidenceNote } from "@/lib/executive";
 import type { PlanTierKey } from "@/lib/entitlements";
 
 /* -------------------------------------------------------------------------- */
@@ -70,11 +70,9 @@ export interface PayloadInput {
   confidence: Confidence;
   snapshot: ExecutiveSnapshot;
   recommendations: Recommendation[];
-  placementLabel?: (key: string) => string;
 }
 
 export function buildInsightPayload(input: PayloadInput): InsightPayload {
-  const label = input.placementLabel ?? ((k: string) => k);
   const s = input.snapshot;
   const h = input.health;
 
@@ -99,12 +97,12 @@ export function buildInsightPayload(input: PayloadInput): InsightPayload {
   const deterministic: string[] = [];
   if (s.bestPlacement) {
     deterministic.push(
-      `${label(s.bestPlacement.key)} recorded the most engagement with ${s.bestPlacement.scans} scans.`,
+      `${s.bestPlacement.label} recorded the most engagement with ${s.bestPlacement.scans} scans.`,
     );
   }
   if (s.weakestPlacement) {
     deterministic.push(
-      `${label(s.weakestPlacement.key)} recorded the lowest engagement at ${s.weakestPlacement.clickRate}%.`,
+      `${s.weakestPlacement.label} recorded the lowest engagement at ${s.weakestPlacement.clickRate}%.`,
     );
   }
   if (s.rolloutCompletion !== null) {
@@ -115,7 +113,7 @@ export function buildInsightPayload(input: PayloadInput): InsightPayload {
   );
 
   const asPlacement = (r: ExecutiveSnapshot["bestPlacement"]) =>
-    r ? { label: label(r.key), scans: r.scans, clickRate: r.clickRate } : null;
+    r ? { label: r.label, scans: r.scans, clickRate: r.clickRate } : null;
 
   return {
     version: 1,
@@ -136,7 +134,7 @@ export function buildInsightPayload(input: PayloadInput): InsightPayload {
     },
     dimensions: h.dimensions.map((d) => ({
       key: d.key,
-      label: DIMENSION_COPY[d.key].label,
+      label: d.label,
       score: d.score,
       state: d.state,
       summary: d.summary,
