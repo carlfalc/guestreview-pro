@@ -22,6 +22,10 @@ export const PRODUCT_EVENTS = [
   "limit_reached",
   "onboarding_step_completed",
   "feedback_submitted",
+  "public_page_viewed",
+  "public_cta_clicked",
+  "template_viewed",
+  "lead_captured",
 ] as const;
 
 export type ProductEventName = (typeof PRODUCT_EVENTS)[number];
