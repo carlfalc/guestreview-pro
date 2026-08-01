@@ -1,0 +1,330 @@
+// Public template gallery catalogue.
+//
+// Every entry uses SAFE DEMO CONTENT ONLY — the fictional businesses below do
+// not exist and no customer data is ever rendered on a public page.
+
+import { FORMATS, type BusinessFormat, type LayoutTemplate } from "./qr-formats";
+
+export type GalleryCategory =
+  | "sticker"
+  | "table-tent"
+  | "reception"
+  | "room-card"
+  | "window-decal"
+  | "poster"
+  | "digital";
+
+export const GALLERY_CATEGORIES: { id: GalleryCategory; label: string }[] = [
+  { id: "sticker", label: "Stickers" },
+  { id: "table-tent", label: "Table tents" },
+  { id: "reception", label: "Reception signs" },
+  { id: "room-card", label: "Room cards" },
+  { id: "window-decal", label: "Window decals" },
+  { id: "poster", label: "Posters" },
+  { id: "digital", label: "Digital" },
+];
+
+export type GalleryTemplate = {
+  id: string;
+  name: string;
+  category: GalleryCategory;
+  /** Format id from qr-formats.ts — drives the real dimensions shown. */
+  formatId: string;
+  layout: LayoutTemplate;
+  /** Fictional demo business shown in the preview. */
+  demoBusiness: string;
+  headline: string;
+  subline: string;
+  material: string;
+  placement: string;
+  /** Industry slugs this template suits. */
+  industries: string[];
+  /** Free-text search keywords. */
+  keywords: string[];
+};
+
+export const GALLERY_TEMPLATES: GalleryTemplate[] = [
+  {
+    id: "counter-circle-mint",
+    name: "Counter circle",
+    category: "sticker",
+    formatId: "sticker-circle-80",
+    layout: "clean-minimal",
+    demoBusiness: "Harbour Lane Coffee",
+    headline: "Enjoyed your coffee?",
+    subline: "Scan to review us on Google",
+    material: "Matte vinyl, laminated",
+    placement: "Card terminal or counter edge",
+    industries: ["cafes", "retail", "restaurants"],
+    keywords: ["circle", "round", "counter", "till", "coffee"],
+  },
+  {
+    id: "packaging-circle-small",
+    name: "Packaging dot",
+    category: "sticker",
+    formatId: "sticker-circle-60",
+    layout: "bold-review",
+    demoBusiness: "Fern & Fold Bakery",
+    headline: "Thanks for your order",
+    subline: "Tell us how we did",
+    material: "Matte vinyl label sheet",
+    placement: "Takeaway bags, boxes and cup lids",
+    industries: ["cafes", "restaurants", "retail"],
+    keywords: ["takeaway", "packaging", "small", "label"],
+  },
+  {
+    id: "square-till-dark",
+    name: "Till square",
+    category: "sticker",
+    formatId: "sticker-sq-90",
+    layout: "premium-dark",
+    demoBusiness: "Northgate Supply Co.",
+    headline: "Two taps, one review",
+    subline: "Scan with your camera",
+    material: "Matte vinyl, laminated",
+    placement: "Beside the card machine",
+    industries: ["retail", "salons"],
+    keywords: ["square", "till", "dark", "payment"],
+  },
+  {
+    id: "mirror-square-salon",
+    name: "Mirror square",
+    category: "sticker",
+    formatId: "mirror-100",
+    layout: "brand-colour",
+    demoBusiness: "Ivy Row Studio",
+    headline: "Love the result?",
+    subline: "Leave us a Google review",
+    material: "Waterproof vinyl",
+    placement: "Styling-station mirror or bathroom mirror",
+    industries: ["salons", "hotels"],
+    keywords: ["mirror", "salon", "waterproof", "bathroom"],
+  },
+  {
+    id: "tent-a5-restaurant",
+    name: "Dining table tent",
+    category: "table-tent",
+    formatId: "tent-a5",
+    layout: "hospitality",
+    demoBusiness: "The Copper Yard",
+    headline: "How was dinner?",
+    subline: "Scan to share your visit on Google",
+    material: "350 gsm silk, scored and folded",
+    placement: "Centre of the dining table",
+    industries: ["restaurants", "cafes"],
+    keywords: ["tent", "folded", "table", "dinner", "a5"],
+  },
+  {
+    id: "tent-a6-compact",
+    name: "Compact table tent",
+    category: "table-tent",
+    formatId: "tent-a6",
+    layout: "clean-minimal",
+    demoBusiness: "Salt & Steam",
+    headline: "Two minutes, big help",
+    subline: "Review us on Google",
+    material: "350 gsm silk, scored and folded",
+    placement: "Small tables and bar counters",
+    industries: ["restaurants", "cafes"],
+    keywords: ["tent", "folded", "compact", "bar", "a6"],
+  },
+  {
+    id: "reception-a5-hotel",
+    name: "Reception sign",
+    category: "reception",
+    formatId: "reception-a5",
+    layout: "premium-dark",
+    demoBusiness: "The Ashcroft Hotel",
+    headline: "Thank you for staying",
+    subline: "Share your stay on Google",
+    material: "Foamex or acrylic sign",
+    placement: "Check-out desk, in an acrylic stand",
+    industries: ["hotels", "medical", "salons"],
+    keywords: ["reception", "desk", "sign", "check out", "a5"],
+  },
+  {
+    id: "reception-clinic-calm",
+    name: "Clinic reception card",
+    category: "reception",
+    formatId: "a6-portrait",
+    layout: "clean-minimal",
+    demoBusiness: "Ridgeway Dental",
+    headline: "Feedback welcome",
+    subline: "Scan to review the practice",
+    material: "350 gsm silk card",
+    placement: "Reception desk and waiting room",
+    industries: ["medical"],
+    keywords: ["clinic", "dental", "calm", "waiting", "discreet"],
+  },
+  {
+    id: "bedside-dl-hotel",
+    name: "Bedside room card",
+    category: "room-card",
+    formatId: "bedside-dl",
+    layout: "hospitality",
+    demoBusiness: "The Ashcroft Hotel",
+    headline: "Sleep well?",
+    subline: "A review helps the next guest choose",
+    material: "350 gsm silk card",
+    placement: "Bedside table or compendium",
+    industries: ["hotels", "motels"],
+    keywords: ["room", "bedside", "dl", "guest", "stay"],
+  },
+  {
+    id: "compendium-a6-hotel",
+    name: "Compendium insert",
+    category: "room-card",
+    formatId: "compendium-a6",
+    layout: "premium-dark",
+    demoBusiness: "Marlow House",
+    headline: "Enjoying your stay?",
+    subline: "Scan to review us on Google",
+    material: "350 gsm silk insert",
+    placement: "In-room information folder",
+    industries: ["hotels", "motels"],
+    keywords: ["compendium", "insert", "room", "folder"],
+  },
+  {
+    id: "keycard-wallet-hotel",
+    name: "Key-card wallet",
+    category: "room-card",
+    formatId: "keycard-wallet",
+    layout: "brand-colour",
+    demoBusiness: "Marlow House",
+    headline: "Room 214",
+    subline: "Scan to review your stay",
+    material: "300 gsm insert card",
+    placement: "Key-card wallet, ticket back or appointment card",
+    industries: ["hotels", "motels", "tourism", "salons"],
+    keywords: ["key card", "wallet", "ticket", "appointment"],
+  },
+  {
+    id: "window-decal-street",
+    name: "Street window decal",
+    category: "window-decal",
+    formatId: "window-decal-150",
+    layout: "window-sticker",
+    demoBusiness: "Harbour Lane Coffee",
+    headline: "Rated by our regulars",
+    subline: "Scan to add yours",
+    material: "Static-cling window vinyl",
+    placement: "Front window or entrance door",
+    industries: ["cafes", "restaurants", "retail", "motels"],
+    keywords: ["window", "decal", "street", "cling", "door"],
+  },
+  {
+    id: "window-decal-retail",
+    name: "Retail door decal",
+    category: "window-decal",
+    formatId: "window-decal-150",
+    layout: "bold-review",
+    demoBusiness: "Northgate Supply Co.",
+    headline: "Shopped with us today?",
+    subline: "Leave a Google review",
+    material: "Static-cling window vinyl",
+    placement: "Exit door at eye level",
+    industries: ["retail", "salons"],
+    keywords: ["window", "retail", "exit", "door"],
+  },
+  {
+    id: "poster-a4-lift",
+    name: "Lift and corridor poster",
+    category: "poster",
+    formatId: "poster-a4-p",
+    layout: "premium-dark",
+    demoBusiness: "The Ashcroft Hotel",
+    headline: "Tell us about your stay",
+    subline: "Scan from where you're standing",
+    material: "170 gsm silk poster",
+    placement: "Lift lobby, corridor or waiting area",
+    industries: ["hotels", "medical", "salons"],
+    keywords: ["poster", "lift", "corridor", "a4"],
+  },
+  {
+    id: "poster-a3-exit",
+    name: "Exit-point poster",
+    category: "poster",
+    formatId: "poster-a3-p",
+    layout: "bold-review",
+    demoBusiness: "Cliffside Boat Tours",
+    headline: "How was the trip?",
+    subline: "Scan before you go",
+    material: "170 gsm silk, matte laminate for outdoor use",
+    placement: "Exit route, gift shop or gate",
+    industries: ["tourism", "restaurants"],
+    keywords: ["poster", "a3", "exit", "large", "outdoor"],
+  },
+  {
+    id: "digital-web-badge",
+    name: "Website review badge",
+    category: "digital",
+    formatId: "web-review-badge",
+    layout: "clean-minimal",
+    demoBusiness: "Ridgeway Dental",
+    headline: "Review us on Google",
+    subline: "guestreviewpro.com demo",
+    material: "400 × 400 px PNG",
+    placement: "Website footer or contact page",
+    industries: ["retail", "medical", "salons"],
+    keywords: ["digital", "web", "badge", "png", "website"],
+  },
+  {
+    id: "digital-email-banner",
+    name: "Email signature banner",
+    category: "digital",
+    formatId: "email-signature",
+    layout: "brand-colour",
+    demoBusiness: "Northgate Supply Co.",
+    headline: "Happy with our service?",
+    subline: "Scan or click to review",
+    material: "600 × 200 px PNG",
+    placement: "Email signature and order confirmations",
+    industries: ["retail", "tourism", "medical"],
+    keywords: ["digital", "email", "signature", "banner"],
+  },
+  {
+    id: "digital-sms-card",
+    name: "Follow-up message card",
+    category: "digital",
+    formatId: "sms-card",
+    layout: "premium-dark",
+    demoBusiness: "Cliffside Boat Tours",
+    headline: "Thanks for joining us",
+    subline: "Two minutes to review",
+    material: "1200 × 630 px PNG",
+    placement: "SMS, WhatsApp and post-visit email",
+    industries: ["tourism", "salons", "hotels"],
+    keywords: ["digital", "sms", "message", "follow up"],
+  },
+];
+
+const FORMAT_BY_ID = new Map<string, BusinessFormat>(FORMATS.map((f) => [f.id, f]));
+
+export function templateFormat(t: GalleryTemplate): BusinessFormat {
+  const f = FORMAT_BY_ID.get(t.formatId);
+  if (!f) throw new Error(`Unknown format ${t.formatId}`);
+  return f;
+}
+
+export function templateDimensions(t: GalleryTemplate): string {
+  const f = templateFormat(t);
+  const unit = f.medium === "print" ? "mm" : "px";
+  return `${f.width} × ${f.height} ${unit}`;
+}
+
+export function searchTemplates(
+  query: string,
+  category: GalleryCategory | "all",
+  industry: string | "all",
+): GalleryTemplate[] {
+  const q = query.trim().toLowerCase();
+  return GALLERY_TEMPLATES.filter((t) => {
+    if (category !== "all" && t.category !== category) return false;
+    if (industry !== "all" && !t.industries.includes(industry)) return false;
+    if (!q) return true;
+    const haystack = [t.name, t.headline, t.subline, t.material, t.placement, ...t.keywords]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(q);
+  });
+}
