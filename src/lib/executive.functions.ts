@@ -7,6 +7,7 @@ import {
   buildEmailPreview,
   buildRecommendations,
   confidenceFor,
+  confidenceNote,
   isPeriodDays,
   rankPlacements,
   ratingFor,
@@ -136,8 +137,6 @@ export const getExecutiveOverview = createServerFn({ method: "POST" })
     const rating = ratingFor(health.overall);
     const confidence = confidenceFor(health.totals.scans, health.totals.eventDataAvailable);
     const businessInfo = facts.businessRow ?? { id: "", name: "Your business", industry: null };
-
-    const { confidenceNote } = await import("@/lib/executive");
 
     return {
       business: facts.businessRow,
