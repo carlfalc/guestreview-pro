@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as GoogleReviewQrCodeRouteImport } from './routes/google-review-qr-code'
 import { Route as FeaturesRouteImport } from './routes/features'
@@ -20,7 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
-import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated/pricing'
+import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBusinessesRouteImport } from './routes/_authenticated/businesses'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
@@ -45,6 +46,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
@@ -91,9 +97,9 @@ const AuthenticatedQrRoute = AuthenticatedQrRouteImport.update({
   path: '/qr',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
+const AuthenticatedPlansRoute = AuthenticatedPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -187,13 +193,14 @@ export interface FileRoutesByFullPath {
   '/features': typeof FeaturesRoute
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/pricing': typeof AuthenticatedPricingRoute
+  '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
@@ -215,13 +222,14 @@ export interface FileRoutesByTo {
   '/features': typeof FeaturesRoute
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/pricing': typeof AuthenticatedPricingRoute
+  '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
@@ -245,13 +253,14 @@ export interface FileRoutesById {
   '/features': typeof FeaturesRoute
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/businesses': typeof AuthenticatedBusinessesRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/pricing': typeof AuthenticatedPricingRoute
+  '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
@@ -275,13 +284,14 @@ export interface FileRouteTypes {
     | '/features'
     | '/google-review-qr-code'
     | '/how-it-works'
+    | '/pricing'
     | '/reset-password'
     | '/sitemap.xml'
     | '/analytics'
     | '/billing'
     | '/businesses'
     | '/dashboard'
-    | '/pricing'
+    | '/plans'
     | '/qr'
     | '/settings'
     | '/r/$code'
@@ -303,13 +313,14 @@ export interface FileRouteTypes {
     | '/features'
     | '/google-review-qr-code'
     | '/how-it-works'
+    | '/pricing'
     | '/reset-password'
     | '/sitemap.xml'
     | '/analytics'
     | '/billing'
     | '/businesses'
     | '/dashboard'
-    | '/pricing'
+    | '/plans'
     | '/qr'
     | '/settings'
     | '/r/$code'
@@ -332,13 +343,14 @@ export interface FileRouteTypes {
     | '/features'
     | '/google-review-qr-code'
     | '/how-it-works'
+    | '/pricing'
     | '/reset-password'
     | '/sitemap.xml'
     | '/_authenticated/analytics'
     | '/_authenticated/billing'
     | '/_authenticated/businesses'
     | '/_authenticated/dashboard'
-    | '/_authenticated/pricing'
+    | '/_authenticated/plans'
     | '/_authenticated/qr'
     | '/_authenticated/settings'
     | '/r/$code'
@@ -362,6 +374,7 @@ export interface RootRouteChildren {
   FeaturesRoute: typeof FeaturesRoute
   GoogleReviewQrCodeRoute: typeof GoogleReviewQrCodeRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   RCodeRoute: typeof RCodeRoute
@@ -383,6 +396,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-it-works': {
@@ -448,11 +468,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQrRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/pricing': {
-      id: '/_authenticated/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof AuthenticatedPricingRouteImport
+    '/_authenticated/plans': {
+      id: '/_authenticated/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof AuthenticatedPlansRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -594,7 +614,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedBusinessesRoute: typeof AuthenticatedBusinessesRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
+  AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
@@ -611,7 +631,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedBusinessesRoute: AuthenticatedBusinessesRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedPricingRoute: AuthenticatedPricingRoute,
+  AuthenticatedPlansRoute: AuthenticatedPlansRoute,
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
@@ -633,6 +653,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeaturesRoute: FeaturesRoute,
   GoogleReviewQrCodeRoute: GoogleReviewQrCodeRoute,
   HowItWorksRoute: HowItWorksRoute,
+  PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   RCodeRoute: RCodeRoute,
