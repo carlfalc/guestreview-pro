@@ -441,6 +441,36 @@ export type Database = {
           },
         ]
       }
+      marketing_leads: {
+        Row: {
+          created_at: string
+          email: string
+          guide_key: string
+          id: string
+          industry: string | null
+          marketing_consent: boolean
+          source_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          guide_key?: string
+          id?: string
+          industry?: string | null
+          marketing_consent?: boolean
+          source_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          guide_key?: string
+          id?: string
+          industry?: string | null
+          marketing_consent?: boolean
+          source_path?: string | null
+        }
+        Relationships: []
+      }
       marketing_packs: {
         Row: {
           archived_at: string | null

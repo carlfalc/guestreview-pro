@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -17,12 +18,15 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as GoogleReviewQrCodeRouteImport } from './routes/google-review-qr-code'
 import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as ExamplesRouteImport } from './routes/examples'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
@@ -45,6 +49,11 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesRoute = TemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -82,6 +91,11 @@ const FeaturesRoute = FeaturesRouteImport.update({
   path: '/features',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExamplesRoute = ExamplesRouteImport.update({
+  id: '/examples',
+  path: '/examples',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -106,9 +120,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
+  id: '/industries/',
+  path: '/industries/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RCodeRoute = RCodeRouteImport.update({
   id: '/r/$code',
   path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndustriesSlugRoute = IndustriesSlugRouteImport.update({
+  id: '/industries/$slug',
+  path: '/industries/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -216,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
+  '/examples': typeof ExamplesRoute
   '/features': typeof FeaturesRoute
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -223,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/templates': typeof TemplatesRoute
   '/terms': typeof TermsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -231,7 +257,9 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
+  '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/industries/': typeof IndustriesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -249,6 +277,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
+  '/examples': typeof ExamplesRoute
   '/features': typeof FeaturesRoute
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -256,6 +285,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/templates': typeof TemplatesRoute
   '/terms': typeof TermsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -264,7 +294,9 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
+  '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/industries': typeof IndustriesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -284,6 +316,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
+  '/examples': typeof ExamplesRoute
   '/features': typeof FeaturesRoute
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -291,6 +324,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/templates': typeof TemplatesRoute
   '/terms': typeof TermsRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
@@ -299,7 +333,9 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/industries/': typeof IndustriesIndexRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/health': typeof AuthenticatedAdminHealthRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -319,6 +355,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/compare'
     | '/contact'
+    | '/examples'
     | '/features'
     | '/google-review-qr-code'
     | '/how-it-works'
@@ -326,6 +363,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/templates'
     | '/terms'
     | '/analytics'
     | '/billing'
@@ -334,7 +372,9 @@ export interface FileRouteTypes {
     | '/plans'
     | '/qr'
     | '/settings'
+    | '/industries/$slug'
     | '/r/$code'
+    | '/industries/'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -352,6 +392,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/compare'
     | '/contact'
+    | '/examples'
     | '/features'
     | '/google-review-qr-code'
     | '/how-it-works'
@@ -359,6 +400,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/templates'
     | '/terms'
     | '/analytics'
     | '/billing'
@@ -367,7 +409,9 @@ export interface FileRouteTypes {
     | '/plans'
     | '/qr'
     | '/settings'
+    | '/industries/$slug'
     | '/r/$code'
+    | '/industries'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -386,6 +430,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/compare'
     | '/contact'
+    | '/examples'
     | '/features'
     | '/google-review-qr-code'
     | '/how-it-works'
@@ -393,6 +438,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/templates'
     | '/terms'
     | '/_authenticated/analytics'
     | '/_authenticated/billing'
@@ -401,7 +447,9 @@ export interface FileRouteTypes {
     | '/_authenticated/plans'
     | '/_authenticated/qr'
     | '/_authenticated/settings'
+    | '/industries/$slug'
     | '/r/$code'
+    | '/industries/'
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/health'
     | '/_authenticated/admin/region-requests'
@@ -421,6 +469,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CompareRoute: typeof CompareRoute
   ContactRoute: typeof ContactRoute
+  ExamplesRoute: typeof ExamplesRoute
   FeaturesRoute: typeof FeaturesRoute
   GoogleReviewQrCodeRoute: typeof GoogleReviewQrCodeRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -428,8 +477,11 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TemplatesRoute: typeof TemplatesRoute
   TermsRoute: typeof TermsRoute
+  IndustriesSlugRoute: typeof IndustriesSlugRoute
   RCodeRoute: typeof RCodeRoute
+  IndustriesIndexRoute: typeof IndustriesIndexRoute
   RCodeViewRoute: typeof RCodeViewRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -441,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates': {
+      id: '/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof TemplatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -492,6 +551,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeaturesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/examples': {
+      id: '/examples'
+      path: '/examples'
+      fullPath: '/examples'
+      preLoaderRoute: typeof ExamplesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
@@ -527,11 +593,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/industries/': {
+      id: '/industries/'
+      path: '/industries'
+      fullPath: '/industries/'
+      preLoaderRoute: typeof IndustriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$code': {
       id: '/r/$code'
       path: '/r/$code'
       fullPath: '/r/$code'
       preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/industries/$slug': {
+      id: '/industries/$slug'
+      path: '/industries/$slug'
+      fullPath: '/industries/$slug'
+      preLoaderRoute: typeof IndustriesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings': {
@@ -732,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CompareRoute: CompareRoute,
   ContactRoute: ContactRoute,
+  ExamplesRoute: ExamplesRoute,
   FeaturesRoute: FeaturesRoute,
   GoogleReviewQrCodeRoute: GoogleReviewQrCodeRoute,
   HowItWorksRoute: HowItWorksRoute,
@@ -739,8 +820,11 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TemplatesRoute: TemplatesRoute,
   TermsRoute: TermsRoute,
+  IndustriesSlugRoute: IndustriesSlugRoute,
   RCodeRoute: RCodeRoute,
+  IndustriesIndexRoute: IndustriesIndexRoute,
   RCodeViewRoute: RCodeViewRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
