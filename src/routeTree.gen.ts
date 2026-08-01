@@ -42,6 +42,7 @@ import { Route as AuthenticatedMarketingPacksIndexRouteImport } from './routes/_
 import { Route as ResourcesCategoryCategoryRouteImport } from './routes/resources.category.$category'
 import { Route as RCodeViewRouteImport } from './routes/r.$code_.view'
 import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/qr.$id'
+import { Route as AuthenticatedPlacementPlansIdRouteImport } from './routes/_authenticated/placement-plans.$id'
 import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
 import { Route as AuthenticatedMarketingPacksIdRouteImport } from './routes/_authenticated/marketing-packs.$id'
 import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authenticated/businesses.$id'
@@ -220,6 +221,12 @@ const AuthenticatedQrIdRoute = AuthenticatedQrIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedQrRoute,
 } as any)
+const AuthenticatedPlacementPlansIdRoute =
+  AuthenticatedPlacementPlansIdRouteImport.update({
+    id: '/placement-plans/$id',
+    path: '/placement-plans/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingPacksNewRoute =
   AuthenticatedMarketingPacksNewRouteImport.update({
     id: '/marketing-packs/new',
@@ -310,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
+  '/placement-plans/$id': typeof AuthenticatedPlacementPlansIdRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
@@ -353,6 +361,7 @@ export interface FileRoutesByTo {
   '/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
+  '/placement-plans/$id': typeof AuthenticatedPlacementPlansIdRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
@@ -398,6 +407,7 @@ export interface FileRoutesById {
   '/_authenticated/businesses/$id': typeof AuthenticatedBusinessesIdRoute
   '/_authenticated/marketing-packs/$id': typeof AuthenticatedMarketingPacksIdRoute
   '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
+  '/_authenticated/placement-plans/$id': typeof AuthenticatedPlacementPlansIdRoute
   '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code_/view': typeof RCodeViewRoute
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
@@ -443,6 +453,7 @@ export interface FileRouteTypes {
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
+    | '/placement-plans/$id'
     | '/qr/$id'
     | '/r/$code/view'
     | '/resources/category/$category'
@@ -486,6 +497,7 @@ export interface FileRouteTypes {
     | '/businesses/$id'
     | '/marketing-packs/$id'
     | '/marketing-packs/new'
+    | '/placement-plans/$id'
     | '/qr/$id'
     | '/r/$code/view'
     | '/resources/category/$category'
@@ -530,6 +542,7 @@ export interface FileRouteTypes {
     | '/_authenticated/businesses/$id'
     | '/_authenticated/marketing-packs/$id'
     | '/_authenticated/marketing-packs/new'
+    | '/_authenticated/placement-plans/$id'
     | '/_authenticated/qr/$id'
     | '/r/$code_/view'
     | '/resources/category/$category'
@@ -797,6 +810,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQrIdRouteImport
       parentRoute: typeof AuthenticatedQrRoute
     }
+    '/_authenticated/placement-plans/$id': {
+      id: '/_authenticated/placement-plans/$id'
+      path: '/placement-plans/$id'
+      fullPath: '/placement-plans/$id'
+      preLoaderRoute: typeof AuthenticatedPlacementPlansIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing-packs/new': {
       id: '/_authenticated/marketing-packs/new'
       path: '/marketing-packs/new'
@@ -905,6 +925,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminWebhookEventsRoute: typeof AuthenticatedAdminWebhookEventsRoute
   AuthenticatedMarketingPacksIdRoute: typeof AuthenticatedMarketingPacksIdRoute
   AuthenticatedMarketingPacksNewRoute: typeof AuthenticatedMarketingPacksNewRoute
+  AuthenticatedPlacementPlansIdRoute: typeof AuthenticatedPlacementPlansIdRoute
   AuthenticatedMarketingPacksIndexRoute: typeof AuthenticatedMarketingPacksIndexRoute
   AuthenticatedPlacementPlansIndexRoute: typeof AuthenticatedPlacementPlansIndexRoute
 }
@@ -925,6 +946,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminWebhookEventsRoute: AuthenticatedAdminWebhookEventsRoute,
   AuthenticatedMarketingPacksIdRoute: AuthenticatedMarketingPacksIdRoute,
   AuthenticatedMarketingPacksNewRoute: AuthenticatedMarketingPacksNewRoute,
+  AuthenticatedPlacementPlansIdRoute: AuthenticatedPlacementPlansIdRoute,
   AuthenticatedMarketingPacksIndexRoute: AuthenticatedMarketingPacksIndexRoute,
   AuthenticatedPlacementPlansIndexRoute: AuthenticatedPlacementPlansIndexRoute,
 }
