@@ -15,6 +15,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as GoogleReviewQrCodeRouteImport } from './routes/google-review-qr-code'
 import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -67,6 +68,11 @@ const GoogleReviewQrCodeRoute = GoogleReviewQrCodeRouteImport.update({
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompareRoute = CompareRouteImport.update({
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/compare': typeof CompareRoute
+  '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/compare': typeof CompareRoute
+  '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/compare': typeof CompareRoute
+  '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/compare'
+    | '/contact'
     | '/features'
     | '/google-review-qr-code'
     | '/how-it-works'
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/compare'
+    | '/contact'
     | '/features'
     | '/google-review-qr-code'
     | '/how-it-works'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/compare'
+    | '/contact'
     | '/features'
     | '/google-review-qr-code'
     | '/how-it-works'
@@ -384,6 +396,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CompareRoute: typeof CompareRoute
+  ContactRoute: typeof ContactRoute
   FeaturesRoute: typeof FeaturesRoute
   GoogleReviewQrCodeRoute: typeof GoogleReviewQrCodeRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -437,6 +450,13 @@ declare module '@tanstack/react-router' {
       path: '/features'
       fullPath: '/features'
       preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compare': {
@@ -671,6 +691,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CompareRoute: CompareRoute,
+  ContactRoute: ContactRoute,
   FeaturesRoute: FeaturesRoute,
   GoogleReviewQrCodeRoute: GoogleReviewQrCodeRoute,
   HowItWorksRoute: HowItWorksRoute,
