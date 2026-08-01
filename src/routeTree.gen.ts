@@ -26,6 +26,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
+import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -129,6 +130,11 @@ const ResourcesIndexRoute = ResourcesIndexRouteImport.update({
 const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
   id: '/industries/',
   path: '/industries/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesSlugRoute = ResourcesSlugRouteImport.update({
+  id: '/resources/$slug',
+  path: '/resources/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RCodeRoute = RCodeRouteImport.update({
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/resources/$slug': typeof ResourcesSlugRoute
   '/industries/': typeof IndustriesIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
@@ -303,6 +310,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/resources/$slug': typeof ResourcesSlugRoute
   '/industries': typeof IndustriesIndexRoute
   '/resources': typeof ResourcesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
@@ -343,6 +351,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/resources/$slug': typeof ResourcesSlugRoute
   '/industries/': typeof IndustriesIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
@@ -383,6 +392,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/industries/$slug'
     | '/r/$code'
+    | '/resources/$slug'
     | '/industries/'
     | '/resources/'
     | '/admin/funnel'
@@ -421,6 +431,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/industries/$slug'
     | '/r/$code'
+    | '/resources/$slug'
     | '/industries'
     | '/resources'
     | '/admin/funnel'
@@ -460,6 +471,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/industries/$slug'
     | '/r/$code'
+    | '/resources/$slug'
     | '/industries/'
     | '/resources/'
     | '/_authenticated/admin/funnel'
@@ -493,6 +505,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   IndustriesSlugRoute: typeof IndustriesSlugRoute
   RCodeRoute: typeof RCodeRoute
+  ResourcesSlugRoute: typeof ResourcesSlugRoute
   IndustriesIndexRoute: typeof IndustriesIndexRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   RCodeViewRoute: typeof RCodeViewRoute
@@ -618,6 +631,13 @@ declare module '@tanstack/react-router' {
       path: '/industries'
       fullPath: '/industries/'
       preLoaderRoute: typeof IndustriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/$slug': {
+      id: '/resources/$slug'
+      path: '/resources/$slug'
+      fullPath: '/resources/$slug'
+      preLoaderRoute: typeof ResourcesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$code': {
@@ -844,6 +864,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   IndustriesSlugRoute: IndustriesSlugRoute,
   RCodeRoute: RCodeRoute,
+  ResourcesSlugRoute: ResourcesSlugRoute,
   IndustriesIndexRoute: IndustriesIndexRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   RCodeViewRoute: RCodeViewRoute,

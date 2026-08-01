@@ -73,7 +73,7 @@ function ResourceNotFound() {
 }
 
 function ResourceArticlePage() {
-  const { article } = Route.useLoaderData();
+  const { article } = Route.useLoaderData() as { article: ResourceArticle };
   usePublicPageView({ page: "resource_article", article: article.slug });
   const track = usePublicTrack();
 
