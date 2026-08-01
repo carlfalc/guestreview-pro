@@ -177,7 +177,8 @@ export async function loadHealthFacts(
     },
     packStats: {
       total: packs.length,
-      ready: packs.filter((p) => p.status === "ready" || p.status === "complete").length,
+      ready: packs.filter((p) => p.status === "ready" || p.status === "exported").length,
     },
+
   };
 }
