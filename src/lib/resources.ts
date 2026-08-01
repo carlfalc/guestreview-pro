@@ -76,7 +76,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
     title: "How to get more Google reviews without breaking the rules",
     metaTitle: "How to Get More Google Reviews | GuestReview Pro",
     metaDescription:
-      "A practical, policy-safe system for collecting more Google reviews: when to ask, how to ask, what never to do and how QR placement turns intent into published reviews.",
+      "A practical, policy-safe system for collecting more Google reviews: when to ask, how to ask and how QR placement turns intent into published reviews.",
     category: "google-reviews",
     excerpt:
       "Most businesses do not have a review problem — they have an asking problem. Here is the timing, wording and placement that turns satisfied customers into published reviews.",
