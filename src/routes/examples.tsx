@@ -83,15 +83,28 @@ function ExamplesGallery() {
         </div>
 
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {industry.placements.map((p) => (
-            <article key={p.where} className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-              <h3 className="text-base font-semibold">{p.where}</h3>
-              <p className="mt-1 text-xs uppercase tracking-wide text-white/40">{p.format}</p>
-              <p className="mt-3 text-sm leading-relaxed text-white/60">{p.why}</p>
-            </article>
-          ))}
+          {industry.placements.map((p, index) => {
+            const suggested = packPreview[index % Math.max(packPreview.length, 1)];
+            return (
+              <article
+                key={p.where}
+                className="flex flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-6"
+              >
+                <h3 className="text-base font-semibold">{p.where}</h3>
+                <p className="mt-1 text-xs uppercase tracking-wide text-white/40">{p.format}</p>
+                <p className="mt-3 text-sm leading-relaxed text-white/60">{p.why}</p>
+                {suggested && (
+                  <p className="mt-4 border-t border-white/10 pt-4 text-xs text-white/45">
+                    Closest template: <span className="text-white/70">{suggested.name}</span> ·{" "}
+                    {templateDimensions(suggested)}
+                  </p>
+                )}
+              </article>
+            );
+          })}
         </div>
       </Section>
+
 
       <Section
         title={`${industry.packName} preview`}
