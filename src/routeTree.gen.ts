@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as GoogleReviewQrCodeRouteImport } from './routes/google-review-qr-code'
@@ -48,6 +49,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -272,6 +280,7 @@ export interface FileRoutesById {
   '/google-review-qr-code': typeof GoogleReviewQrCodeRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/google-review-qr-code'
     | '/how-it-works'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/analytics'
@@ -336,6 +346,7 @@ export interface FileRouteTypes {
     | '/google-review-qr-code'
     | '/how-it-works'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/analytics'
@@ -368,6 +379,7 @@ export interface FileRouteTypes {
     | '/google-review-qr-code'
     | '/how-it-works'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/_authenticated/analytics'
@@ -401,6 +413,7 @@ export interface RootRouteChildren {
   GoogleReviewQrCodeRoute: typeof GoogleReviewQrCodeRoute
   HowItWorksRoute: typeof HowItWorksRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   RCodeRoute: typeof RCodeRoute
@@ -422,6 +435,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -696,6 +716,7 @@ const rootRouteChildren: RootRouteChildren = {
   GoogleReviewQrCodeRoute: GoogleReviewQrCodeRoute,
   HowItWorksRoute: HowItWorksRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   RCodeRoute: RCodeRoute,
