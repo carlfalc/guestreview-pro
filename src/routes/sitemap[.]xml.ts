@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
+import { INDUSTRY_SLUGS } from "@/lib/industries";
 
-const BASE_URL = "https://www.guestreviewpro.com";
+const BASE_URL = "https://googlereviewpro.com";
 
 interface SitemapEntry {
   path: string;
@@ -15,6 +16,14 @@ const entries: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/google-review-qr-code", changefreq: "weekly", priority: "0.9" },
   { path: "/features", changefreq: "monthly", priority: "0.8" },
+  { path: "/industries", changefreq: "monthly", priority: "0.8" },
+  ...INDUSTRY_SLUGS.map((slug) => ({
+    path: `/industries/${slug}`,
+    changefreq: "monthly" as const,
+    priority: "0.8",
+  })),
+  { path: "/templates", changefreq: "weekly", priority: "0.8" },
+  { path: "/examples", changefreq: "weekly", priority: "0.7" },
   { path: "/pricing", changefreq: "monthly", priority: "0.8" },
   { path: "/how-it-works", changefreq: "monthly", priority: "0.7" },
   { path: "/compare", changefreq: "monthly", priority: "0.6" },
