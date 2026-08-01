@@ -37,6 +37,7 @@ import { Route as AuthenticatedBusinessesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedMarketingPacksIndexRouteImport } from './routes/_authenticated/marketing-packs.index'
+import { Route as ResourcesCategoryCategoryRouteImport } from './routes/resources.category.$category'
 import { Route as RCodeViewRouteImport } from './routes/r.$code_.view'
 import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/qr.$id'
 import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
@@ -188,6 +189,12 @@ const AuthenticatedMarketingPacksIndexRoute =
     path: '/marketing-packs/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ResourcesCategoryCategoryRoute =
+  ResourcesCategoryCategoryRouteImport.update({
+    id: '/resources/category/$category',
+    path: '/resources/category/$category',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const RCodeViewRoute = RCodeViewRouteImport.update({
   id: '/r/$code_/view',
   path: '/r/$code/view',
@@ -283,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
+  '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -322,6 +330,7 @@ export interface FileRoutesByTo {
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code/view': typeof RCodeViewRoute
+  '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -363,6 +372,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
   '/r/$code_/view': typeof RCodeViewRoute
+  '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/marketing-packs/new'
     | '/qr/$id'
     | '/r/$code/view'
+    | '/resources/category/$category'
     | '/marketing-packs/'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/marketing-packs/new'
     | '/qr/$id'
     | '/r/$code/view'
+    | '/resources/category/$category'
     | '/marketing-packs'
     | '/api/public/payments/webhook'
   id:
@@ -483,6 +495,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing-packs/new'
     | '/_authenticated/qr/$id'
     | '/r/$code_/view'
+    | '/resources/category/$category'
     | '/_authenticated/marketing-packs/'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -509,6 +522,7 @@ export interface RootRouteChildren {
   IndustriesIndexRoute: typeof IndustriesIndexRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   RCodeViewRoute: typeof RCodeViewRoute
+  ResourcesCategoryCategoryRoute: typeof ResourcesCategoryCategoryRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -710,6 +724,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingPacksIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/resources/category/$category': {
+      id: '/resources/category/$category'
+      path: '/resources/category/$category'
+      fullPath: '/resources/category/$category'
+      preLoaderRoute: typeof ResourcesCategoryCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$code_/view': {
       id: '/r/$code_/view'
       path: '/r/$code/view'
@@ -868,6 +889,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndustriesIndexRoute: IndustriesIndexRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   RCodeViewRoute: RCodeViewRoute,
+  ResourcesCategoryCategoryRoute: ResourcesCategoryCategoryRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
