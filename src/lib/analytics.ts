@@ -149,7 +149,7 @@ export function onboardingSteps(
       title: "Unlock unlimited QR codes",
       body: "Pro adds unlimited codes, campaign tracking, advanced analytics and no branding.",
       cta: "Compare plans",
-      to: "/pricing",
+      to: "/plans",
       done: isPaid,
     },
   ];

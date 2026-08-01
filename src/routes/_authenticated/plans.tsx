@@ -4,7 +4,7 @@ import { useAccountRegion } from "@/hooks/use-account-region";
 import { RegionalPricingTable } from "@/components/billing/RegionalPricingTable";
 import { useTrackOnce } from "@/hooks/use-analytics";
 
-export const Route = createFileRoute("/_authenticated/pricing")({
+export const Route = createFileRoute("/_authenticated/plans")({
   component: PricingPage,
   head: () => ({
     meta: [
