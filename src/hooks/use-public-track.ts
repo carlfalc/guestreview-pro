@@ -29,15 +29,17 @@ export function usePublicTrack() {
     (name: ProductEventName, properties?: EventProperties) => {
       void (async () => {
         try {
+          const attribution = getAttribution();
           await track({
             data: {
               name,
-              properties: properties ?? {},
+              properties: { ...attribution, ...(properties ?? {}) },
               path: typeof window !== "undefined" ? window.location.pathname : undefined,
               sessionId: sessionId(),
             },
           });
         } catch {
+
           /* analytics is best-effort */
         }
       })();
