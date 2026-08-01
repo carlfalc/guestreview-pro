@@ -2,6 +2,8 @@ import { createFileRoute, Outlet, redirect, Link, useRouter } from "@tanstack/re
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
+  MapPin,
+
   Building2,
   QrCode,
   LineChart,
