@@ -5,9 +5,12 @@ Disallow: /businesses
 Disallow: /qr
 Disallow: /analytics
 Disallow: /marketing-packs
+Disallow: /plans
 Disallow: /settings
 Disallow: /billing
 Disallow: /admin
+Disallow: /r/
+Disallow: /reset-password
 Disallow: /api/
 
 Sitemap: https://www.guestreviewpro.com/sitemap.xml
