@@ -702,9 +702,11 @@ export function recommendPlacements(input: RecommendationInput): PlacementRecomm
   if (ticked.length) {
     for (const key of ticked) {
       const def = placementByKey(key) ?? null;
-      candidates.push({ def, key, name: def?.name ?? key });
+      const customName = custom.find((c) => c.key === key)?.name;
+      candidates.push({ def, key, name: def?.name ?? customName ?? key });
     }
   } else {
+
     for (const def of placementsForIndustry(input.industry)) {
       if (def.excludeGoals && activeGoals.every((g) => def.excludeGoals!.includes(g))) continue;
       candidates.push({ def, key: def.key, name: def.name });
