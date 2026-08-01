@@ -34,7 +34,9 @@ const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/businesses", label: "Businesses", icon: Building2 },
   { to: "/qr", label: "QR codes", icon: QrCode },
+  { to: "/placement-plans", label: "Placement plans", icon: MapPin },
   { to: "/marketing-packs", label: "Marketing Packs", icon: Package },
+
   { to: "/analytics", label: "Analytics", icon: LineChart },
   { to: "/plans", label: "Plans", icon: Sparkles },
   { to: "/billing", label: "Billing", icon: CreditCard },
