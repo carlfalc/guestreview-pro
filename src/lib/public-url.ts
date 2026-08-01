@@ -8,10 +8,7 @@
 export const PUBLIC_SITE_URL = "https://www.guestreviewpro.com";
 
 /** Origins that are safe to use as-is when building scan links. */
-const PUBLIC_HOST_SUFFIXES = [
-  "guestreviewpro.com",
-  "googlereviewpro.com",
-];
+const PUBLIC_HOST_SUFFIXES = ["guestreviewpro.com", "googlereviewpro.com"];
 
 function isLocalHost(hostname: string) {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".local");
@@ -28,7 +25,9 @@ export function getPublicBaseUrl(): string {
   if (typeof window === "undefined") return PUBLIC_SITE_URL;
   const { hostname, origin } = window.location;
   if (isLocalHost(hostname)) return origin;
-  if (PUBLIC_HOST_SUFFIXES.some((suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`))) {
+  if (
+    PUBLIC_HOST_SUFFIXES.some((suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`))
+  ) {
     return origin;
   }
   return PUBLIC_SITE_URL;

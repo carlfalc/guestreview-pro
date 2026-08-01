@@ -64,7 +64,11 @@ function AdminWebhookEventsPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label="Failed" value={health?.failed ?? 0} tone={health?.failed ? "bad" : "ok"} />
-        <Stat label="Stuck in flight" value={health?.stuck ?? 0} tone={health?.stuck ? "warn" : "ok"} />
+        <Stat
+          label="Stuck in flight"
+          value={health?.stuck ?? 0}
+          tone={health?.stuck ? "warn" : "ok"}
+        />
         <Stat label="Processed (24h)" value={health?.processedLast24h ?? 0} tone="ok" />
       </div>
 
@@ -89,7 +93,15 @@ function AdminWebhookEventsPage() {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: number; tone: "ok" | "warn" | "bad" }) {
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "ok" | "warn" | "bad";
+}) {
   const toneClass =
     tone === "bad" ? "text-destructive" : tone === "warn" ? "text-amber-500" : "text-foreground";
   return (
@@ -139,7 +151,12 @@ function EventCard({ event }: { event: WebhookEventRow }) {
           ) : null}
         </div>
         {failed ? (
-          <Button size="sm" variant="outline" disabled={requeue.isPending} onClick={() => requeue.mutate()}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={requeue.isPending}
+            onClick={() => requeue.mutate()}
+          >
             {requeue.isPending ? "Re-queuing…" : "Re-queue for retry"}
           </Button>
         ) : null}

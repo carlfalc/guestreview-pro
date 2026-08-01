@@ -74,16 +74,19 @@ export async function getAccountPlan(
   return effectivePlan(sub);
 }
 
-export async function getAccountUsage(
-  admin: AdminClient,
-  ownerId: string,
-): Promise<UsageCounts> {
+export async function getAccountUsage(admin: AdminClient, ownerId: string): Promise<UsageCounts> {
   const client = admin as unknown as SupabaseClient;
   const [biz, qr] = await Promise.all([
-    client.from("businesses").select("id", { count: "exact", head: true })
-      .eq("owner_id", ownerId).eq("status", "active"),
-    client.from("qr_codes").select("id", { count: "exact", head: true })
-      .eq("owner_id", ownerId).eq("status", "active"),
+    client
+      .from("businesses")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", ownerId)
+      .eq("status", "active"),
+    client
+      .from("qr_codes")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", ownerId)
+      .eq("status", "active"),
   ]);
   return { businesses: biz.count ?? 0, activeQrCodes: qr.count ?? 0 };
 }
@@ -123,7 +126,11 @@ export async function canCreateBusiness(admin: AdminClient, ownerId: string, env
 export async function canCreateQrCode(admin: AdminClient, ownerId: string, env: StripeEnvName) {
   return (await getAccountEntitlements(admin, ownerId, env)).canCreateQrCode;
 }
-export async function canUseAdvancedAnalytics(admin: AdminClient, ownerId: string, env: StripeEnvName) {
+export async function canUseAdvancedAnalytics(
+  admin: AdminClient,
+  ownerId: string,
+  env: StripeEnvName,
+) {
   return entitlementsFor(await getAccountPlan(admin, ownerId, env)).advancedAnalytics;
 }
 export async function canUseCampaigns(admin: AdminClient, ownerId: string, env: StripeEnvName) {

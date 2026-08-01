@@ -56,9 +56,11 @@ function inspect(path: string, label: string, status: number, html: string): Seo
   if (!title) issues.push("Missing title");
   else if (title.length > 60) issues.push(`Title ${title.length} chars (over 60)`);
   if (!description) issues.push("Missing meta description");
-  else if (description.length > 160) issues.push(`Description ${description.length} chars (over 160)`);
+  else if (description.length > 160)
+    issues.push(`Description ${description.length} chars (over 160)`);
   if (!canonical) issues.push("Missing canonical");
-  else if (!canonical.startsWith(SITE_URL)) issues.push("Canonical is not on the production domain");
+  else if (!canonical.startsWith(SITE_URL))
+    issues.push("Canonical is not on the production domain");
   if (canonicalCount > 1) issues.push(`${canonicalCount} canonical tags`);
   if (h1Count === 0) issues.push("No H1");
   if (h1Count > 1) issues.push(`${h1Count} H1 elements`);

@@ -34,7 +34,11 @@ export function isValidDestinationUrl(raw: string | null | undefined): boolean {
   if (!v) return false;
   if (BAD_LITERALS.has(v.toLowerCase())) return false;
   const lower = v.toLowerCase();
-  if (lower.startsWith("javascript:") || lower.startsWith("data:") || lower.startsWith("vbscript:")) {
+  if (
+    lower.startsWith("javascript:") ||
+    lower.startsWith("data:") ||
+    lower.startsWith("vbscript:")
+  ) {
     return false;
   }
   // must be absolute URL — no relative paths

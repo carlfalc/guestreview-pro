@@ -39,7 +39,10 @@ describe("webhook signature verification", () => {
 
   it("accepts a correctly signed payload", async () => {
     const t = Math.floor(Date.now() / 1000);
-    const event = await verifyWebhook(req(body, `t=${t},v1=${await sign(body, SECRET, t)}`), "sandbox");
+    const event = await verifyWebhook(
+      req(body, `t=${t},v1=${await sign(body, SECRET, t)}`),
+      "sandbox",
+    );
     expect(event.id).toBe("evt_1");
   });
 
@@ -61,7 +64,11 @@ describe("webhook signature verification", () => {
   it("rejects a tampered body", async () => {
     const t = Math.floor(Date.now() / 1000);
     const sig = await sign(body, SECRET, t);
-    const tampered = JSON.stringify({ id: "evt_1", type: "invoice.paid", data: { object: { hacked: true } } });
+    const tampered = JSON.stringify({
+      id: "evt_1",
+      type: "invoice.paid",
+      data: { object: { hacked: true } },
+    });
     await expect(verifyWebhook(req(tampered, `t=${t},v1=${sig}`), "sandbox")).rejects.toThrow(
       /Invalid webhook signature/,
     );
@@ -77,7 +84,9 @@ describe("webhook signature verification", () => {
 
   it("rejects a missing or malformed signature header", async () => {
     await expect(verifyWebhook(req(body, ""), "sandbox")).rejects.toThrow(/Missing signature/);
-    await expect(verifyWebhook(req(body, "garbage"), "sandbox")).rejects.toThrow(/Invalid signature format/);
+    await expect(verifyWebhook(req(body, "garbage"), "sandbox")).rejects.toThrow(
+      /Invalid signature format/,
+    );
   });
 
   it("accepts one valid v1 among several (secret rotation)", async () => {

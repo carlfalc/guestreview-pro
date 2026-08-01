@@ -23,9 +23,15 @@ export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
     meta: [
       { title: "Billing & subscription — GuestReview Pro" },
-      { name: "description", content: "Manage your GuestReview Pro subscription, plan and invoices." },
+      {
+        name: "description",
+        content: "Manage your GuestReview Pro subscription, plan and invoices.",
+      },
       { property: "og:title", content: "Billing & subscription — GuestReview Pro" },
-      { property: "og:description", content: "Manage your GuestReview Pro subscription, plan and invoices." },
+      {
+        property: "og:description",
+        content: "Manage your GuestReview Pro subscription, plan and invoices.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -92,8 +98,6 @@ function BillingPage() {
       <UpgradeChecklist />
       <PlanPrioritiesCard />
 
-
-
       <Card className="rounded-3xl border-border/70">
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center gap-3">
@@ -109,16 +113,19 @@ function BillingPage() {
               {formatRegionalPrice(sub.amountMinor, sub.currencyCode as never, undefined)} per{" "}
               {sub.billingInterval === "annual" ? "year" : "month"}
               {sub.currentPeriodEnd && (
-                <> · {sub.cancelAtPeriodEnd ? "access until" : "renews"}{" "}
-                {new Date(sub.currentPeriodEnd).toLocaleDateString()}</>
+                <>
+                  {" "}
+                  · {sub.cancelAtPeriodEnd ? "access until" : "renews"}{" "}
+                  {new Date(sub.currentPeriodEnd).toLocaleDateString()}
+                </>
               )}
             </p>
           )}
 
           {sub?.status === "past_due" && (
             <p className="rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
-              Your last payment failed. Update your card in the billing portal to keep your plan active — we
-              retry automatically in the meantime.
+              Your last payment failed. Update your card in the billing portal to keep your plan
+              active — we retry automatically in the meantime.
             </p>
           )}
 
@@ -134,7 +141,8 @@ function BillingPage() {
           </div>
           {sub?.stripeCustomerId && (
             <p className="text-xs text-muted-foreground">
-              The billing portal opens in a new tab — card updates, cancellations and receipts live there.
+              The billing portal opens in a new tab — card updates, cancellations and receipts live
+              there.
             </p>
           )}
         </CardContent>
@@ -199,7 +207,10 @@ function UsageRow({ label, used, max }: { label: string; used: number; max: numb
     <div className="rounded-2xl border border-border/60 px-4 py-3">
       <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-1 text-lg font-semibold">
-        {used} <span className="text-sm font-normal text-muted-foreground">of {unlimited ? "unlimited" : max}</span>
+        {used}{" "}
+        <span className="text-sm font-normal text-muted-foreground">
+          of {unlimited ? "unlimited" : max}
+        </span>
       </p>
     </div>
   );

@@ -24,7 +24,10 @@ export const Route = createFileRoute("/resources/category/$category")({
     const category = loaderData?.category;
     if (!category) {
       return {
-        meta: [{ title: "Topic not found — GuestReview Pro" }, { name: "robots", content: "noindex" }],
+        meta: [
+          { title: "Topic not found — GuestReview Pro" },
+          { name: "robots", content: "noindex" },
+        ],
       };
     }
     const articles = resourcesInCategory(category.id as ResourceCategory);
@@ -83,7 +86,11 @@ function ResourceCategoryPage() {
 
   return (
     <PublicShell>
-      <PageHero eyebrow="Resource centre" title={`${category.label} guides`} subtitle={category.blurb} />
+      <PageHero
+        eyebrow="Resource centre"
+        title={`${category.label} guides`}
+        subtitle={category.blurb}
+      />
 
       <Section title="Guides in this topic">
         <div className="grid gap-5 sm:grid-cols-2">
@@ -92,10 +99,14 @@ function ResourceCategoryPage() {
               key={a.slug}
               to="/resources/$slug"
               params={{ slug: a.slug }}
-              onClick={() => track("resource_cta_clicked", { cta: "category_article", article: a.slug })}
+              onClick={() =>
+                track("resource_cta_clicked", { cta: "category_article", article: a.slug })
+              }
               className="group rounded-3xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-white/25 hover:bg-white/[0.06]"
             >
-              <p className="text-xs uppercase tracking-wide text-white/40">{a.readMinutes} min read</p>
+              <p className="text-xs uppercase tracking-wide text-white/40">
+                {a.readMinutes} min read
+              </p>
               <p className="mt-3 text-lg font-semibold">{a.title}</p>
               <p className="mt-2 text-sm leading-relaxed text-white/55">{a.excerpt}</p>
               <span className="mt-4 inline-flex items-center gap-1.5 text-sm text-white/70 group-hover:text-white">

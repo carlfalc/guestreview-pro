@@ -106,7 +106,9 @@ function AnalyticsPage() {
           <AlertCircle className="h-8 w-8 text-destructive" />
           <h2 className="text-lg font-semibold">Couldn't load analytics</h2>
           <p className="text-sm text-muted-foreground">Please try again in a moment.</p>
-          <Button onClick={() => refetch()} className="rounded-full">Retry</Button>
+          <Button onClick={() => refetch()} className="rounded-full">
+            Retry
+          </Button>
         </CardContent>
       </Card>
     );
@@ -131,9 +133,12 @@ function AnalyticsPage() {
   const destinationCtr = uniqueQrSessions > 0 ? (destinationClicks / uniqueQrSessions) * 100 : 0;
   const reviewScans = events.filter((e) => e.destination_type === "google_review");
   const reviewClicks = reviewScans.filter((e) => e.clicked_review).length;
-  const reviewQrSessions = new Set(
-    reviewScans.filter((e) => e.session_id && e.qr_code_id).map((e) => `${e.session_id}::${e.qr_code_id}`),
-  ).size || reviewScans.length;
+  const reviewQrSessions =
+    new Set(
+      reviewScans
+        .filter((e) => e.session_id && e.qr_code_id)
+        .map((e) => `${e.session_id}::${e.qr_code_id}`),
+    ).size || reviewScans.length;
   const reviewCtr = reviewQrSessions > 0 ? (reviewClicks / reviewQrSessions) * 100 : 0;
 
   // Chart: scans over time
@@ -194,25 +199,27 @@ function AnalyticsPage() {
   ];
 
   function exportCsv() {
-    const rows = [[
-      "scan_date",
-      "qr_code_id",
-      "qr_label",
-      "business",
-      "location",
-      "campaign",
-      "destination_type",
-      "device",
-      "browser",
-      "os",
-      "timezone",
-      "country_code",
-      "session_id",
-      "destination_clicked",
-      "destination_clicked_at",
-      "clicked_review",
-      "clicked_review_at",
-    ]];
+    const rows = [
+      [
+        "scan_date",
+        "qr_code_id",
+        "qr_label",
+        "business",
+        "location",
+        "campaign",
+        "destination_type",
+        "device",
+        "browser",
+        "os",
+        "timezone",
+        "country_code",
+        "session_id",
+        "destination_clicked",
+        "destination_clicked_at",
+        "clicked_review",
+        "clicked_review_at",
+      ],
+    ];
     events.forEach((e) => {
       const q = e.qr_code_id ? qrById.get(e.qr_code_id) : null;
       rows.push([
@@ -256,9 +263,12 @@ function AnalyticsPage() {
             <BarChart3 className="h-10 w-10 text-muted-foreground" />
             <h2 className="text-lg font-semibold">No scans yet</h2>
             <p className="max-w-sm text-sm text-muted-foreground">
-              Once guests scan your QR codes, you'll see scan volume, device breakdowns and review-click metrics here.
+              Once guests scan your QR codes, you'll see scan volume, device breakdowns and
+              review-click metrics here.
             </p>
-            <Button variant="outline" onClick={() => refetch()} className="rounded-full">Refresh</Button>
+            <Button variant="outline" onClick={() => refetch()} className="rounded-full">
+              Refresh
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -267,32 +277,55 @@ function AnalyticsPage() {
 
   return (
     <div className="animate-fade-in-up space-y-8">
-      {!billing.entitlements.advancedAnalytics && <UpgradePrompt reason="advancedAnalytics" compact />}
+      {!billing.entitlements.advancedAnalytics && (
+        <UpgradePrompt reason="advancedAnalytics" compact />
+      )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Analytics</h1>
           <p className="mt-1 text-sm text-muted-foreground">Last 30 days of scan activity.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="rounded-full bg-card">
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="rounded-full bg-card"
+          >
             Refresh
           </Button>
           <Button onClick={exportCsv} variant="outline" className="rounded-full bg-card">
-            <Download className="mr-1 h-4 w-4"/> Export CSV
+            <Download className="mr-1 h-4 w-4" /> Export CSV
           </Button>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Total scans" value={totalScans.toLocaleString()} />
-        <MetricCard label="Unique QR scan sessions" value={uniqueQrSessions.toLocaleString()} sublabel="session × QR pairs" />
-        <MetricCard label="Unique visitors" value={uniqueVisitors.toLocaleString()} sublabel="distinct sessions" />
+        <MetricCard
+          label="Unique QR scan sessions"
+          value={uniqueQrSessions.toLocaleString()}
+          sublabel="session × QR pairs"
+        />
+        <MetricCard
+          label="Unique visitors"
+          value={uniqueVisitors.toLocaleString()}
+          sublabel="distinct sessions"
+        />
         <MetricCard label="Destination clicks" value={destinationClicks.toLocaleString()} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Destination click-through rate" value={`${destinationCtr.toFixed(1)}%`} sublabel="clicks ÷ unique QR sessions" />
+        <MetricCard
+          label="Destination click-through rate"
+          value={`${destinationCtr.toFixed(1)}%`}
+          sublabel="clicks ÷ unique QR sessions"
+        />
         <MetricCard label="Google review clicks" value={reviewClicks.toLocaleString()} />
-        <MetricCard label="Google review click-through rate" value={`${reviewCtr.toFixed(1)}%`} sublabel="review clicks ÷ review QR sessions" />
+        <MetricCard
+          label="Google review click-through rate"
+          value={`${reviewCtr.toFixed(1)}%`}
+          sublabel="review clicks ÷ review QR sessions"
+        />
       </div>
 
       <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
@@ -303,15 +336,38 @@ function AnalyticsPage() {
               <AreaChart data={chart}>
                 <defs>
                   <linearGradient id="a1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.4}/>
-                    <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0}/>
+                    <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)"/>
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} interval={4} axisLine={false} tickLine={false}/>
-                <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={30}/>
-                <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }}/>
-                <Area type="monotone" dataKey="scans" stroke="var(--color-chart-1)" strokeWidth={2} fill="url(#a1)"/>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="var(--color-border)"
+                />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11 }}
+                  interval={4}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--color-card)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="scans"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={2}
+                  fill="url(#a1)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -325,10 +381,26 @@ function AnalyticsPage() {
             <div className="mt-4 h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={devices} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2}>
-                    {devices.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]}/>)}
+                  <Pie
+                    data={devices}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={45}
+                    outerRadius={80}
+                    paddingAngle={2}
+                  >
+                    {devices.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
                   </Pie>
-                  <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }}/>
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--color-card)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -345,11 +417,34 @@ function AnalyticsPage() {
               <div className="mt-4 h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={topQr} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)"/>
-                    <XAxis type="number" tick={{ fontSize: 11 }} axisLine={false} tickLine={false}/>
-                    <YAxis type="category" dataKey="label" width={140} tick={{ fontSize: 11 }} axisLine={false} tickLine={false}/>
-                    <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }}/>
-                    <Bar dataKey="scans" fill="var(--color-chart-1)" radius={[0, 6, 6, 0]}/>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      horizontal={false}
+                      stroke="var(--color-border)"
+                    />
+                    <XAxis
+                      type="number"
+                      tick={{ fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="label"
+                      width={140}
+                      tick={{ fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--color-card)",
+                        border: "1px solid var(--color-border)",
+                        borderRadius: 12,
+                        fontSize: 12,
+                      }}
+                    />
+                    <Bar dataKey="scans" fill="var(--color-chart-1)" radius={[0, 6, 6, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -361,7 +456,10 @@ function AnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <ListCard title="Top locations" rows={topLoc} />
         <ListCard title="Top campaigns" rows={topCampaign} />
-        <ListCard title="Timezone regions" rows={timezones.map((t) => ({ label: t.name, scans: t.value }))} />
+        <ListCard
+          title="Timezone regions"
+          rows={timezones.map((t) => ({ label: t.name, scans: t.value }))}
+        />
       </div>
 
       <Card className="rounded-3xl border-border/70">
@@ -374,7 +472,15 @@ function AnalyticsPage() {
   );
 }
 
-function MetricCard({ label, value, sublabel }: { label: string; value: string; sublabel?: string }) {
+function MetricCard({
+  label,
+  value,
+  sublabel,
+}: {
+  label: string;
+  value: string;
+  sublabel?: string;
+}) {
   return (
     <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
       <CardContent className="p-5">
@@ -392,7 +498,10 @@ function Legend({ items, colors }: { items: { name: string; value: number }[]; c
       {items.map((d, i) => (
         <div key={d.name} className="flex justify-between">
           <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full" style={{ background: colors[i % colors.length] }}/>
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ background: colors[i % colors.length] }}
+            />
             {d.name}
           </span>
           <span className="text-muted-foreground">{d.value}</span>
@@ -424,7 +533,10 @@ function ListRows({ rows }: { rows: { label: string; scans: number }[] }) {
             <span className="text-muted-foreground">{r.scans}</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-accent">
-            <div className="h-full rounded-full" style={{ width: `${(r.scans / max) * 100}%`, background: "var(--color-chart-1)" }} />
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${(r.scans / max) * 100}%`, background: "var(--color-chart-1)" }}
+            />
           </div>
         </div>
       ))}

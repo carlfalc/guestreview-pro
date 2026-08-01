@@ -114,7 +114,9 @@ describe("destination safety", () => {
   });
 
   it("accepts https URLs", () => {
-    expect(isValidDestinationUrl("https://search.google.com/local/writereview?placeid=x")).toBe(true);
+    expect(isValidDestinationUrl("https://search.google.com/local/writereview?placeid=x")).toBe(
+      true,
+    );
   });
 
   it("rejects plain http off localhost", () => {

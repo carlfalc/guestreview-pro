@@ -14,32 +14,43 @@ import type { PlanKey, RegionalPlanPrice } from "./regional-pricing";
 export const getAuthorisedPlanForUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { planKey: PlanKey }) => {
-    const allowed: PlanKey[] = ["free", "pro_monthly", "pro_annual", "business_monthly", "business_annual"];
+    const allowed: PlanKey[] = [
+      "free",
+      "pro_monthly",
+      "pro_annual",
+      "business_monthly",
+      "business_annual",
+    ];
     if (!data?.planKey || !allowed.includes(data.planKey)) {
       throw new Error("Unknown plan.");
     }
     return { planKey: data.planKey };
   })
-  .handler(async ({ data, context }): Promise<{
-    planKey: PlanKey;
-    pricingRegion: string;
-    price: RegionalPlanPrice;
-  }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { getRegionalPlanPrices } = await import("./regional-pricing");
-    const { data: region, error } = await supabaseAdmin
-      .from("account_regions")
-      .select("pricing_region")
-      .eq("owner_id", context.userId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!region) throw new Error("Account region has not been resolved yet.");
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{
+      planKey: PlanKey;
+      pricingRegion: string;
+      price: RegionalPlanPrice;
+    }> => {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { getRegionalPlanPrices } = await import("./regional-pricing");
+      const { data: region, error } = await supabaseAdmin
+        .from("account_regions")
+        .select("pricing_region")
+        .eq("owner_id", context.userId)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!region) throw new Error("Account region has not been resolved yet.");
 
-    const prices = getRegionalPlanPrices(region.pricing_region as never);
-    const price = prices[data.planKey];
-    if (!price) throw new Error("Plan is not available in this region.");
-    return { planKey: data.planKey, pricingRegion: region.pricing_region, price };
-  });
+      const prices = getRegionalPlanPrices(region.pricing_region as never);
+      const price = prices[data.planKey];
+      if (!price) throw new Error("Plan is not available in this region.");
+      return { planKey: data.planKey, pricingRegion: region.pricing_region, price };
+    },
+  );
 
 /** True iff the current authenticated user has the 'admin' role. */
 export const currentUserIsAdmin = createServerFn({ method: "GET" })
@@ -58,7 +69,8 @@ export const adminListRegionCorrectionRequests = createServerFn({ method: "GET" 
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId, _role: "admin",
+      _user_id: context.userId,
+      _role: "admin",
     });
     if (!isAdmin) throw new Error("Forbidden");
 
@@ -76,12 +88,14 @@ export const adminListRegionCorrectionRequests = createServerFn({ method: "GET" 
 export const adminApproveRegionCorrection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { requestId: string; adminNotes?: string }) => {
-    if (!data?.requestId || typeof data.requestId !== "string") throw new Error("requestId required.");
+    if (!data?.requestId || typeof data.requestId !== "string")
+      throw new Error("requestId required.");
     return { requestId: data.requestId, adminNotes: data.adminNotes?.trim() || null };
   })
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId, _role: "admin",
+      _user_id: context.userId,
+      _role: "admin",
     });
     if (!isAdmin) throw new Error("Forbidden");
 
@@ -131,11 +145,13 @@ export const adminApproveRegionCorrection = createServerFn({ method: "POST" })
 
     await writeRegionAudit(supabaseAdmin, {
       ownerId: req.owner_id,
-      previous: existing ? {
-        country_code: existing.country_code,
-        currency_code: existing.currency_code,
-        pricing_region: existing.pricing_region,
-      } : null,
+      previous: existing
+        ? {
+            country_code: existing.country_code,
+            currency_code: existing.currency_code,
+            pricing_region: existing.pricing_region,
+          }
+        : null,
       next: {
         country_code: row.country_code,
         currency_code: row.currency_code,
@@ -169,7 +185,8 @@ export const adminRejectRegionCorrection = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId, _role: "admin",
+      _user_id: context.userId,
+      _role: "admin",
     });
     if (!isAdmin) throw new Error("Forbidden");
 

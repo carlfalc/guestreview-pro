@@ -4,7 +4,6 @@ import { trackPublicEvent } from "@/lib/public-marketing.functions";
 import { getAttribution } from "@/lib/attribution";
 import type { EventProperties, ProductEventName } from "@/lib/analytics";
 
-
 const SESSION_KEY = "grp_session_id";
 
 function sessionId(): string | undefined {
@@ -39,7 +38,6 @@ export function usePublicTrack() {
             },
           });
         } catch {
-
           /* analytics is best-effort */
         }
       })();

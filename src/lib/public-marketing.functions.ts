@@ -11,15 +11,17 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /** Anonymous product event from a public marketing page. No owner, no PII. */
 export const trackPublicEvent = createServerFn({ method: "POST" })
-  .inputValidator((data: { name: string; properties?: unknown; path?: string; sessionId?: string }) => ({
-    name: String(data?.name ?? ""),
-    properties: sanitiseEventProperties(data?.properties),
-    path: sanitisePath(data?.path),
-    sessionId:
-      typeof data?.sessionId === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(data.sessionId)
-        ? data.sessionId
-        : null,
-  }))
+  .inputValidator(
+    (data: { name: string; properties?: unknown; path?: string; sessionId?: string }) => ({
+      name: String(data?.name ?? ""),
+      properties: sanitiseEventProperties(data?.properties),
+      path: sanitisePath(data?.path),
+      sessionId:
+        typeof data?.sessionId === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(data.sessionId)
+          ? data.sessionId
+          : null,
+    }),
+  )
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     if (!isProductEvent(data.name)) return { ok: false };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -43,7 +45,9 @@ export type LeadResult = { ok: true } | { ok: false; message: string };
 export const submitMarketingLead = createServerFn({ method: "POST" })
   .inputValidator(
     (data: { email: string; industry?: string; sourcePath?: string; consent: boolean }) => {
-      const email = String(data?.email ?? "").trim().toLowerCase();
+      const email = String(data?.email ?? "")
+        .trim()
+        .toLowerCase();
       if (!EMAIL.test(email) || email.length > 254) throw new Error("Enter a valid email address.");
       if (data?.consent !== true) throw new Error("Please tick the consent box to continue.");
       const industry =

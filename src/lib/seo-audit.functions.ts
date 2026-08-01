@@ -8,23 +8,27 @@ import type { SeoRouteCheck, SeoSupportCheck } from "./seo-audit.server";
 
 export const adminSeoAudit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{
-    origin: string;
-    routes: SeoRouteCheck[];
-    support: SeoSupportCheck;
-  }> => {
-    const { data: isAdmin, error } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (error) throw new Error(error.message);
-    if (isAdmin !== true) throw new Error("Forbidden");
+  .handler(
+    async ({
+      context,
+    }): Promise<{
+      origin: string;
+      routes: SeoRouteCheck[];
+      support: SeoSupportCheck;
+    }> => {
+      const { data: isAdmin, error } = await context.supabase.rpc("has_role", {
+        _user_id: context.userId,
+        _role: "admin",
+      });
+      if (error) throw new Error(error.message);
+      if (isAdmin !== true) throw new Error("Forbidden");
 
-    const origin = new URL(getRequest().url).origin;
-    const { auditPublicRoutes, auditSupportFiles } = await import("./seo-audit.server");
-    const [routes, support] = await Promise.all([
-      auditPublicRoutes(origin),
-      auditSupportFiles(origin),
-    ]);
-    return { origin, routes, support };
-  });
+      const origin = new URL(getRequest().url).origin;
+      const { auditPublicRoutes, auditSupportFiles } = await import("./seo-audit.server");
+      const [routes, support] = await Promise.all([
+        auditPublicRoutes(origin),
+        auditSupportFiles(origin),
+      ]);
+      return { origin, routes, support };
+    },
+  );

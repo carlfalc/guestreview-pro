@@ -51,9 +51,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Something went wrong
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Try refreshing or head back home.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Try refreshing or head back home.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -97,9 +95,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "GuestReview Pro — Grow Google reviews with beautiful QR" },
-      { name: "twitter:description", content: "GuestReview Pro helps hotels, restaurants and retail brands generate branded Google review QR codes, track scans by location, and delight every guest." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/82792254-d575-4af6-9da7-7519f2c8ea17/id-preview-824daf51--b8a4e22d-5aa2-4598-b96c-d47d9b7e94e5.lovable.app-1783945846691.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/82792254-d575-4af6-9da7-7519f2c8ea17/id-preview-824daf51--b8a4e22d-5aa2-4598-b96c-d47d9b7e94e5.lovable.app-1783945846691.png" },
+      {
+        name: "twitter:description",
+        content:
+          "GuestReview Pro helps hotels, restaurants and retail brands generate branded Google review QR codes, track scans by location, and delight every guest.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/82792254-d575-4af6-9da7-7519f2c8ea17/id-preview-824daf51--b8a4e22d-5aa2-4598-b96c-d47d9b7e94e5.lovable.app-1783945846691.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/82792254-d575-4af6-9da7-7519f2c8ea17/id-preview-824daf51--b8a4e22d-5aa2-4598-b96c-d47d9b7e94e5.lovable.app-1783945846691.png",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -132,19 +142,13 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (
-        event !== "SIGNED_IN" &&
-        event !== "SIGNED_OUT" &&
-        event !== "USER_UPDATED"
-      )
-        return;
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });

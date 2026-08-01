@@ -108,7 +108,9 @@ function Businesses() {
     if (!userData.user) return;
     const gru = form.google_review_url.trim();
     if (gru && !isValidDestinationUrl(gru)) {
-      return toast.error("Enter a valid https:// Google review URL (e.g. https://g.page/r/.../review)");
+      return toast.error(
+        "Enter a valid https:// Google review URL (e.g. https://g.page/r/.../review)",
+      );
     }
     const payload = { ...form, google_review_url: gru || null };
     const { error } = await supabase.from("businesses").insert({
@@ -150,46 +152,94 @@ function Businesses() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2 space-y-1.5">
                   <Label>Business name</Label>
-                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Blue Bottle Coffee" className="rounded-xl"/>
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Blue Bottle Coffee"
+                    className="rounded-xl"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Industry</Label>
-                  <Select value={form.industry} onValueChange={(v) => setForm({ ...form, industry: v })}>
-                    <SelectTrigger className="rounded-xl"><SelectValue/></SelectTrigger>
+                  <Select
+                    value={form.industry}
+                    onValueChange={(v) => setForm({ ...form, industry: v })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      {INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                      {INDUSTRIES.map((i) => (
+                        <SelectItem key={i} value={i}>
+                          {i}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Brand color</Label>
-                  <Input type="color" value={form.brand_primary} onChange={(e) => setForm({ ...form, brand_primary: e.target.value })} className="h-10 rounded-xl p-1"/>
+                  <Input
+                    type="color"
+                    value={form.brand_primary}
+                    onChange={(e) => setForm({ ...form, brand_primary: e.target.value })}
+                    className="h-10 rounded-xl p-1"
+                  />
                 </div>
                 <div className="col-span-2 space-y-1.5">
                   <Label>Google review URL</Label>
-                  <Input value={form.google_review_url} onChange={(e) => setForm({ ...form, google_review_url: e.target.value })} placeholder="https://g.page/r/..." className="rounded-xl"/>
+                  <Input
+                    value={form.google_review_url}
+                    onChange={(e) => setForm({ ...form, google_review_url: e.target.value })}
+                    placeholder="https://g.page/r/..."
+                    className="rounded-xl"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Website</Label>
-                  <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} className="rounded-xl"/>
+                  <Input
+                    value={form.website}
+                    onChange={(e) => setForm({ ...form, website: e.target.value })}
+                    className="rounded-xl"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Phone</Label>
-                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="rounded-xl"/>
+                  <Input
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="rounded-xl"
+                  />
                 </div>
                 <div className="col-span-2 space-y-1.5">
                   <Label>Address</Label>
-                  <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="rounded-xl"/>
+                  <Input
+                    value={form.address}
+                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                    className="rounded-xl"
+                  />
                 </div>
                 <div className="col-span-2 space-y-1.5">
                   <Label>Welcome message</Label>
-                  <Textarea value={form.welcome_message} onChange={(e) => setForm({ ...form, welcome_message: e.target.value })} className="rounded-xl"/>
+                  <Textarea
+                    value={form.welcome_message}
+                    onChange={(e) => setForm({ ...form, welcome_message: e.target.value })}
+                    className="rounded-xl"
+                  />
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateOpen(false)} className="rounded-full">Cancel</Button>
-              <Button onClick={create} disabled={!form.name} className="rounded-full">Create</Button>
+              <Button
+                variant="outline"
+                onClick={() => setCreateOpen(false)}
+                className="rounded-full"
+              >
+                Cancel
+              </Button>
+              <Button onClick={create} disabled={!form.name} className="rounded-full">
+                Create
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -229,9 +279,14 @@ function Businesses() {
                       </Badge>
                     </div>
                     <h3 className="text-lg font-semibold tracking-tight">{b.name}</h3>
-                    <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{b.address || "No address"}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                      {b.address || "No address"}
+                    </p>
                     <div className="mt-5 flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><MapPin className="h-3 w-3"/>{locCount} locations</span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {locCount} locations
+                      </span>
                       <span>{qrCount} QR codes</span>
                     </div>
                   </CardContent>
@@ -244,14 +299,15 @@ function Businesses() {
         <Card className="rounded-3xl border-dashed">
           <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <div className="grid h-14 w-14 place-items-center rounded-2xl bg-accent text-primary">
-              <Building2 className="h-6 w-6"/>
+              <Building2 className="h-6 w-6" />
             </div>
             <h3 className="text-lg font-semibold">Add your first business</h3>
             <p className="max-w-sm text-sm text-muted-foreground">
-              Create a business to generate branded QR codes, guest landing pages and per-location analytics.
+              Create a business to generate branded QR codes, guest landing pages and per-location
+              analytics.
             </p>
             <Button className="mt-2 rounded-full" onClick={() => setCreateOpen(true)}>
-              <Plus className="mr-1 h-4 w-4"/> New business
+              <Plus className="mr-1 h-4 w-4" /> New business
             </Button>
           </CardContent>
         </Card>
@@ -268,7 +324,8 @@ function Businesses() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this business?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently removes the business along with its locations, QR codes and marketing packs. This cannot be undone.
+              This permanently removes the business along with its locations, QR codes and marketing
+              packs. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -335,14 +392,13 @@ function EditBusinessDialog({
     if (!business) return;
     const gru = values.google_review_url.trim();
     if (gru && !isValidDestinationUrl(gru)) {
-      return toast.error("Enter a valid https:// Google review URL (e.g. https://g.page/r/.../review)");
+      return toast.error(
+        "Enter a valid https:// Google review URL (e.g. https://g.page/r/.../review)",
+      );
     }
     setSaving(true);
     const payload = { ...values, google_review_url: gru || null };
-    const { error } = await supabase
-      .from("businesses")
-      .update(payload)
-      .eq("id", business.id);
+    const { error } = await supabase.from("businesses").update(payload).eq("id", business.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Saved");
@@ -369,40 +425,79 @@ function EditBusinessDialog({
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2 space-y-1.5">
             <Label>Business name</Label>
-            <Input value={values.name} onChange={(e) => setValues({ ...values, name: e.target.value })} className="rounded-xl"/>
+            <Input
+              value={values.name}
+              onChange={(e) => setValues({ ...values, name: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Industry</Label>
-            <Select value={values.industry} onValueChange={(v) => setValues({ ...values, industry: v })}>
-              <SelectTrigger className="rounded-xl"><SelectValue/></SelectTrigger>
+            <Select
+              value={values.industry}
+              onValueChange={(v) => setValues({ ...values, industry: v })}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                {INDUSTRIES.map((i) => (
+                  <SelectItem key={i} value={i}>
+                    {i}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Brand color</Label>
-            <Input type="color" value={values.brand_primary} onChange={(e) => setValues({ ...values, brand_primary: e.target.value })} className="h-10 rounded-xl p-1"/>
+            <Input
+              type="color"
+              value={values.brand_primary}
+              onChange={(e) => setValues({ ...values, brand_primary: e.target.value })}
+              className="h-10 rounded-xl p-1"
+            />
           </div>
           <div className="col-span-2 space-y-1.5">
             <Label>Google review URL</Label>
-            <Input value={values.google_review_url} onChange={(e) => setValues({ ...values, google_review_url: e.target.value })} placeholder="https://g.page/r/..." className="rounded-xl"/>
+            <Input
+              value={values.google_review_url}
+              onChange={(e) => setValues({ ...values, google_review_url: e.target.value })}
+              placeholder="https://g.page/r/..."
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Website</Label>
-            <Input value={values.website} onChange={(e) => setValues({ ...values, website: e.target.value })} className="rounded-xl"/>
+            <Input
+              value={values.website}
+              onChange={(e) => setValues({ ...values, website: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Phone</Label>
-            <Input value={values.phone} onChange={(e) => setValues({ ...values, phone: e.target.value })} className="rounded-xl"/>
+            <Input
+              value={values.phone}
+              onChange={(e) => setValues({ ...values, phone: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
           <div className="col-span-2 space-y-1.5">
             <Label>Address</Label>
-            <Input value={values.address} onChange={(e) => setValues({ ...values, address: e.target.value })} className="rounded-xl"/>
+            <Input
+              value={values.address}
+              onChange={(e) => setValues({ ...values, address: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
           <div className="col-span-2 space-y-1.5">
             <Label>Welcome message</Label>
-            <Textarea value={values.welcome_message} onChange={(e) => setValues({ ...values, welcome_message: e.target.value })} className="rounded-xl"/>
+            <Textarea
+              value={values.welcome_message}
+              onChange={(e) => setValues({ ...values, welcome_message: e.target.value })}
+              className="rounded-xl"
+            />
           </div>
         </div>
 
@@ -426,7 +521,9 @@ function EditBusinessDialog({
             <Trash2 className="mr-1 h-4 w-4" /> Delete business
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose} className="rounded-full">Cancel</Button>
+            <Button variant="outline" onClick={onClose} className="rounded-full">
+              Cancel
+            </Button>
             <Button onClick={save} disabled={saving || !values.name} className="rounded-full">
               <Save className="mr-1 h-4 w-4" /> {saving ? "Saving…" : "Save"}
             </Button>

@@ -5,7 +5,13 @@ import type { BorderStyle, StarStyle, BgImageFit, FormatContent } from "@/lib/fo
 export type PackType = "essential" | "restaurant" | "hotel" | "retail" | "custom";
 export type PackStatus = "draft" | "ready" | "exported" | "archived";
 
-export const PACK_TYPES: { id: PackType; label: string; description: string; formatIds: string[]; layout: LayoutTemplate }[] = [
+export const PACK_TYPES: {
+  id: PackType;
+  label: string;
+  description: string;
+  formatIds: string[];
+  layout: LayoutTemplate;
+}[] = [
   {
     id: "essential",
     label: "Essential Pack",
@@ -30,8 +36,17 @@ export const PACK_TYPES: { id: PackType; label: string; description: string; for
   {
     id: "retail",
     label: "Retail Pack",
-    description: "Circular & square stickers, counter card, window decal, poster, email signature and web badge.",
-    formatIds: ["sticker-circle-80", "sticker-sq-90", "a6-portrait", "window-decal-150", "poster-a4-p", "email-signature", "web-review-badge"],
+    description:
+      "Circular & square stickers, counter card, window decal, poster, email signature and web badge.",
+    formatIds: [
+      "sticker-circle-80",
+      "sticker-sq-90",
+      "a6-portrait",
+      "window-decal-150",
+      "poster-a4-p",
+      "email-signature",
+      "web-review-badge",
+    ],
     layout: "brand-colour",
   },
   {
@@ -50,21 +65,33 @@ export function packTypeById(id: string): (typeof PACK_TYPES)[number] | undefine
 export function defaultProjectName(packType: PackType, businessName: string): string {
   const bn = businessName || "Untitled";
   switch (packType) {
-    case "essential": return `${bn} Essential Review Pack`;
-    case "restaurant": return `${bn} Restaurant Review Pack`;
-    case "hotel": return `${bn} Hotel Guest Review Pack`;
-    case "retail": return `${bn} Retail Review Pack`;
-    default: return `${bn} Marketing Pack`;
+    case "essential":
+      return `${bn} Essential Review Pack`;
+    case "restaurant":
+      return `${bn} Restaurant Review Pack`;
+    case "hotel":
+      return `${bn} Hotel Guest Review Pack`;
+    case "retail":
+      return `${bn} Retail Review Pack`;
+    default:
+      return `${bn} Marketing Pack`;
   }
 }
 
-export type PackStatusMeta = { label: string; badge: "default" | "secondary" | "outline" | "destructive" };
+export type PackStatusMeta = {
+  label: string;
+  badge: "default" | "secondary" | "outline" | "destructive";
+};
 export function statusMeta(s: PackStatus): PackStatusMeta {
   switch (s) {
-    case "ready": return { label: "Ready to print", badge: "default" };
-    case "exported": return { label: "Exported", badge: "secondary" };
-    case "archived": return { label: "Archived", badge: "outline" };
-    default: return { label: "Draft", badge: "outline" };
+    case "ready":
+      return { label: "Ready to print", badge: "default" };
+    case "exported":
+      return { label: "Exported", badge: "secondary" };
+    case "archived":
+      return { label: "Archived", badge: "outline" };
+    default:
+      return { label: "Draft", badge: "outline" };
   }
 }
 
@@ -75,7 +102,11 @@ export const FONT_OPTIONS: { id: string; label: string; stack: string }[] = [
   { id: "helvetica", label: "Helvetica", stack: "Helvetica, Arial, sans-serif" },
   { id: "georgia", label: "Georgia", stack: "Georgia, 'Times New Roman', serif" },
   { id: "times", label: "Times New Roman", stack: "'Times New Roman', Times, serif" },
-  { id: "montserrat", label: "Montserrat", stack: "Montserrat, 'Helvetica Neue', Arial, sans-serif" },
+  {
+    id: "montserrat",
+    label: "Montserrat",
+    stack: "Montserrat, 'Helvetica Neue', Arial, sans-serif",
+  },
   { id: "playfair", label: "Playfair Display", stack: "'Playfair Display', Georgia, serif" },
 ];
 
@@ -249,7 +280,8 @@ export function buildFormatContent(
   const showBusinessName = override?.showBusinessName ?? base.showBusinessName;
   const showLogo = override?.logoVisible ?? base.showLogo;
   const baseStars = base.showStars && override?.hideStars !== true;
-  const starStyle: StarStyle = override?.starStyle ?? global.starStyle ?? (baseStars ? "solid" : "hidden");
+  const starStyle: StarStyle =
+    override?.starStyle ?? global.starStyle ?? (baseStars ? "solid" : "hidden");
   const showStars = baseStars && starStyle !== "hidden";
   const showGoogleBadge = override?.showGoogleBadge ?? base.showGoogleBadge;
   const fontId = override?.fontFamily ?? global.fontFamily;
@@ -287,7 +319,14 @@ export function buildFormatContent(
 
 /** Formats considered "similar" for copying overrides: same shape, category, and orientation. */
 export function similarFormats(target: BusinessFormat, all: BusinessFormat[]): BusinessFormat[] {
-  const orient = (f: BusinessFormat) => (f.width === f.height ? "square" : f.width > f.height ? "landscape" : "portrait");
+  const orient = (f: BusinessFormat) =>
+    f.width === f.height ? "square" : f.width > f.height ? "landscape" : "portrait";
   const t = orient(target);
-  return all.filter((f) => f.id !== target.id && f.shape === target.shape && f.category === target.category && orient(f) === t);
+  return all.filter(
+    (f) =>
+      f.id !== target.id &&
+      f.shape === target.shape &&
+      f.category === target.category &&
+      orient(f) === t,
+  );
 }

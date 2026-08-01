@@ -100,7 +100,11 @@ function TemplateGallery() {
                 All
               </FilterChip>
               {INDUSTRIES.map((i) => (
-                <FilterChip key={i.slug} active={industry === i.slug} onClick={() => setIndustry(i.slug)}>
+                <FilterChip
+                  key={i.slug}
+                  active={industry === i.slug}
+                  onClick={() => setIndustry(i.slug)}
+                >
                   {i.shortName}
                 </FilterChip>
               ))}

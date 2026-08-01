@@ -10,7 +10,12 @@ export const Route = createFileRoute("/privacy")({
       title: "Privacy Policy — GuestReview Pro",
       description:
         "How GuestReview Pro collects, uses and protects data: account information, QR scan events, payment handling, retention and your rights.",
-      jsonLd: [jsonLd.breadcrumbs([{ name: "Home", path: "/" }, { name: "Privacy", path: "/privacy" }])],
+      jsonLd: [
+        jsonLd.breadcrumbs([
+          { name: "Home", path: "/" },
+          { name: "Privacy", path: "/privacy" },
+        ]),
+      ],
     }),
 });
 
@@ -99,14 +104,20 @@ const SECTIONS: Array<{ h: string; p: string[] }> = [
 function PrivacyPage() {
   return (
     <PublicShell>
-      <PageHero eyebrow="Legal" title="Privacy Policy" subtitle="What we collect, why we collect it and what we never do with it." />
+      <PageHero
+        eyebrow="Legal"
+        title="Privacy Policy"
+        subtitle="What we collect, why we collect it and what we never do with it."
+      />
       <Section>
         <div className="max-w-3xl space-y-8">
           {SECTIONS.map((s) => (
             <section key={s.h}>
               <h2 className="text-xl font-semibold tracking-tight">{s.h}</h2>
               {s.p.map((para) => (
-                <p key={para.slice(0, 40)} className="mt-3 text-sm leading-relaxed text-white/60">{para}</p>
+                <p key={para.slice(0, 40)} className="mt-3 text-sm leading-relaxed text-white/60">
+                  {para}
+                </p>
               ))}
             </section>
           ))}

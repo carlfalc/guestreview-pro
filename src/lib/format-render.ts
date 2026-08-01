@@ -114,16 +114,18 @@ export async function renderFormatSvg(
   const inset = format.medium === "print" ? 4 : 40;
   const qrOffsetXPx = (content.qrOffsetX ?? 0) * format.width;
   const qrOffsetYPx = (content.qrOffsetY ?? 0) * displayH;
-  const qrX = (qrAlign === "left" ? offX + inset
-    : qrAlign === "right" ? offX + format.width - qrSize - inset
-    : offX + (format.width - qrSize) / 2) + qrOffsetXPx;
+  const qrX =
+    (qrAlign === "left"
+      ? offX + inset
+      : qrAlign === "right"
+        ? offX + format.width - qrSize - inset
+        : offX + (format.width - qrSize) / 2) + qrOffsetXPx;
   const qrY = offY + displayH * (isCircular ? 0.32 : 0.28) + qrOffsetYPx;
 
   const cx = offX + format.width / 2;
   const textAlign = content.textAlign ?? "center";
-  const tx = textAlign === "left" ? offX + inset
-    : textAlign === "right" ? offX + format.width - inset
-    : cx;
+  const tx =
+    textAlign === "left" ? offX + inset : textAlign === "right" ? offX + format.width - inset : cx;
   const textAnchor = textAlign === "left" ? "start" : textAlign === "right" ? "end" : "middle";
 
   const parts: string[] = [];
@@ -136,9 +138,13 @@ export async function renderFormatSvg(
   const clipId = `clip-${Math.random().toString(36).slice(2, 8)}`;
   parts.push(`<defs>`);
   if (isCircular) {
-    parts.push(`<clipPath id="${clipId}"><circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}"/></clipPath>`);
+    parts.push(
+      `<clipPath id="${clipId}"><circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}"/></clipPath>`,
+    );
   } else {
-    parts.push(`<clipPath id="${clipId}"><rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" rx="${cornerR}" ry="${cornerR}"/></clipPath>`);
+    parts.push(
+      `<clipPath id="${clipId}"><rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" rx="${cornerR}" ry="${cornerR}"/></clipPath>`,
+    );
   }
   parts.push(`</defs>`);
 
@@ -146,14 +152,22 @@ export async function renderFormatSvg(
   if (isCircular) {
     // Outside-of-trim area
     if (!transparentOutside) {
-      parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${includeBleed ? bgFill : "none"}"/>`);
+      parts.push(
+        `<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${includeBleed ? bgFill : "none"}"/>`,
+      );
     }
-    parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}" fill="${bgFill}"/>`);
+    parts.push(
+      `<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2}" fill="${bgFill}"/>`,
+    );
   } else {
     parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="${bgFill}"/>`);
-    parts.push(`<rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" rx="${cornerR}" ry="${cornerR}" fill="${bgFill}"/>`);
+    parts.push(
+      `<rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" rx="${cornerR}" ry="${cornerR}" fill="${bgFill}"/>`,
+    );
     if (isFolded) {
-      parts.push(`<line x1="${offX}" y1="${offY + format.height / 2}" x2="${offX + format.width}" y2="${offY + format.height / 2}" stroke="${textColor}" stroke-opacity="0.15" stroke-dasharray="2 2"/>`);
+      parts.push(
+        `<line x1="${offX}" y1="${offY + format.height / 2}" x2="${offX + format.width}" y2="${offY + format.height / 2}" stroke="${textColor}" stroke-opacity="0.15" stroke-dasharray="2 2"/>`,
+      );
     }
   }
 
@@ -169,26 +183,49 @@ export async function renderFormatSvg(
   // Border
   const borderStyle = content.borderStyle ?? "none";
   if (borderStyle !== "none") {
-    const strokeW = borderStyle === "thin" ? (format.medium === "print" ? 0.4 : 3)
-      : borderStyle === "thick" ? (format.medium === "print" ? 1.2 : 8)
-      : borderStyle === "keyline-white" || borderStyle === "keyline-black" ? (format.medium === "print" ? 0.3 : 2)
-      : (format.medium === "print" ? 0.8 : 5); // double, ring-brand
-    const strokeColor = borderStyle === "keyline-white" ? "#ffffff"
-      : borderStyle === "keyline-black" ? "#000000"
-      : accent;
+    const strokeW =
+      borderStyle === "thin"
+        ? format.medium === "print"
+          ? 0.4
+          : 3
+        : borderStyle === "thick"
+          ? format.medium === "print"
+            ? 1.2
+            : 8
+          : borderStyle === "keyline-white" || borderStyle === "keyline-black"
+            ? format.medium === "print"
+              ? 0.3
+              : 2
+            : format.medium === "print"
+              ? 0.8
+              : 5; // double, ring-brand
+    const strokeColor =
+      borderStyle === "keyline-white"
+        ? "#ffffff"
+        : borderStyle === "keyline-black"
+          ? "#000000"
+          : accent;
     if (isCircular) {
-      parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
+      parts.push(
+        `<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`,
+      );
       if (borderStyle === "double") {
         const gap = strokeW * 2.2;
-        parts.push(`<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2 - gap}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
+        parts.push(
+          `<circle cx="${cx}" cy="${offY + format.height / 2}" r="${format.width / 2 - strokeW / 2 - gap}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`,
+        );
       }
     } else {
       const rx = Math.max(0, cornerR - strokeW / 2);
-      parts.push(`<rect x="${offX + strokeW / 2}" y="${offY + strokeW / 2}" width="${format.width - strokeW}" height="${format.height - strokeW}" rx="${rx}" ry="${rx}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
+      parts.push(
+        `<rect x="${offX + strokeW / 2}" y="${offY + strokeW / 2}" width="${format.width - strokeW}" height="${format.height - strokeW}" rx="${rx}" ry="${rx}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`,
+      );
       if (borderStyle === "double") {
         const gap = strokeW * 2.2;
         const rx2 = Math.max(0, rx - gap);
-        parts.push(`<rect x="${offX + strokeW / 2 + gap}" y="${offY + strokeW / 2 + gap}" width="${format.width - strokeW - gap * 2}" height="${format.height - strokeW - gap * 2}" rx="${rx2}" ry="${rx2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`);
+        parts.push(
+          `<rect x="${offX + strokeW / 2 + gap}" y="${offY + strokeW / 2 + gap}" width="${format.width - strokeW - gap * 2}" height="${format.height - strokeW - gap * 2}" rx="${rx2}" ry="${rx2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeW}"/>`,
+        );
       }
     }
   }
@@ -197,7 +234,8 @@ export async function renderFormatSvg(
   if (content.logoUrl) {
     const logoScale = clamp(content.logoSize ?? 0.18, 0.08, 0.35);
     const logoSize = Math.min(format.width * logoScale, displayH * (logoScale * 0.78));
-    const logoX = tx - (textAlign === "center" ? logoSize / 2 : textAlign === "right" ? logoSize : 0);
+    const logoX =
+      tx - (textAlign === "center" ? logoSize / 2 : textAlign === "right" ? logoSize : 0);
     const logoY = offY + displayH * 0.08;
     parts.push(
       `<image href="${escapeAttr(content.logoUrl)}" x="${logoX}" y="${logoY}" width="${logoSize}" height="${logoSize}" preserveAspectRatio="xMidYMid meet"/>`,
@@ -300,31 +338,47 @@ export async function renderFormatSvg(
   const cy = offY + format.height / 2;
   if (showTrim) {
     if (isCircular) {
-      parts.push(`<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`);
+      parts.push(
+        `<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`,
+      );
     } else {
-      parts.push(`<rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`);
+      parts.push(
+        `<rect x="${offX}" y="${offY}" width="${format.width}" height="${format.height}" fill="none" stroke="#3b82f6" stroke-width="0.4" stroke-dasharray="2 2"/>`,
+      );
     }
   }
   if (showBleedGuide && includeBleed && format.bleed > 0) {
     if (isCircular) {
-      parts.push(`<circle cx="${cx}" cy="${cy}" r="${format.width / 2 + format.bleed}" fill="none" stroke="#ef4444" stroke-width="0.4" stroke-dasharray="1 1"/>`);
+      parts.push(
+        `<circle cx="${cx}" cy="${cy}" r="${format.width / 2 + format.bleed}" fill="none" stroke="#ef4444" stroke-width="0.4" stroke-dasharray="1 1"/>`,
+      );
     } else {
-      parts.push(`<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="none" stroke="#ef4444" stroke-width="0.4" stroke-dasharray="1 1"/>`);
+      parts.push(
+        `<rect x="0" y="0" width="${totalW}" height="${totalH}" fill="none" stroke="#ef4444" stroke-width="0.4" stroke-dasharray="1 1"/>`,
+      );
     }
   }
   if (showSafe) {
     if (isCircular) {
-      parts.push(`<circle cx="${cx}" cy="${cy}" r="${circularSafeRadius(format.width)}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`);
+      parts.push(
+        `<circle cx="${cx}" cy="${cy}" r="${circularSafeRadius(format.width)}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`,
+      );
     } else {
       const sa = safeArea(format);
-      parts.push(`<rect x="${offX + (format.width - sa.w) / 2}" y="${offY + (format.height - sa.h) / 2}" width="${sa.w}" height="${sa.h}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`);
+      parts.push(
+        `<rect x="${offX + (format.width - sa.w) / 2}" y="${offY + (format.height - sa.h) / 2}" width="${sa.w}" height="${sa.h}" fill="none" stroke="#22c55e" stroke-width="0.3" stroke-dasharray="1.5 1.5"/>`,
+      );
     }
   }
 
   // Dieline (CutContour) — only for circular formats, as vector on its own layer/group.
   if ((opts.showDieline || opts.includeDieline) && isCircular) {
-    parts.push(`<g id="${DIELINE_LAYER}" data-layer="${DIELINE_LAYER}"><title>${DIELINE_LAYER}</title>`);
-    parts.push(`<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="${DIELINE_COLOR}" stroke-width="0.25"/>`);
+    parts.push(
+      `<g id="${DIELINE_LAYER}" data-layer="${DIELINE_LAYER}"><title>${DIELINE_LAYER}</title>`,
+    );
+    parts.push(
+      `<circle cx="${cx}" cy="${cy}" r="${format.width / 2}" fill="none" stroke="${DIELINE_COLOR}" stroke-width="0.25"/>`,
+    );
     parts.push(`</g>`);
   }
 
@@ -378,9 +432,19 @@ function extractQrInnerSvg(qrSvg: string): { body: string; vb: number } {
 
 async function renderQrSvg(d: QrDesign, url: string, logoUrl: string | null): Promise<string> {
   const size = 512;
-  const fgColorOption = d.colorMode === "gradient"
-    ? { gradient: { type: d.gradientType, rotation: d.gradientRotation, colorStops: [{ offset: 0, color: d.fg }, { offset: 1, color: d.fg2 }] } }
-    : { color: d.fg };
+  const fgColorOption =
+    d.colorMode === "gradient"
+      ? {
+          gradient: {
+            type: d.gradientType,
+            rotation: d.gradientRotation,
+            colorStops: [
+              { offset: 0, color: d.fg },
+              { offset: 1, color: d.fg2 },
+            ],
+          },
+        }
+      : { color: d.fg };
   const bgColorOption = d.transparentBg ? { color: "rgba(0,0,0,0)" } : { color: d.bg };
   const qr = new QRCodeStyling({
     width: size,
@@ -390,7 +454,12 @@ async function renderQrSvg(d: QrDesign, url: string, logoUrl: string | null): Pr
     margin: d.margin,
     qrOptions: { errorCorrectionLevel: d.errorCorrection },
     image: d.logoEnabled && logoUrl ? logoUrl : undefined,
-    imageOptions: { hideBackgroundDots: d.logoWhitePad, imageSize: d.logoSize, margin: d.logoMargin, crossOrigin: "anonymous" },
+    imageOptions: {
+      hideBackgroundDots: d.logoWhitePad,
+      imageSize: d.logoSize,
+      margin: d.logoMargin,
+      crossOrigin: "anonymous",
+    },
     dotsOptions: { type: d.dotStyle, ...fgColorOption },
     backgroundOptions: bgColorOption,
     cornersSquareOptions: { type: mapCornerSquare(d.cornerSquareStyle), color: d.fg },
@@ -425,7 +494,10 @@ export async function svgToPng(svg: string, targetWpx: number, targetHpx: number
 export function pxFor(format: BusinessFormat, dpi = 300): { w: number; h: number } {
   if (format.medium === "digital") return { w: format.width, h: format.height };
   const mmToIn = 1 / 25.4;
-  return { w: Math.round(format.width * mmToIn * dpi), h: Math.round(format.height * mmToIn * dpi) };
+  return {
+    w: Math.round(format.width * mmToIn * dpi),
+    h: Math.round(format.height * mmToIn * dpi),
+  };
 }
 
 function starGlyph(style: StarStyle, cx: number, cy: number, r: number, color: string): string {
@@ -450,10 +522,18 @@ function starGlyph(style: StarStyle, cx: number, cy: number, r: number, color: s
   return `<polygon points="${points.join(" ")}" fill="${color}"/>`;
 }
 
-function escapeText(s: string): string { return s.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]!)); }
-function escapeAttr(s: string): string { return s.replace(/"/g, "&quot;"); }
-function estimateTextWidth(s: string, fontSize: number): number { return s.length * fontSize * 0.55; }
-function clamp(v: number, lo: number, hi: number): number { return Math.max(lo, Math.min(hi, v)); }
+function escapeText(s: string): string {
+  return s.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]!);
+}
+function escapeAttr(s: string): string {
+  return s.replace(/"/g, "&quot;");
+}
+function estimateTextWidth(s: string, fontSize: number): number {
+  return s.length * fontSize * 0.55;
+}
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
 function pickReadableText(bg: string): string {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(bg.trim());
   if (!m) return "#ffffff";

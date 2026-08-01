@@ -11,7 +11,6 @@ import {
   Menu,
   Sparkles,
   CreditCard,
-
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -40,7 +39,6 @@ const nav = [
   { to: "/plans", label: "Plans", icon: Sparkles },
   { to: "/billing", label: "Billing", icon: CreditCard },
   { to: "/settings", label: "Settings", icon: Settings },
-
 ] as const;
 
 function AuthedLayout() {
@@ -76,9 +74,7 @@ function AuthedLayout() {
             <div className="grid h-8 w-8 place-items-center rounded-xl hero-gradient text-white">
               <QrCode className="h-4 w-4" />
             </div>
-            <span className="text-[15px] font-semibold tracking-tight">
-              GuestReview Pro
-            </span>
+            <span className="text-[15px] font-semibold tracking-tight">GuestReview Pro</span>
           </div>
           <nav className="flex-1 space-y-1 px-3 py-2">
             {nav.map((item) => (
@@ -88,8 +84,7 @@ function AuthedLayout() {
                 onClick={() => setOpen(false)}
                 className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 transition hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 activeProps={{
-                  className:
-                    "bg-sidebar-accent text-sidebar-foreground shadow-sm",
+                  className: "bg-sidebar-accent text-sidebar-foreground shadow-sm",
                 }}
               >
                 <item.icon className="h-4 w-4" />

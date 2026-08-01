@@ -59,7 +59,10 @@ function IndustryPage() {
     .map((id) => FORMATS.find((f) => f.id === id))
     .filter((f): f is NonNullable<typeof f> => Boolean(f));
 
-  const templates = GALLERY_TEMPLATES.filter((t) => t.industries.includes(industry.slug)).slice(0, 3);
+  const templates = GALLERY_TEMPLATES.filter((t) => t.industries.includes(industry.slug)).slice(
+    0,
+    3,
+  );
 
   const others = INDUSTRIES.filter((i) => i.slug !== industry.slug);
 
@@ -70,15 +73,25 @@ function IndustryPage() {
           <Link
             to="/auth"
             data-cta="signup"
-            onClick={() => track("public_cta_clicked", { cta: "industry_hero_signup", industry: industry.slug })}
+            onClick={() =>
+              track("public_cta_clicked", { cta: "industry_hero_signup", industry: industry.slug })
+            }
           >
-            <Button size="lg" className="rounded-full bg-white px-8 text-[#0a0f3d] hover:bg-white/90">
+            <Button
+              size="lg"
+              className="rounded-full bg-white px-8 text-[#0a0f3d] hover:bg-white/90"
+            >
               Create your free QR
             </Button>
           </Link>
           <Link
             to="/templates"
-            onClick={() => track("public_cta_clicked", { cta: "industry_hero_templates", industry: industry.slug })}
+            onClick={() =>
+              track("public_cta_clicked", {
+                cta: "industry_hero_templates",
+                industry: industry.slug,
+              })
+            }
           >
             <Button
               size="lg"
@@ -89,7 +102,9 @@ function IndustryPage() {
             </Button>
           </Link>
         </div>
-        <p className="mt-4 text-sm text-white/55">1 business and 1 QR code free. No card required.</p>
+        <p className="mt-4 text-sm text-white/55">
+          1 business and 1 QR code free. No card required.
+        </p>
       </PageHero>
 
       <Section title={`Why ${industry.shortName.toLowerCase()} are different`}>
@@ -108,12 +123,20 @@ function IndustryPage() {
       >
         <div className="overflow-x-auto rounded-3xl border border-white/10">
           <table className="w-full min-w-[620px] text-left text-sm">
-            <caption className="sr-only">Recommended QR code placements for {industry.name}</caption>
+            <caption className="sr-only">
+              Recommended QR code placements for {industry.name}
+            </caption>
             <thead className="bg-white/[0.04] text-white/70">
               <tr>
-                <th scope="col" className="px-5 py-3 font-medium">Placement</th>
-                <th scope="col" className="px-5 py-3 font-medium">Format</th>
-                <th scope="col" className="px-5 py-3 font-medium">Why it works</th>
+                <th scope="col" className="px-5 py-3 font-medium">
+                  Placement
+                </th>
+                <th scope="col" className="px-5 py-3 font-medium">
+                  Format
+                </th>
+                <th scope="col" className="px-5 py-3 font-medium">
+                  Why it works
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10 text-white/60">
@@ -145,7 +168,10 @@ function IndustryPage() {
       </Section>
 
       {templates.length > 0 && (
-        <Section title="Templates that suit this trade" intro="Demo artwork — your own branding replaces it.">
+        <Section
+          title="Templates that suit this trade"
+          intro="Demo artwork — your own branding replaces it."
+        >
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {templates.map((t) => (
               <div key={t.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
@@ -153,14 +179,18 @@ function IndustryPage() {
                   <TemplatePreview template={t} />
                 </div>
                 <p className="mt-4 text-sm font-semibold">{t.name}</p>
-                <p className="mt-1 text-xs text-white/50">{templateDimensions(t)} · {t.material}</p>
+                <p className="mt-1 text-xs text-white/50">
+                  {templateDimensions(t)} · {t.material}
+                </p>
               </div>
             ))}
           </div>
           <div className="mt-6">
             <Link
               to="/templates"
-              onClick={() => track("public_cta_clicked", { cta: "industry_gallery", industry: industry.slug })}
+              onClick={() =>
+                track("public_cta_clicked", { cta: "industry_gallery", industry: industry.slug })
+              }
             >
               <Button
                 variant="outline"

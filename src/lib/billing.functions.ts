@@ -72,13 +72,15 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
     const { environment, host } = await trustedContext();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { createStripeClient, getStripeErrorMessage, automaticTaxEnabled } = await import("./stripe.server");
+    const { createStripeClient, getStripeErrorMessage, automaticTaxEnabled } =
+      await import("./stripe.server");
     const { resolveBillablePlan } = await import("./regional-pricing");
     const { loadSubscription } = await import("./entitlements.server");
     const { effectivePlan } = await import("./entitlements");
     const { getOrCreateStripeCustomer } = await import("./stripe-customer.server");
     const { buildReturnUrl } = await import("./payments-env.server");
-    const { findTrustedPriceByLookupKey, backfillStripePriceId } = await import("./plan-price-map.server");
+    const { findTrustedPriceByLookupKey, backfillStripePriceId } =
+      await import("./plan-price-map.server");
 
     const admin = supabaseAdmin as never;
 
@@ -89,7 +91,8 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       .eq("owner_id", context.userId)
       .maybeSingle();
     if (regionError) return { error: regionError.message };
-    if (!region) return { error: "Your billing region has not been resolved yet. Reload and try again." };
+    if (!region)
+      return { error: "Your billing region has not been resolved yet. Reload and try again." };
 
     // 2. Refuse a second active subscription.
     const existing = await loadSubscription(admin, context.userId, environment);
@@ -106,7 +109,9 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       environment,
     );
     if (!trusted) {
-      return { error: `This plan is not available for purchase right now. (${plan.stripeLookupKey})` };
+      return {
+        error: `This plan is not available for purchase right now. (${plan.stripeLookupKey})`,
+      };
     }
 
     try {
@@ -176,9 +181,11 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       // Record the attempt so an abandoned checkout can be recovered later.
       // Best-effort: a failure here must never block a paying customer.
       try {
-        const attempts = (supabaseAdmin as unknown as {
-          from: (table: string) => { insert: (row: Record<string, unknown>) => Promise<unknown> };
-        }).from("checkout_attempts");
+        const attempts = (
+          supabaseAdmin as unknown as {
+            from: (table: string) => { insert: (row: Record<string, unknown>) => Promise<unknown> };
+          }
+        ).from("checkout_attempts");
         await attempts.insert({
           owner_id: context.userId,
           environment,
@@ -193,13 +200,11 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
         console.error("checkout_attempts insert failed:", e);
       }
 
-
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
   });
-
 
 export const createCustomerPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

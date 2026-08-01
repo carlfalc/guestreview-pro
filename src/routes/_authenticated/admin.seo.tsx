@@ -158,13 +158,17 @@ function AdminSeoPage() {
           <p className="font-medium">Google Search Console checklist</p>
           <ol className="list-decimal space-y-1.5 pl-5 text-muted-foreground">
             <li>Property is verified via the HTML file served at /google726063f1ecc9f8a3.html.</li>
-            <li>Submit {SITE_URL}/sitemap.xml under Sitemaps and confirm it is read without errors.</li>
+            <li>
+              Submit {SITE_URL}/sitemap.xml under Sitemaps and confirm it is read without errors.
+            </li>
             <li>
               Use URL Inspection on the newest resource articles and request indexing after each
               publish.
             </li>
             <li>Check Page indexing weekly for “Discovered – currently not indexed” entries.</li>
-            <li>Confirm the preview and *.lovable.app hosts never appear as canonical URLs above.</li>
+            <li>
+              Confirm the preview and *.lovable.app hosts never appear as canonical URLs above.
+            </li>
           </ol>
         </CardContent>
       </Card>

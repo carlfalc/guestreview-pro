@@ -105,11 +105,7 @@ function ExamplesGallery() {
         </div>
       </Section>
 
-
-      <Section
-        title={`${industry.packName} preview`}
-        intro={industry.packBlurb}
-      >
+      <Section title={`${industry.packName} preview`} intro={industry.packBlurb}>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {packPreview.map((t) => (
             <div key={t.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
@@ -125,13 +121,14 @@ function ExamplesGallery() {
               </p>
             </div>
           ))}
-
         </div>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             to="/industries/$slug"
             params={{ slug: industry.slug }}
-            onClick={() => track("public_cta_clicked", { cta: "examples_to_industry", industry: industry.slug })}
+            onClick={() =>
+              track("public_cta_clicked", { cta: "examples_to_industry", industry: industry.slug })
+            }
           >
             <Button className="rounded-full bg-white text-[#0a0f3d] hover:bg-white/90">
               Read the {industry.shortName.toLowerCase()} guide

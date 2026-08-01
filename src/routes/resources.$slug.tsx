@@ -27,7 +27,10 @@ export const Route = createFileRoute("/resources/$slug")({
     const article = loaderData?.article;
     if (!article) {
       return {
-        meta: [{ title: "Guide not found — GuestReview Pro" }, { name: "robots", content: "noindex" }],
+        meta: [
+          { title: "Guide not found — GuestReview Pro" },
+          { name: "robots", content: "noindex" },
+        ],
       };
     }
     return seo({
@@ -86,7 +89,11 @@ function ResourceArticlePage() {
 
   return (
     <PublicShell>
-      <PageHero eyebrow={category?.label ?? "Guide"} title={article.title} subtitle={article.excerpt}>
+      <PageHero
+        eyebrow={category?.label ?? "Guide"}
+        title={article.title}
+        subtitle={article.excerpt}
+      >
         <p className="mt-5 text-xs uppercase tracking-wide text-white/40">
           {article.readMinutes} min read · Updated{" "}
           {new Date(article.updated).toLocaleDateString("en-GB", {
@@ -103,7 +110,10 @@ function ResourceArticlePage() {
             <ul className="mt-3 space-y-2">
               {article.sections.map((s) => (
                 <li key={s.id}>
-                  <a href={`#${s.id}`} className="text-sm text-white/55 transition hover:text-white">
+                  <a
+                    href={`#${s.id}`}
+                    className="text-sm text-white/55 transition hover:text-white"
+                  >
                     {s.heading}
                   </a>
                 </li>
@@ -127,15 +137,24 @@ function ResourceArticlePage() {
               <section key={s.id} id={s.id} className="mt-12 scroll-mt-24">
                 <h2 className="text-2xl font-bold tracking-tight">{s.heading}</h2>
                 {s.body.map((p) => (
-                  <p key={p.slice(0, 32)} className="mt-4 text-[16px] leading-relaxed text-white/65">
+                  <p
+                    key={p.slice(0, 32)}
+                    className="mt-4 text-[16px] leading-relaxed text-white/65"
+                  >
                     {p}
                   </p>
                 ))}
                 {s.bullets && (
                   <ul className="mt-5 space-y-2.5">
                     {s.bullets.map((b) => (
-                      <li key={b.slice(0, 32)} className="flex gap-3 text-[15px] leading-relaxed text-white/65">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" aria-hidden />
+                      <li
+                        key={b.slice(0, 32)}
+                        className="flex gap-3 text-[15px] leading-relaxed text-white/65"
+                      >
+                        <span
+                          className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40"
+                          aria-hidden
+                        />
                         <span>{b}</span>
                       </li>
                     ))}
@@ -160,7 +179,9 @@ function ResourceArticlePage() {
               <Link
                 to="/auth"
                 data-cta="signup"
-                onClick={() => track("resource_cta_clicked", { cta: "signup", article: article.slug })}
+                onClick={() =>
+                  track("resource_cta_clicked", { cta: "signup", article: article.slug })
+                }
               >
                 <Button className="rounded-full bg-white text-[#0a0f3d] hover:bg-white/90">
                   Create your free review QR code
@@ -168,7 +189,9 @@ function ResourceArticlePage() {
               </Link>
               <Link
                 to="/templates"
-                onClick={() => track("resource_cta_clicked", { cta: "templates", article: article.slug })}
+                onClick={() =>
+                  track("resource_cta_clicked", { cta: "templates", article: article.slug })
+                }
               >
                 <Button
                   variant="outline"
@@ -212,7 +235,9 @@ function ResourceArticlePage() {
                 className="group rounded-3xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-white/25 hover:bg-white/[0.06]"
               >
                 <p className="text-base font-semibold">{r.title}</p>
-                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-white/55">{r.excerpt}</p>
+                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-white/55">
+                  {r.excerpt}
+                </p>
                 <span className="mt-4 inline-flex items-center gap-1.5 text-sm text-white/70 group-hover:text-white">
                   Read the guide
                   <ArrowRight className="h-3.5 w-3.5" aria-hidden />

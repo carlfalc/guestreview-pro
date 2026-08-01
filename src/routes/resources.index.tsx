@@ -84,7 +84,9 @@ function ResourcesIndex() {
                 <Link
                   to="/resources/$slug"
                   params={{ slug: a.slug }}
-                  onClick={() => track("resource_cta_clicked", { cta: "article_card", article: a.slug })}
+                  onClick={() =>
+                    track("resource_cta_clicked", { cta: "article_card", article: a.slug })
+                  }
                   className="transition hover:text-white/80"
                 >
                   {a.title}

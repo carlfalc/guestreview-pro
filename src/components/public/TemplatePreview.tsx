@@ -104,7 +104,13 @@ export function TemplatePreview({ template }: { template: GalleryTemplate }) {
           [0, modules.size - 3],
         ].map(([cx, cy]) => (
           <g key={`${cx}-${cy}`}>
-            <rect x={qrX + cx * cell} y={qrY + cy * cell} width={cell * 3} height={cell * 3} fill={colors.qrFg} />
+            <rect
+              x={qrX + cx * cell}
+              y={qrY + cy * cell}
+              width={cell * 3}
+              height={cell * 3}
+              fill={colors.qrFg}
+            />
             <rect
               x={qrX + (cx + 1) * cell}
               y={qrY + (cy + 1) * cell}

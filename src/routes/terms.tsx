@@ -10,7 +10,12 @@ export const Route = createFileRoute("/terms")({
       title: "Terms of Service — GuestReview Pro",
       description:
         "The terms that govern use of GuestReview Pro: accounts, acceptable use, review platform policies, subscriptions, cancellation, printing and liability.",
-      jsonLd: [jsonLd.breadcrumbs([{ name: "Home", path: "/" }, { name: "Terms", path: "/terms" }])],
+      jsonLd: [
+        jsonLd.breadcrumbs([
+          { name: "Home", path: "/" },
+          { name: "Terms", path: "/terms" },
+        ]),
+      ],
     }),
 });
 
@@ -106,14 +111,20 @@ const SECTIONS: Array<{ h: string; p: string[] }> = [
 function TermsPage() {
   return (
     <PublicShell>
-      <PageHero eyebrow="Legal" title="Terms of Service" subtitle="The rules for using GuestReview Pro, written to be read rather than skipped." />
+      <PageHero
+        eyebrow="Legal"
+        title="Terms of Service"
+        subtitle="The rules for using GuestReview Pro, written to be read rather than skipped."
+      />
       <Section>
         <div className="max-w-3xl space-y-8">
           {SECTIONS.map((s) => (
             <section key={s.h}>
               <h2 className="text-xl font-semibold tracking-tight">{s.h}</h2>
               {s.p.map((para) => (
-                <p key={para.slice(0, 40)} className="mt-3 text-sm leading-relaxed text-white/60">{para}</p>
+                <p key={para.slice(0, 40)} className="mt-3 text-sm leading-relaxed text-white/60">
+                  {para}
+                </p>
               ))}
             </section>
           ))}

@@ -6,7 +6,9 @@ import type { BusinessFormat, LayoutTemplate } from "@/lib/qr-formats";
 import type { QrDesign } from "@/lib/qr-design";
 import { svgToPng, pxFor } from "@/lib/format-render";
 import {
-  renderFoldedFormatSvg, renderFoldedProductionSvg, renderFoldedMockupSvg,
+  renderFoldedFormatSvg,
+  renderFoldedProductionSvg,
+  renderFoldedMockupSvg,
   type FoldedRenderInput,
 } from "@/lib/folded-render";
 import { getFoldedLayout } from "@/lib/folded-layouts";
@@ -26,10 +28,16 @@ export type FoldedExportInputs = {
   fontFamily?: string;
 };
 
-function inputs(x: FoldedExportInputs): FoldedRenderInput { return x; }
+function inputs(x: FoldedExportInputs): FoldedRenderInput {
+  return x;
+}
 
 /** Rasterise a folded SVG view at print-DPI (300 DPI for print, native for digital). */
-async function pngFor(x: FoldedExportInputs, facing: "flat" | "front" | "back", dpi = 300): Promise<Blob> {
+async function pngFor(
+  x: FoldedExportInputs,
+  facing: "flat" | "front" | "back",
+  dpi = 300,
+): Promise<Blob> {
   const svg = await renderFoldedFormatSvg(inputs(x), { facing, includeBleed: facing === "flat" });
   const layout = getFoldedLayout(x.format)!;
   let wMm: number, hMm: number;
@@ -40,21 +48,30 @@ async function pngFor(x: FoldedExportInputs, facing: "flat" | "front" | "back", 
     wMm = layout.assembledWidth;
     hMm = layout.assembledHeight;
   }
-  const px = x.format.medium === "print"
-    ? { w: Math.round(wMm * dpi / 25.4), h: Math.round(hMm * dpi / 25.4) }
-    : pxFor(x.format, dpi);
+  const px =
+    x.format.medium === "print"
+      ? { w: Math.round((wMm * dpi) / 25.4), h: Math.round((hMm * dpi) / 25.4) }
+      : pxFor(x.format, dpi);
   return await svgToPng(svg, px.w, px.h);
 }
 
 /** Front / Back / Flat PNG downloads. */
-export async function downloadFoldedPng(x: FoldedExportInputs, facing: "flat" | "front" | "back"): Promise<Blob> {
+export async function downloadFoldedPng(
+  x: FoldedExportInputs,
+  facing: "flat" | "front" | "back",
+): Promise<Blob> {
   return await pngFor(x, facing);
 }
 
 /** SVG with switchable production-guide groups (CutContour, FoldLine, ScoreLine). */
 export async function renderFoldedSvgWithGuides(x: FoldedExportInputs): Promise<string> {
   return await renderFoldedFormatSvg(inputs(x), {
-    includeBleed: true, showCut: true, showFold: true, showScore: true, showPanelLabels: true, showSafe: true,
+    includeBleed: true,
+    showCut: true,
+    showFold: true,
+    showScore: true,
+    showPanelLabels: true,
+    showSafe: true,
   });
 }
 
@@ -95,7 +112,13 @@ export async function buildFoldedPdf(x: FoldedExportInputs): Promise<Uint8Array>
         [inner.r + 1, inner.tp, inner.r + mL, inner.tp],
         [inner.r, inner.tp + 1, inner.r, inner.tp + mL],
       ];
-      for (const [x1, y1, x2, y2] of marks) page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: 0.4, color: stroke });
+      for (const [x1, y1, x2, y2] of marks)
+        page.drawLine({
+          start: { x: x1, y: y1 },
+          end: { x: x2, y: y2 },
+          thickness: 0.4,
+          color: stroke,
+        });
     }
 
     // Vector production paths on top: CutContour (magenta), FoldLine (green dashed), ScoreLine (amber dotted)
@@ -104,13 +127,19 @@ export async function buildFoldedPdf(x: FoldedExportInputs): Promise<Uint8Array>
     // Y-axis is flipped in PDF (origin bottom-left). Convert layout y (top-down) to PDF y (bottom-up).
     const flip = (y: number) => flatHpt - (offYp + y * MM_TO_PT);
     for (const s of layout.segments) {
-      const color = s.type === "cut" ? rgb(1, 0, 1) : s.type === "fold" ? rgb(0, 0.65, 0.32) : rgb(0.96, 0.62, 0.04);
+      const color =
+        s.type === "cut"
+          ? rgb(1, 0, 1)
+          : s.type === "fold"
+            ? rgb(0, 0.65, 0.32)
+            : rgb(0.96, 0.62, 0.04);
       const thickness = s.type === "cut" ? 0.25 : 0.4;
-      const dash = s.type === "cut" ? undefined : (s.type === "fold" ? [3, 2] : [1, 1]);
+      const dash = s.type === "cut" ? undefined : s.type === "fold" ? [3, 2] : [1, 1];
       page.drawLine({
         start: { x: offXp + s.x1 * MM_TO_PT, y: flip(s.y1) },
         end: { x: offXp + s.x2 * MM_TO_PT, y: flip(s.y2) },
-        thickness, color,
+        thickness,
+        color,
         dashArray: dash,
       });
     }
@@ -119,9 +148,15 @@ export async function buildFoldedPdf(x: FoldedExportInputs): Promise<Uint8Array>
   // Page 2: front + back proofs side by side
   {
     const page = doc.addPage([595, 842]);
-    page.drawText("Front & back proofs", { x: 40, y: 800, size: 18, font: helvBold, color: rgb(0.05, 0.05, 0.05) });
-    const proofWpt = (layout.assembledWidth) * MM_TO_PT * 0.9;
-    const proofHpt = (layout.assembledHeight) * MM_TO_PT * 0.9;
+    page.drawText("Front & back proofs", {
+      x: 40,
+      y: 800,
+      size: 18,
+      font: helvBold,
+      color: rgb(0.05, 0.05, 0.05),
+    });
+    const proofWpt = layout.assembledWidth * MM_TO_PT * 0.9;
+    const proofHpt = layout.assembledHeight * MM_TO_PT * 0.9;
     const frontPng = await pngFor(x, "front");
     const backPng = await pngFor(x, "back");
     const frontImg = await doc.embedPng(new Uint8Array(await frontPng.arrayBuffer()));
@@ -130,19 +165,44 @@ export async function buildFoldedPdf(x: FoldedExportInputs): Promise<Uint8Array>
     const rowY = 780 - proofHpt;
     page.drawImage(frontImg, { x: 40, y: rowY, width: proofWpt, height: proofHpt });
     page.drawImage(backImg, { x: 40 + proofWpt + gap, y: rowY, width: proofWpt, height: proofHpt });
-    page.drawText("Front (as assembled)", { x: 40, y: rowY - 14, size: 9, font: helv, color: rgb(0.3, 0.3, 0.3) });
-    page.drawText("Back (as assembled)", { x: 40 + proofWpt + gap, y: rowY - 14, size: 9, font: helv, color: rgb(0.3, 0.3, 0.3) });
+    page.drawText("Front (as assembled)", {
+      x: 40,
+      y: rowY - 14,
+      size: 9,
+      font: helv,
+      color: rgb(0.3, 0.3, 0.3),
+    });
+    page.drawText("Back (as assembled)", {
+      x: 40 + proofWpt + gap,
+      y: rowY - 14,
+      size: 9,
+      font: helv,
+      color: rgb(0.3, 0.3, 0.3),
+    });
   }
 
   // Page 3: assembly notes
   {
     const page = doc.addPage([595, 842]);
     let y = 800;
-    page.drawText("Assembly & print notes", { x: 40, y, size: 20, font: helvBold, color: rgb(0.05, 0.05, 0.05) });
+    page.drawText("Assembly & print notes", {
+      x: 40,
+      y,
+      size: 20,
+      font: helvBold,
+      color: rgb(0.05, 0.05, 0.05),
+    });
     y -= 26;
     const notes = foldedPrintNotes(x, layout);
     for (const line of notes) {
-      page.drawText(line, { x: 40, y, size: 10.5, font: line.startsWith("—") ? helvBold : helv, color: rgb(0.15, 0.15, 0.15), maxWidth: 515 });
+      page.drawText(line, {
+        x: 40,
+        y,
+        size: 10.5,
+        font: line.startsWith("—") ? helvBold : helv,
+        color: rgb(0.15, 0.15, 0.15),
+        maxWidth: 515,
+      });
       y -= 15;
       if (y < 60) break;
     }
@@ -151,10 +211,16 @@ export async function buildFoldedPdf(x: FoldedExportInputs): Promise<Uint8Array>
   return await doc.save();
 }
 
-export function foldedPrintNotes(x: FoldedExportInputs, layout: import("@/lib/folded-layouts").FoldedLayout): string[] {
-  const modeLabel = x.config.mode === "same_both_sides" ? "Same both sides"
-    : x.config.mode === "mirrored" ? "Mirrored (back rotated 180° in production)"
-    : "Different front and back";
+export function foldedPrintNotes(
+  x: FoldedExportInputs,
+  layout: import("@/lib/folded-layouts").FoldedLayout,
+): string[] {
+  const modeLabel =
+    x.config.mode === "same_both_sides"
+      ? "Same both sides"
+      : x.config.mode === "mirrored"
+        ? "Mirrored (back rotated 180° in production)"
+        : "Different front and back";
   const l: string[] = [
     `Format: ${x.format.name}`,
     `Design mode: ${modeLabel}`,

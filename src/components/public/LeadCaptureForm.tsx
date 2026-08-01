@@ -56,7 +56,6 @@ export function LeadCaptureForm({
     );
   }
 
-
   return (
     <form
       onSubmit={onSubmit}

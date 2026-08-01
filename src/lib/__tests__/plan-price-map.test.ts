@@ -18,10 +18,50 @@ interface Row {
 }
 
 const ROWS: Row[] = [
-  { stripe_price_id: "price_live_pro_nzd", stripe_lookup_key: "pro_monthly_nzd", plan_key: "pro", billing_interval: "monthly", currency_code: "NZD", pricing_region: "NZ", amount_minor: 2900, environment: "live", active: true },
-  { stripe_price_id: null, stripe_lookup_key: "business_annual_gbp", plan_key: "business", billing_interval: "annual", currency_code: "GBP", pricing_region: "GB", amount_minor: 39000, environment: "live", active: true },
-  { stripe_price_id: "price_test_pro_nzd", stripe_lookup_key: "pro_monthly_nzd", plan_key: "pro", billing_interval: "monthly", currency_code: "NZD", pricing_region: "NZ", amount_minor: 2900, environment: "sandbox", active: true },
-  { stripe_price_id: "price_retired", stripe_lookup_key: "pro_monthly_old", plan_key: "pro", billing_interval: "monthly", currency_code: "NZD", pricing_region: "NZ", amount_minor: 1000, environment: "live", active: false },
+  {
+    stripe_price_id: "price_live_pro_nzd",
+    stripe_lookup_key: "pro_monthly_nzd",
+    plan_key: "pro",
+    billing_interval: "monthly",
+    currency_code: "NZD",
+    pricing_region: "NZ",
+    amount_minor: 2900,
+    environment: "live",
+    active: true,
+  },
+  {
+    stripe_price_id: null,
+    stripe_lookup_key: "business_annual_gbp",
+    plan_key: "business",
+    billing_interval: "annual",
+    currency_code: "GBP",
+    pricing_region: "GB",
+    amount_minor: 39000,
+    environment: "live",
+    active: true,
+  },
+  {
+    stripe_price_id: "price_test_pro_nzd",
+    stripe_lookup_key: "pro_monthly_nzd",
+    plan_key: "pro",
+    billing_interval: "monthly",
+    currency_code: "NZD",
+    pricing_region: "NZ",
+    amount_minor: 2900,
+    environment: "sandbox",
+    active: true,
+  },
+  {
+    stripe_price_id: "price_retired",
+    stripe_lookup_key: "pro_monthly_old",
+    plan_key: "pro",
+    billing_interval: "monthly",
+    currency_code: "NZD",
+    pricing_region: "NZ",
+    amount_minor: 1000,
+    environment: "live",
+    active: false,
+  },
 ];
 
 /** Minimal chainable stub of the Supabase query builder used by the module. */
@@ -37,7 +77,9 @@ function fakeAdmin(rows: Row[]) {
         },
         maybeSingle: async () => {
           const match = rows.find((r) =>
-            Object.entries(filters).every(([k, v]) => (r as unknown as Record<string, unknown>)[k] === v),
+            Object.entries(filters).every(
+              ([k, v]) => (r as unknown as Record<string, unknown>)[k] === v,
+            ),
           );
           return { data: match ?? null, error: null };
         },
@@ -63,7 +105,12 @@ describe("trusted price mapping", () => {
   it("falls back to the lookup key when the price ID is not yet recorded", async () => {
     const plan = await resolveTrustedPlanForPrice(
       admin,
-      { id: "price_unrecorded", lookup_key: "business_annual_gbp", currency: "gbp", unit_amount: 39000 },
+      {
+        id: "price_unrecorded",
+        lookup_key: "business_annual_gbp",
+        currency: "gbp",
+        unit_amount: 39000,
+      },
       "live",
     );
     expect(plan.planKey).toBe("business");
@@ -87,19 +134,31 @@ describe("trusted price mapping", () => {
 
   it("throws instead of silently downgrading an unknown price to free", async () => {
     await expect(
-      resolveTrustedPlanForPrice(admin, { id: "price_unknown", lookup_key: "mystery_plan" }, "live"),
+      resolveTrustedPlanForPrice(
+        admin,
+        { id: "price_unknown", lookup_key: "mystery_plan" },
+        "live",
+      ),
     ).rejects.toThrow(/BILLING_CONFIG_ERROR/);
   });
 
   it("rejects a currency that disagrees with the trusted mapping", async () => {
     await expect(
-      resolveTrustedPlanForPrice(admin, { id: "price_live_pro_nzd", currency: "usd", unit_amount: 2900 }, "live"),
+      resolveTrustedPlanForPrice(
+        admin,
+        { id: "price_live_pro_nzd", currency: "usd", unit_amount: 2900 },
+        "live",
+      ),
     ).rejects.toBeInstanceOf(UnknownStripePriceError);
   });
 
   it("rejects an amount that disagrees with the trusted mapping", async () => {
     await expect(
-      resolveTrustedPlanForPrice(admin, { id: "price_live_pro_nzd", currency: "nzd", unit_amount: 100 }, "live"),
+      resolveTrustedPlanForPrice(
+        admin,
+        { id: "price_live_pro_nzd", currency: "nzd", unit_amount: 100 },
+        "live",
+      ),
     ).rejects.toBeInstanceOf(UnknownStripePriceError);
   });
 
@@ -107,7 +166,11 @@ describe("trusted price mapping", () => {
     await expect(
       resolveTrustedPlanForPrice(admin, { id: "price_live_pro_nzd" }, "sandbox"),
     ).rejects.toBeInstanceOf(UnknownStripePriceError);
-    const sandbox = await resolveTrustedPlanForPrice(admin, { id: "price_test_pro_nzd" }, "sandbox");
+    const sandbox = await resolveTrustedPlanForPrice(
+      admin,
+      { id: "price_test_pro_nzd" },
+      "sandbox",
+    );
     expect(sandbox.environment).toBe("sandbox");
   });
 

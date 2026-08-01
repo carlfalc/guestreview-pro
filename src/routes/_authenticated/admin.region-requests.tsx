@@ -64,7 +64,9 @@ function AdminRegionRequestsPage() {
           ))}
           {(listQ.data ?? []).length === 0 && (
             <Card className="rounded-3xl border-border/70">
-              <CardContent className="p-6 text-sm text-muted-foreground">No requests yet.</CardContent>
+              <CardContent className="p-6 text-sm text-muted-foreground">
+                No requests yet.
+              </CardContent>
             </Card>
           )}
         </div>
@@ -112,7 +114,12 @@ function RequestCard({ req }: { req: Req }) {
 
   const pending = req.status === "pending";
   const badgeVariant = useMemo(
-    () => (req.status === "approved" ? "default" : req.status === "rejected" ? "destructive" : "secondary"),
+    () =>
+      req.status === "approved"
+        ? "default"
+        : req.status === "rejected"
+          ? "destructive"
+          : "secondary",
     [req.status],
   );
 
@@ -120,20 +127,39 @@ function RequestCard({ req }: { req: Req }) {
     <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
       <CardContent className="space-y-4 p-6">
         <div className="flex flex-wrap items-center gap-3">
-          <Badge variant={badgeVariant} className="capitalize">{req.status}</Badge>
-          <span className="text-xs text-muted-foreground">{new Date(req.created_at).toLocaleString()}</span>
+          <Badge variant={badgeVariant} className="capitalize">
+            {req.status}
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            {new Date(req.created_at).toLocaleString()}
+          </span>
           <span className="text-xs text-muted-foreground">Owner: {req.owner_id.slice(0, 8)}…</span>
         </div>
         <div className="grid gap-2 text-sm sm:grid-cols-2">
-          <div><span className="text-muted-foreground">Current: </span>{countryName(req.current_country_code) || "—"} ({req.current_country_code ?? "—"})</div>
-          <div><span className="text-muted-foreground">Requested: </span>{countryName(req.requested_country_code)} ({req.requested_country_code})</div>
+          <div>
+            <span className="text-muted-foreground">Current: </span>
+            {countryName(req.current_country_code) || "—"} ({req.current_country_code ?? "—"})
+          </div>
+          <div>
+            <span className="text-muted-foreground">Requested: </span>
+            {countryName(req.requested_country_code)} ({req.requested_country_code})
+          </div>
         </div>
-        <div className="text-sm"><span className="text-muted-foreground">Reason: </span>{req.reason}</div>
+        <div className="text-sm">
+          <span className="text-muted-foreground">Reason: </span>
+          {req.reason}
+        </div>
         {req.supporting_information ? (
-          <div className="text-sm"><span className="text-muted-foreground">Supporting: </span>{req.supporting_information}</div>
+          <div className="text-sm">
+            <span className="text-muted-foreground">Supporting: </span>
+            {req.supporting_information}
+          </div>
         ) : null}
         {req.admin_notes ? (
-          <div className="text-sm"><span className="text-muted-foreground">Admin notes: </span>{req.admin_notes}</div>
+          <div className="text-sm">
+            <span className="text-muted-foreground">Admin notes: </span>
+            {req.admin_notes}
+          </div>
         ) : null}
         {pending && (
           <div className="space-y-2">
@@ -149,12 +175,16 @@ function RequestCard({ req }: { req: Req }) {
                 className="rounded-full"
                 onClick={() => rejectMut.mutate()}
                 disabled={rejectMut.isPending || approveMut.isPending}
-              >Reject</Button>
+              >
+                Reject
+              </Button>
               <Button
                 className="rounded-full"
                 onClick={() => approveMut.mutate()}
                 disabled={approveMut.isPending || rejectMut.isPending}
-              >Approve</Button>
+              >
+                Approve
+              </Button>
             </div>
           </div>
         )}

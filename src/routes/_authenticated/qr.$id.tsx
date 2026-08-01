@@ -97,11 +97,19 @@ function QrDetail() {
     setDestinationLabelValue(qr.destination_label ?? "");
     setLandingMode((qr.landing_mode as "landing" | "redirect") ?? "landing");
     setExpiresAt(qr.expires_at ? new Date(qr.expires_at).toISOString().slice(0, 16) : "");
-    const biz = qr.businesses as { logo_url?: string; brand_primary?: string; name?: string } | null;
+    const biz = qr.businesses as {
+      logo_url?: string;
+      brand_primary?: string;
+      name?: string;
+    } | null;
     setDesign(mergeDesign((qr.design as Partial<QrDesign> | null) ?? null));
     setLogoUrl(qr.logo_url ?? biz?.logo_url ?? null);
-    setProjectName((qr.project_name as string | null) ?? `${biz?.name ?? "Untitled"} — Format Pack`);
-    setLayoutTemplate(((qr.layout_template as LayoutTemplate | null) ?? "clean-minimal") as LayoutTemplate);
+    setProjectName(
+      (qr.project_name as string | null) ?? `${biz?.name ?? "Untitled"} — Format Pack`,
+    );
+    setLayoutTemplate(
+      ((qr.layout_template as LayoutTemplate | null) ?? "clean-minimal") as LayoutTemplate,
+    );
     const fmts = qr.selected_formats;
     setSelectedFormats(Array.isArray(fmts) ? (fmts as string[]) : []);
     setContent({
@@ -109,7 +117,7 @@ function QrDetail() {
       logoUrl: qr.logo_url ?? biz?.logo_url ?? null,
       headline: (qr.headline as string | null) ?? "Loved your visit?",
       supportText: (qr.support_text as string | null) ?? "Scan to leave us a review.",
-      ctaText: (qr.cta_text as string | null) ?? (qr.destination_label ?? "Leave a review"),
+      ctaText: (qr.cta_text as string | null) ?? qr.destination_label ?? "Leave a review",
     });
   }, [qr]);
 
@@ -118,9 +126,13 @@ function QrDetail() {
     return buildScanUrl(qr.short_code as string);
   }, [qr]);
 
-
   const isGoogleReview = destinationType === "google_review";
-  const biz = qr?.businesses as { name?: string; brand_primary?: string; logo_url?: string; google_review_url?: string } | null;
+  const biz = qr?.businesses as {
+    name?: string;
+    brand_primary?: string;
+    logo_url?: string;
+    google_review_url?: string;
+  } | null;
   const trimmedDestinationUrl = destinationUrl.trim();
   const resolved = resolveQrDestination({
     destinationType,
@@ -139,13 +151,15 @@ function QrDetail() {
       return toast.error("Destination URL is required and must be a valid https:// URL.");
     }
     if (isGoogleReview && !resolved.url) {
-      return toast.error("No valid Google review URL. Add one on the business or enter a QR-specific override.");
+      return toast.error(
+        "No valid Google review URL. Add one on the business or enter a QR-specific override.",
+      );
     }
     // For google_review, only persist a QR-specific override when it differs from the business URL.
     const qrDestinationUrl = isGoogleReview
-      ? (trimmedDestinationUrl && trimmedDestinationUrl !== (biz?.google_review_url ?? "").trim()
-          ? trimmedDestinationUrl
-          : null)
+      ? trimmedDestinationUrl && trimmedDestinationUrl !== (biz?.google_review_url ?? "").trim()
+        ? trimmedDestinationUrl
+        : null
       : trimmedDestinationUrl;
     const patch = {
       label,
@@ -258,24 +272,27 @@ function QrDetail() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return toast.error("Not signed in");
     const bizName = biz?.name ?? "Untitled";
-    const { data, error } = await supabase.from("marketing_packs").insert({
-      owner_id: userData.user.id,
-      business_id: qr.business_id,
-      qr_code_id: qr.id,
-      project_name: projectName || `${bizName} Marketing Pack`,
-      pack_type: "custom",
-      layout_template: layoutTemplate,
-      headline: content.headline,
-      support_text: content.supportText,
-      cta_text: content.ctaText,
-      selected_formats: selectedFormats as unknown as never,
-      status: "draft",
-    } as never).select("id").single();
+    const { data, error } = await supabase
+      .from("marketing_packs")
+      .insert({
+        owner_id: userData.user.id,
+        business_id: qr.business_id,
+        qr_code_id: qr.id,
+        project_name: projectName || `${bizName} Marketing Pack`,
+        pack_type: "custom",
+        layout_template: layoutTemplate,
+        headline: content.headline,
+        support_text: content.supportText,
+        cta_text: content.ctaText,
+        selected_formats: selectedFormats as unknown as never,
+        status: "draft",
+      } as never)
+      .select("id")
+      .single();
     if (error || !data) return toast.error(error?.message ?? "Convert failed");
     toast.success("Converted to Marketing Pack");
     navigate({ to: "/marketing-packs/$id", params: { id: data.id } });
   }
-
 
   function copyUrl() {
     navigator.clipboard.writeText(shortUrl);
@@ -288,7 +305,11 @@ function QrDetail() {
 
   return (
     <div className="animate-fade-in-up space-y-6">
-      <Link to="/businesses/$id" params={{ id: qr.business_id }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/businesses/$id"
+        params={{ id: qr.business_id }}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Back to business
       </Link>
 
@@ -302,23 +323,47 @@ function QrDetail() {
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {biz?.name} · {destinationLabel(destinationType)}
-            {(qr.locations as { name?: string } | null)?.name ? ` · ${(qr.locations as { name?: string }).name}` : ""}
+            {(qr.locations as { name?: string } | null)?.name
+              ? ` · ${(qr.locations as { name?: string }).name}`
+              : ""}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {qr.status === "active" && (
-            <Button variant="outline" onClick={() => setStatus("paused")} className="rounded-full"><Pause className="mr-1 h-4 w-4"/>Pause</Button>
+            <Button variant="outline" onClick={() => setStatus("paused")} className="rounded-full">
+              <Pause className="mr-1 h-4 w-4" />
+              Pause
+            </Button>
           )}
           {qr.status === "paused" && (
-            <Button variant="outline" onClick={() => setStatus("active")} className="rounded-full"><Play className="mr-1 h-4 w-4"/>Activate</Button>
+            <Button variant="outline" onClick={() => setStatus("active")} className="rounded-full">
+              <Play className="mr-1 h-4 w-4" />
+              Activate
+            </Button>
           )}
           {qr.status !== "archived" ? (
-            <Button variant="outline" onClick={() => setStatus("archived")} className="rounded-full"><Archive className="mr-1 h-4 w-4"/>Archive</Button>
+            <Button
+              variant="outline"
+              onClick={() => setStatus("archived")}
+              className="rounded-full"
+            >
+              <Archive className="mr-1 h-4 w-4" />
+              Archive
+            </Button>
           ) : (
-            <Button variant="outline" onClick={() => setStatus("active")} className="rounded-full"><RefreshCw className="mr-1 h-4 w-4"/>Restore</Button>
+            <Button variant="outline" onClick={() => setStatus("active")} className="rounded-full">
+              <RefreshCw className="mr-1 h-4 w-4" />
+              Restore
+            </Button>
           )}
-          <Button variant="outline" onClick={duplicateQr} className="rounded-full"><CopyIcon className="mr-1 h-4 w-4"/>Duplicate</Button>
-          <Button variant="outline" onClick={convertToMarketingPack} className="rounded-full"><Package className="mr-1 h-4 w-4"/>Convert to Marketing Pack</Button>
+          <Button variant="outline" onClick={duplicateQr} className="rounded-full">
+            <CopyIcon className="mr-1 h-4 w-4" />
+            Duplicate
+          </Button>
+          <Button variant="outline" onClick={convertToMarketingPack} className="rounded-full">
+            <Package className="mr-1 h-4 w-4" />
+            Convert to Marketing Pack
+          </Button>
         </div>
       </div>
 
@@ -328,30 +373,48 @@ function QrDetail() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Label</Label>
-                <Input value={label} onChange={(e) => setLabel(e.target.value)} className="rounded-xl"/>
+                <Input
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  className="rounded-xl"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Destination type</Label>
-                <Select value={destinationType} onValueChange={(v) => setDestinationType(v as DestinationType)}>
-                  <SelectTrigger className="rounded-xl"><SelectValue/></SelectTrigger>
+                <Select
+                  value={destinationType}
+                  onValueChange={(v) => setDestinationType(v as DestinationType)}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {DESTINATION_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
-                <Label>Destination URL{isGoogleReview ? " (QR-specific override — optional)" : ""}</Label>
+                <Label>
+                  Destination URL{isGoogleReview ? " (QR-specific override — optional)" : ""}
+                </Label>
                 <Input
                   value={destinationUrl}
                   onChange={(e) => setDestinationUrl(e.target.value)}
-                  placeholder={isGoogleReview ? (biz?.google_review_url ?? "https://g.page/r/.../review") : "https://..."}
+                  placeholder={
+                    isGoogleReview
+                      ? (biz?.google_review_url ?? "https://g.page/r/.../review")
+                      : "https://..."
+                  }
                   className="rounded-xl font-mono text-xs"
                 />
                 {isGoogleReview ? (
                   <p className="text-[11px] text-muted-foreground">
-                    Leave blank to use the business's Google review URL. Enter a URL here to override for this QR only.
+                    Leave blank to use the business's Google review URL. Enter a URL here to
+                    override for this QR only.
                   </p>
                 ) : null}
                 {trimmedDestinationUrl && !isValidDestinationUrl(trimmedDestinationUrl) && (
@@ -362,10 +425,17 @@ function QrDetail() {
                     <div className="min-w-0">
                       <p className="text-muted-foreground">Effective destination</p>
                       <p className="mt-0.5 truncate font-mono">
-                        {effectiveDestinationUrl || <span className="text-destructive">Not set</span>}
+                        {effectiveDestinationUrl || (
+                          <span className="text-destructive">Not set</span>
+                        )}
                       </p>
                       <p className="mt-0.5 text-muted-foreground">
-                        Source: {resolved.source === "qr" ? "QR-specific destination" : resolved.source === "business" ? "Business default review link" : "None"}
+                        Source:{" "}
+                        {resolved.source === "qr"
+                          ? "QR-specific destination"
+                          : resolved.source === "business"
+                            ? "Business default review link"
+                            : "None"}
                       </p>
                     </div>
                     <Button
@@ -379,19 +449,29 @@ function QrDetail() {
                       }}
                       className="rounded-full"
                     >
-                      <ExternalLink className="mr-1 h-3.5 w-3.5"/> Test destination
+                      <ExternalLink className="mr-1 h-3.5 w-3.5" /> Test destination
                     </Button>
                   </div>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Destination label</Label>
-                <Input value={destinationLabelValue} onChange={(e) => setDestinationLabelValue(e.target.value)} placeholder="View menu" className="rounded-xl"/>
+                <Input
+                  value={destinationLabelValue}
+                  onChange={(e) => setDestinationLabelValue(e.target.value)}
+                  placeholder="View menu"
+                  className="rounded-xl"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Landing behaviour</Label>
-                <Select value={landingMode} onValueChange={(v) => setLandingMode(v as typeof landingMode)}>
-                  <SelectTrigger className="rounded-xl"><SelectValue/></SelectTrigger>
+                <Select
+                  value={landingMode}
+                  onValueChange={(v) => setLandingMode(v as typeof landingMode)}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="landing">Show landing page</SelectItem>
                     <SelectItem value="redirect">Redirect immediately</SelectItem>
@@ -401,9 +481,16 @@ function QrDetail() {
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>Expires at</Label>
                 <div className="flex gap-2">
-                  <Input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="rounded-xl"/>
+                  <Input
+                    type="datetime-local"
+                    value={expiresAt}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    className="rounded-xl"
+                  />
                   {expiresAt && (
-                    <Button variant="outline" onClick={clearExpiry} className="rounded-full">Remove</Button>
+                    <Button variant="outline" onClick={clearExpiry} className="rounded-full">
+                      Remove
+                    </Button>
                   )}
                 </div>
               </div>
@@ -413,20 +500,42 @@ function QrDetail() {
               <MetaRow label="Short link">
                 <div className="flex items-center gap-2 font-mono">
                   <span className="truncate">{shortUrl}</span>
-                  <button onClick={copyUrl} className="rounded-md p-1 hover:bg-accent"><Copy className="h-3.5 w-3.5"/></button>
-                  <a href={shortUrl} target="_blank" rel="noreferrer" className="rounded-md p-1 hover:bg-accent"><ExternalLink className="h-3.5 w-3.5"/></a>
+                  <button onClick={copyUrl} className="rounded-md p-1 hover:bg-accent">
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                  <a
+                    href={shortUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-md p-1 hover:bg-accent"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
                 </div>
               </MetaRow>
               <MetaRow label="Destination">{destinationLabel(destinationType)}</MetaRow>
-              <MetaRow label="Landing">{landingMode === "redirect" ? "Immediate redirect" : "Landing page first"}</MetaRow>
+              <MetaRow label="Landing">
+                {landingMode === "redirect" ? "Immediate redirect" : "Landing page first"}
+              </MetaRow>
               <MetaRow label="Status">{statusLabel(effectiveStatus)}</MetaRow>
-              <MetaRow label="Expires">{qr.expires_at ? new Date(qr.expires_at).toLocaleString() : "Never"}</MetaRow>
+              <MetaRow label="Expires">
+                {qr.expires_at ? new Date(qr.expires_at).toLocaleString() : "Never"}
+              </MetaRow>
               <MetaRow label="Last updated">{new Date(qr.updated_at).toLocaleString()}</MetaRow>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-              <Button variant="outline" onClick={deleteQr} className="rounded-full text-destructive hover:text-destructive"><Trash2 className="mr-1 h-4 w-4"/>Delete</Button>
-              <Button onClick={saveAll} className="rounded-full">Save changes</Button>
+              <Button
+                variant="outline"
+                onClick={deleteQr}
+                className="rounded-full text-destructive hover:text-destructive"
+              >
+                <Trash2 className="mr-1 h-4 w-4" />
+                Delete
+              </Button>
+              <Button onClick={saveAll} className="rounded-full">
+                Save changes
+              </Button>
             </div>
 
             <div className="rounded-2xl bg-accent p-3 text-center text-xs text-accent-foreground">

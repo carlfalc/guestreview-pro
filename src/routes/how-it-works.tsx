@@ -1,12 +1,29 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { PublicShell, PageHero, Section, CardGrid, InfoCard, Faq, FinalCta } from "@/components/public/PublicShell";
+import {
+  PublicShell,
+  PageHero,
+  Section,
+  CardGrid,
+  InfoCard,
+  Faq,
+  FinalCta,
+} from "@/components/public/PublicShell";
 import { seo, jsonLd } from "@/lib/seo";
 
 const FAQS = [
-  { q: "How long does setup take?", a: "Most venues have a printable code within about ten minutes: add the business, paste the Google review link, design the code, export the format you need." },
-  { q: "Where do I find my Google review link?", a: "Open your Google Business Profile, choose the option to ask for reviews, and copy the short review link Google gives you. Paste that into your business settings." },
-  { q: "Do customers need an app?", a: "No. Any modern phone camera opens the link directly. Customers sign in to Google only if Google asks them to when posting." },
+  {
+    q: "How long does setup take?",
+    a: "Most venues have a printable code within about ten minutes: add the business, paste the Google review link, design the code, export the format you need.",
+  },
+  {
+    q: "Where do I find my Google review link?",
+    a: "Open your Google Business Profile, choose the option to ask for reviews, and copy the short review link Google gives you. Paste that into your business settings.",
+  },
+  {
+    q: "Do customers need an app?",
+    a: "No. Any modern phone camera opens the link directly. Customers sign in to Google only if Google asks them to when posting.",
+  },
 ];
 
 export const Route = createFileRoute("/how-it-works")({
@@ -17,7 +34,13 @@ export const Route = createFileRoute("/how-it-works")({
       title: "How It Works — From Google Review Link to Printed QR | GuestReview Pro",
       description:
         "A step-by-step walkthrough: add your business, paste your Google review link, design a validated QR code, print it and measure scans.",
-      jsonLd: [jsonLd.faq(FAQS), jsonLd.breadcrumbs([{ name: "Home", path: "/" }, { name: "How it works", path: "/how-it-works" }])],
+      jsonLd: [
+        jsonLd.faq(FAQS),
+        jsonLd.breadcrumbs([
+          { name: "Home", path: "/" },
+          { name: "How it works", path: "/how-it-works" },
+        ]),
+      ],
     }),
 });
 
@@ -58,7 +81,10 @@ function HowItWorksPage() {
       >
         <div className="mt-8">
           <Link to="/auth" data-cta="signup">
-            <Button size="lg" className="rounded-full bg-white px-8 text-[#0a0f3d] hover:bg-white/90">
+            <Button
+              size="lg"
+              className="rounded-full bg-white px-8 text-[#0a0f3d] hover:bg-white/90"
+            >
               Create your free QR
             </Button>
           </Link>
@@ -68,7 +94,10 @@ function HowItWorksPage() {
       <Section title="The workflow">
         <ol className="space-y-4">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="flex gap-5 rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+            <li
+              key={step.title}
+              className="flex gap-5 rounded-3xl border border-white/10 bg-white/[0.03] p-6"
+            >
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-semibold">
                 {i + 1}
               </span>
@@ -81,15 +110,27 @@ function HowItWorksPage() {
         </ol>
       </Section>
 
-      <Section title="What happens when someone scans" intro="The customer journey is deliberately short.">
+      <Section
+        title="What happens when someone scans"
+        intro="The customer journey is deliberately short."
+      >
         <CardGrid>
-          <InfoCard title="1. Camera opens the link" body="No app, no account and no login on our side. The scan is anonymous." />
-          <InfoCard title="2. We record the scan" body="A scan count for that placement, with no personal data attached to it." />
-          <InfoCard title="3. Google takes over" body="The customer lands on your Google review form and writes their review on Google." />
+          <InfoCard
+            title="1. Camera opens the link"
+            body="No app, no account and no login on our side. The scan is anonymous."
+          />
+          <InfoCard
+            title="2. We record the scan"
+            body="A scan count for that placement, with no personal data attached to it."
+          />
+          <InfoCard
+            title="3. Google takes over"
+            body="The customer lands on your Google review form and writes their review on Google."
+          />
         </CardGrid>
         <p className="mt-4 text-sm text-white/50">
-          GuestReview Pro never writes, edits, filters or removes reviews, and never screens customers
-          before sending them to Google.
+          GuestReview Pro never writes, edits, filters or removes reviews, and never screens
+          customers before sending them to Google.
         </p>
       </Section>
 

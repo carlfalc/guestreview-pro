@@ -60,13 +60,19 @@ function twoPanelTent(format: BusinessFormat): FoldedLayout {
   const safeInset = 4;
   const back: PanelRect = {
     panel: "back",
-    x: 0, y: 0, w, h: foldY,
+    x: 0,
+    y: 0,
+    w,
+    h: foldY,
     rotation: 180,
     label: "Back face",
   };
   const front: PanelRect = {
     panel: "front",
-    x: 0, y: foldY, w, h: foldY,
+    x: 0,
+    y: foldY,
+    w,
+    h: foldY,
     rotation: 0,
     label: "Front face",
   };
