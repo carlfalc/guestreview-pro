@@ -22,6 +22,7 @@ import { Route as CompareRouteImport } from './routes/compare'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
@@ -104,6 +105,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
+  id: '/industries/',
+  path: '/industries/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RCodeRoute = RCodeRouteImport.update({
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
+  '/industries/': typeof IndustriesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
+  '/industries': typeof IndustriesIndexRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/r/$code': typeof RCodeRoute
+  '/industries/': typeof IndustriesIndexRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/health': typeof AuthenticatedAdminHealthRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -335,6 +344,7 @@ export interface FileRouteTypes {
     | '/qr'
     | '/settings'
     | '/r/$code'
+    | '/industries/'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/qr'
     | '/settings'
     | '/r/$code'
+    | '/industries'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/_authenticated/qr'
     | '/_authenticated/settings'
     | '/r/$code'
+    | '/industries/'
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/health'
     | '/_authenticated/admin/region-requests'
@@ -430,6 +442,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   RCodeRoute: typeof RCodeRoute
+  IndustriesIndexRoute: typeof IndustriesIndexRoute
   RCodeViewRoute: typeof RCodeViewRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -525,6 +538,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/industries/': {
+      id: '/industries/'
+      path: '/industries'
+      fullPath: '/industries/'
+      preLoaderRoute: typeof IndustriesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$code': {
@@ -741,6 +761,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   RCodeRoute: RCodeRoute,
+  IndustriesIndexRoute: IndustriesIndexRoute,
   RCodeViewRoute: RCodeViewRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
