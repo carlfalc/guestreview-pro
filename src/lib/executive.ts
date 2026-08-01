@@ -532,3 +532,23 @@ export function buildEmailPreview(input: {
     ctaLabel: "View Dashboard",
   };
 }
+
+/* -------------------------------------------------------------------------- */
+/* Composed overview (shared by the dashboard, reports and AI insights)       */
+/* -------------------------------------------------------------------------- */
+
+export interface ExecutiveOverview {
+  business: { id: string; name: string; industry: string | null } | null;
+  businesses: Array<{ id: string; name: string }>;
+  health: HealthScore;
+  rating: Rating | null;
+  confidence: Confidence;
+  confidenceNote: string;
+  trend: Trend;
+  lastUpdated: string;
+  snapshot: ExecutiveSnapshot;
+  recommendations: Recommendation[];
+  aiPayload: AiSummaryPayload;
+  email: EmailPreview;
+  labels: Record<string, string>;
+}
