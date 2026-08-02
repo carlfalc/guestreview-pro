@@ -4,13 +4,7 @@
 // here recalculates a score: this module only assembles verified values into a
 // payload, defines the required output shape, and screens the model's wording.
 import type { HealthScore } from "@/lib/health-score";
-import type {
-  Confidence,
-  ExecutiveSnapshot,
-  Rating,
-  Recommendation,
-  Trend,
-} from "@/lib/executive";
+import type { Confidence, ExecutiveSnapshot, Rating, Recommendation, Trend } from "@/lib/executive";
 import { confidenceNote } from "@/lib/executive";
 import type { PlanTierKey } from "@/lib/entitlements";
 
@@ -31,7 +25,13 @@ export interface InsightPayload {
     confidenceNote: string;
     state: string;
   };
-  dimensions: Array<{ key: string; label: string; score: number | null; state: string; summary: string }>;
+  dimensions: Array<{
+    key: string;
+    label: string;
+    score: number | null;
+    state: string;
+    summary: string;
+  }>;
   activity: {
     scans: number;
     destinationClicks: number;
@@ -51,7 +51,13 @@ export interface InsightPayload {
   qrQualityWarnings: string[];
   recommendations: {
     completed: string[];
-    outstanding: Array<{ title: string; reason: string; action: string; effort: string; impact: string }>;
+    outstanding: Array<{
+      title: string;
+      reason: string;
+      action: string;
+      effort: string;
+      impact: string;
+    }>;
   };
   deterministicInsights: string[];
   dataConfidenceNotes: string[];
@@ -85,7 +91,9 @@ export function buildInsightPayload(input: PayloadInput): InsightPayload {
 
   const notes: string[] = [confidenceNote(input.confidence)];
   if (!h.totals.eventDataAvailable) {
-    notes.push("Scan event data could not be read for this period, so activity figures are incomplete.");
+    notes.push(
+      "Scan event data could not be read for this period, so activity figures are incomplete.",
+    );
   }
   if (h.totals.clickRate === null) {
     notes.push("There are too few scans to report a reliable click-through rate.");
@@ -192,7 +200,10 @@ export interface SufficiencyResult {
 export const INSUFFICIENT_MESSAGE =
   "Not enough activity yet to generate a reliable weekly insight.";
 
-export function checkInsightSufficiency(payload: InsightPayload, health: HealthScore): SufficiencyResult {
+export function checkInsightSufficiency(
+  payload: InsightPayload,
+  health: HealthScore,
+): SufficiencyResult {
   const actions = [
     "Test your QR codes",
     "Complete your placement rollout",
@@ -234,7 +245,9 @@ export const MAX_ACTIONS = 3;
 const LEVELS: EffortLevel[] = ["low", "medium", "high"];
 
 function level(v: unknown): EffortLevel {
-  const s = String(v ?? "").toLowerCase().trim();
+  const s = String(v ?? "")
+    .toLowerCase()
+    .trim();
   return (LEVELS as string[]).includes(s) ? (s as EffortLevel) : "medium";
 }
 
@@ -326,7 +339,12 @@ export interface InsightLimits {
 export const INSIGHT_LIMITS: Record<PlanTierKey, InsightLimits> = {
   free: { canGenerate: false, perBusinessPerWeek: 0, perAccountPerHour: 0, businessesCovered: 0 },
   pro: { canGenerate: true, perBusinessPerWeek: 3, perAccountPerHour: 10, businessesCovered: 1 },
-  business: { canGenerate: true, perBusinessPerWeek: 3, perAccountPerHour: 10, businessesCovered: "all" },
+  business: {
+    canGenerate: true,
+    perBusinessPerWeek: 3,
+    perAccountPerHour: 10,
+    businessesCovered: "all",
+  },
 };
 
 export function insightLimitsFor(plan: PlanTierKey): InsightLimits {
@@ -335,7 +353,16 @@ export function insightLimitsFor(plan: PlanTierKey): InsightLimits {
 
 export type LimitDenial =
   | { allowed: true }
-  | { allowed: false; code: "plan_required" | "business_not_covered" | "weekly_limit" | "hourly_limit" | "in_progress"; message: string };
+  | {
+      allowed: false;
+      code:
+        | "plan_required"
+        | "business_not_covered"
+        | "weekly_limit"
+        | "hourly_limit"
+        | "in_progress";
+      message: string;
+    };
 
 export function checkInsightAllowance(args: {
   plan: PlanTierKey;
@@ -349,7 +376,8 @@ export function checkInsightAllowance(args: {
     return {
       allowed: false,
       code: "plan_required",
-      message: "AI Weekly Insights are available on Pro and Business plans. Upgrade to generate your own summary.",
+      message:
+        "AI Weekly Insights are available on Pro and Business plans. Upgrade to generate your own summary.",
     };
   }
   if (!args.businessCovered) {
@@ -429,7 +457,8 @@ export function insightToPlainText(out: InsightOutput, businessName: string): st
     "",
     "Recommended actions:",
     ...out.recommendedActions.map(
-      (a, i) => `${i + 1}. ${a.title} — ${a.reason} (effort: ${a.effort}, impact: ${a.expectedImpact})`,
+      (a, i) =>
+        `${i + 1}. ${a.title} — ${a.reason} (effort: ${a.effort}, impact: ${a.expectedImpact})`,
     ),
     "",
     out.closingNote,

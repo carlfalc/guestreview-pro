@@ -17,7 +17,9 @@ export function RegionalPrice({
   // Do not render prices until the account region is resolved.
   if (!region) return <span className={className}>—</span>;
   const config = getRegionForCountry(region.countryCode);
-  const prices = getRegionalPlanPrices(region.pricingRegion as ReturnType<typeof getRegionForCountry>["pricingRegion"]);
+  const prices = getRegionalPlanPrices(
+    region.pricingRegion as ReturnType<typeof getRegionForCountry>["pricingRegion"],
+  );
   const p = prices[plan];
   const fmt = compact ? formatRegionalPriceCompact : formatRegionalPrice;
   return <span className={className}>{fmt(p.amountMinor, p.currency, config.locale)}</span>;

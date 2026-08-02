@@ -706,7 +706,6 @@ export function recommendPlacements(input: RecommendationInput): PlacementRecomm
       candidates.push({ def, key, name: def?.name ?? customName ?? key });
     }
   } else {
-
     for (const def of placementsForIndustry(input.industry)) {
       if (def.excludeGoals && activeGoals.every((g) => def.excludeGoals!.includes(g))) continue;
       candidates.push({ def, key: def.key, name: def.name });

@@ -20,7 +20,6 @@ export const getReviewHealthScore = createServerFn({ method: "POST" })
     return computeHealthScore(facts.input);
   });
 
-
 export interface HealthBusinessOption {
   id: string;
   name: string;

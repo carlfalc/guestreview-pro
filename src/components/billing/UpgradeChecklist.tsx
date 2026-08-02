@@ -74,7 +74,10 @@ export function UpgradeChecklist() {
         </div>
         <ul className="space-y-3">
           {STEPS.map((step) => (
-            <li key={step.title} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/60 p-4">
+            <li
+              key={step.title}
+              className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/60 p-4"
+            >
               <Check className="mt-0.5 size-4 shrink-0 text-primary" />
               <div className="flex-1">
                 <p className="text-sm font-medium">{step.title}</p>

@@ -21,7 +21,9 @@ export function UpgradePrompt({
 
   if (compact) {
     return (
-      <div className={`flex flex-wrap items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 ${className ?? ""}`}>
+      <div
+        className={`flex flex-wrap items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 ${className ?? ""}`}
+      >
         <Sparkles className="h-4 w-4 shrink-0 text-primary" />
         <p className="text-sm">
           <span className="font-medium">{copy.title}</span>{" "}

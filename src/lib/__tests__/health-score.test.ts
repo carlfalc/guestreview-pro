@@ -49,7 +49,14 @@ const base: HealthInput = {
   business,
   qrCodes: [qr],
   plans: [
-    { id: "p1", status: "generated", itemCount: 4, generatedItemCount: 4, checklistTotal: 4, checklistDone: 2 },
+    {
+      id: "p1",
+      status: "generated",
+      itemCount: 4,
+      generatedItemCount: 4,
+      checklistTotal: 4,
+      checklistDone: 2,
+    },
   ],
   scans: [],
   eventDataAvailable: true,

@@ -6,8 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Globe, Lock, MessageCircleQuestion, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -34,17 +47,22 @@ export function AccountRegionCard({ region }: { region: AccountRegionDTO }) {
 
   const submitCorrection = useServerFn(createRegionCorrectionRequest);
   const submit = useMutation({
-    mutationFn: () => submitCorrection({
-      data: {
-        requestedCountryCode: country,
-        reason,
-        supportingInformation: supporting || undefined,
-      },
-    }),
+    mutationFn: () =>
+      submitCorrection({
+        data: {
+          requestedCountryCode: country,
+          reason,
+          supportingInformation: supporting || undefined,
+        },
+      }),
     onSuccess: () => {
-      toast.success("Correction request submitted. Your currency will not change until it's reviewed.");
+      toast.success(
+        "Correction request submitted. Your currency will not change until it's reviewed.",
+      );
       setOpen(false);
-      setCountry(""); setReason(""); setSupporting("");
+      setCountry("");
+      setReason("");
+      setSupporting("");
       qc.invalidateQueries({ queryKey: ["region-correction-requests"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -70,12 +88,15 @@ export function AccountRegionCard({ region }: { region: AccountRegionDTO }) {
               </p>
             </div>
           </div>
-          <Badge variant="secondary" className="rounded-full gap-1"><Lock className="h-3 w-3" /> Locked</Badge>
+          <Badge variant="secondary" className="rounded-full gap-1">
+            <Lock className="h-3 w-3" /> Locked
+          </Badge>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <ReadOnly label="Country">
-            {region.countryName} <span className="text-muted-foreground">({region.countryCode})</span>
+            {region.countryName}{" "}
+            <span className="text-muted-foreground">({region.countryCode})</span>
           </ReadOnly>
           <ReadOnly label="Currency">
             {region.currencyCode} — {region.currencyName}
@@ -84,14 +105,17 @@ export function AccountRegionCard({ region }: { region: AccountRegionDTO }) {
         </div>
 
         <p className="rounded-xl bg-accent/40 p-3 text-xs text-muted-foreground">
-          Your country and billing currency are assigned automatically based on your account and billing location. You cannot change them from settings — this keeps subscription pricing consistent and prevents accidental currency changes when travelling.
+          Your country and billing currency are assigned automatically based on your account and
+          billing location. You cannot change them from settings — this keeps subscription pricing
+          consistent and prevents accidental currency changes when travelling.
         </p>
 
         <RegionDetectionStatus region={region} />
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
           <p className="text-xs text-muted-foreground">
-            Think this is wrong? You can request a correction — our team reviews each request manually.
+            Think this is wrong? You can request a correction — our team reviews each request
+            manually.
           </p>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -107,7 +131,9 @@ export function AccountRegionCard({ region }: { region: AccountRegionDTO }) {
                 <div className="space-y-1.5">
                   <Label>Requested country</Label>
                   <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
                     <SelectContent>
                       {countryOptions.map((c) => (
                         <SelectItem key={c.countryCode} value={c.countryCode}>
@@ -119,18 +145,30 @@ export function AccountRegionCard({ region }: { region: AccountRegionDTO }) {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Reason</Label>
-                  <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. We operate from New Zealand, not the US." className="rounded-xl" />
+                  <Input
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="e.g. We operate from New Zealand, not the US."
+                    className="rounded-xl"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Supporting details (optional)</Label>
-                  <Textarea value={supporting} onChange={(e) => setSupporting(e.target.value)} placeholder="Business address, VAT number, etc." className="rounded-xl" />
+                  <Textarea
+                    value={supporting}
+                    onChange={(e) => setSupporting(e.target.value)}
+                    placeholder="Business address, VAT number, etc."
+                    className="rounded-xl"
+                  />
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   Your currency will not change until the request is reviewed.
                 </p>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setOpen(false)} className="rounded-full">Cancel</Button>
+                <Button variant="outline" onClick={() => setOpen(false)} className="rounded-full">
+                  Cancel
+                </Button>
                 <Button
                   onClick={() => submit.mutate()}
                   disabled={submit.isPending || !country || reason.trim().length < 5}
@@ -145,12 +183,18 @@ export function AccountRegionCard({ region }: { region: AccountRegionDTO }) {
 
         {requestsQ.data && requestsQ.data.length > 0 && (
           <div className="space-y-2 border-t border-border pt-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your correction requests</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Your correction requests
+            </p>
             <ul className="space-y-1.5">
               {requestsQ.data.map((r) => (
-                <li key={r.id} className="flex items-center justify-between rounded-xl bg-accent/40 px-3 py-2 text-xs">
+                <li
+                  key={r.id}
+                  className="flex items-center justify-between rounded-xl bg-accent/40 px-3 py-2 text-xs"
+                >
                   <span>
-                    {r.current_country_code ?? "—"} → <span className="font-medium">{r.requested_country_code}</span>
+                    {r.current_country_code ?? "—"} →{" "}
+                    <span className="font-medium">{r.requested_country_code}</span>
                     <span className="ml-2 text-muted-foreground">
                       {new Date(r.created_at).toLocaleDateString()}
                     </span>
@@ -176,7 +220,21 @@ function ReadOnly({ label, children }: { label: string; children: React.ReactNod
 }
 
 function StatusPill({ status }: { status: string }) {
-  if (status === "approved") return <span className="inline-flex items-center gap-1 text-emerald-600"><CheckCircle2 className="h-3.5 w-3.5" /> Approved</span>;
-  if (status === "rejected") return <span className="inline-flex items-center gap-1 text-destructive"><XCircle className="h-3.5 w-3.5" /> Rejected</span>;
-  return <span className="inline-flex items-center gap-1 text-muted-foreground"><Clock className="h-3.5 w-3.5" /> Pending</span>;
+  if (status === "approved")
+    return (
+      <span className="inline-flex items-center gap-1 text-emerald-600">
+        <CheckCircle2 className="h-3.5 w-3.5" /> Approved
+      </span>
+    );
+  if (status === "rejected")
+    return (
+      <span className="inline-flex items-center gap-1 text-destructive">
+        <XCircle className="h-3.5 w-3.5" /> Rejected
+      </span>
+    );
+  return (
+    <span className="inline-flex items-center gap-1 text-muted-foreground">
+      <Clock className="h-3.5 w-3.5" /> Pending
+    </span>
+  );
 }

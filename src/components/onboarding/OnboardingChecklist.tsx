@@ -43,9 +43,7 @@ export function OnboardingChecklist() {
               <h2 className="text-lg font-semibold tracking-tight">Get set up</h2>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              {next
-                ? `Next: ${next.title.toLowerCase()}.`
-                : "You're all set."}
+              {next ? `Next: ${next.title.toLowerCase()}.` : "You're all set."}
             </p>
           </div>
           <div className="min-w-[140px]">
@@ -66,7 +64,9 @@ export function OnboardingChecklist() {
                 {step.done ? <Check className="h-3 w-3" /> : <Circle className="h-2 w-2" />}
               </span>
               <div className="min-w-0 flex-1">
-                <p className={`text-sm font-medium ${step.done ? "text-muted-foreground line-through" : ""}`}>
+                <p
+                  className={`text-sm font-medium ${step.done ? "text-muted-foreground line-through" : ""}`}
+                >
                   {step.title}
                 </p>
                 {!step.done && <p className="text-sm text-muted-foreground">{step.body}</p>}
@@ -78,7 +78,10 @@ export function OnboardingChecklist() {
                   variant={step.key === next?.key ? "default" : "outline"}
                   className="rounded-full"
                   onClick={() =>
-                    track("onboarding_step_completed", { step: String(step.key), action: "clicked" })
+                    track("onboarding_step_completed", {
+                      step: String(step.key),
+                      action: "clicked",
+                    })
                   }
                 >
                   <Link to={step.to}>{step.cta}</Link>

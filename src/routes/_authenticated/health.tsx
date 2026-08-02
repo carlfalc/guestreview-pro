@@ -7,10 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, CircleAlert, Circle, HeartPulse } from "lucide-react";
-import {
-  getReviewHealthScore,
-  listHealthBusinesses,
-} from "@/lib/health-score.functions";
+import { getReviewHealthScore, listHealthBusinesses } from "@/lib/health-score.functions";
 import type { DimensionBreakdown, DimensionResult } from "@/lib/health-score";
 
 export const Route = createFileRoute("/_authenticated/health")({

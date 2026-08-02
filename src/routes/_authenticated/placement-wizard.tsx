@@ -24,16 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  Loader2,
-  Plus,
-  Sparkles,
-  Trash2,
-  Wand2,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   BUSINESS_GOALS,
@@ -155,7 +146,10 @@ function PlacementWizard() {
   function addCustom() {
     const name = customName.trim();
     if (!name) return;
-    const key = `custom_${name.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 40)}`;
+    const key = `custom_${name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .slice(0, 40)}`;
     if (customPlacements.some((c) => c.key === key)) return setCustomName("");
     setCustomPlacements((p) => [...p, { key, name }]);
     setSelected((p) => [...p, key]);
@@ -194,9 +188,7 @@ function PlacementWizard() {
   }
 
   function patchDraft(key: string, patch: Partial<Draft>) {
-    setDrafts((prev) =>
-      (prev ?? []).map((d) => (d.placementKey === key ? { ...d, ...patch } : d)),
-    );
+    setDrafts((prev) => (prev ?? []).map((d) => (d.placementKey === key ? { ...d, ...patch } : d)));
   }
 
   function removeDraft(key: string) {
@@ -697,7 +689,11 @@ function PlacementWizard() {
                 >
                   Save draft
                 </Button>
-                <Button className="rounded-xl" disabled={busy || !drafts?.length} onClick={generateAll}>
+                <Button
+                  className="rounded-xl"
+                  disabled={busy || !drafts?.length}
+                  onClick={generateAll}
+                >
                   {busy ? (
                     <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                   ) : (
@@ -724,7 +720,12 @@ function PlacementWizard() {
             <Button asChild className="rounded-xl">
               <Link to="/plans">See Pro pricing for your region</Link>
             </Button>
-            <Button variant="outline" className="rounded-xl" onClick={generateOneFree} disabled={busy}>
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={generateOneFree}
+              disabled={busy}
+            >
               Generate my top placement only
             </Button>
           </div>

@@ -260,7 +260,10 @@ export const savePlacementPlan = createServerFn({ method: "POST" })
     return {
       id: data?.id ? assertUuid(data.id, "plan") : null,
       businessId,
-      name: String(data?.name ?? "").trim().slice(0, 140) || "Placement plan",
+      name:
+        String(data?.name ?? "")
+          .trim()
+          .slice(0, 140) || "Placement plan",
       industry: industry as IndustryKey,
       goals: goals as GoalKey[],
       items,
@@ -574,7 +577,11 @@ export const generatePlacementPlan = createServerFn({ method: "POST" })
       (i) => i.qr_code_id,
     ).length;
     const status: PlanStatus =
-      done === 0 ? "ready" : done >= total && !failures.length ? "generated" : "partially_generated";
+      done === 0
+        ? "ready"
+        : done >= total && !failures.length
+          ? "generated"
+          : "partially_generated";
 
     await db
       .from("placement_plans")

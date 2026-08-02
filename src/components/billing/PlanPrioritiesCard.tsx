@@ -116,8 +116,8 @@ export function PlanPrioritiesCard() {
           <h2 className="text-lg font-semibold">Choose what stays editable</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             You have more items than your current plan includes. Everything stays live — every QR
-            code keeps scanning and redirecting to your review page. Pick which ones you want to keep
-            editing; the rest become read-only until you upgrade.
+            code keeps scanning and redirecting to your review page. Pick which ones you want to
+            keep editing; the rest become read-only until you upgrade.
           </p>
         </div>
 

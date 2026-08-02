@@ -122,7 +122,7 @@ function rowToInsight(row: Record<string, unknown>): StoredInsight {
 }
 
 async function callGateway(payload: InsightPayload): Promise<InsightOutput> {
-  const key = process.env['LOVABLE_API_KEY'];
+  const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI service is not configured");
 
   const res = await fetch(GATEWAY_URL, {
@@ -437,17 +437,20 @@ export const generateWeeklyInsight = createServerFn({ method: "POST" })
 
 export const submitInsightFeedback = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { insightId: string; helpful: boolean; reason?: string; comment?: string }) => {
-    if (!isUuid(data?.insightId)) throw new Error("Invalid insight");
-    const allowed = ["too_generic", "incorrect_emphasis", "missing_context", "too_long", "other"];
-    const reason = typeof data.reason === "string" && allowed.includes(data.reason) ? data.reason : null;
-    return {
-      insightId: data.insightId,
-      helpful: Boolean(data.helpful),
-      reason,
-      comment: typeof data.comment === "string" ? data.comment.trim().slice(0, 1000) : null,
-    };
-  })
+  .inputValidator(
+    (data: { insightId: string; helpful: boolean; reason?: string; comment?: string }) => {
+      if (!isUuid(data?.insightId)) throw new Error("Invalid insight");
+      const allowed = ["too_generic", "incorrect_emphasis", "missing_context", "too_long", "other"];
+      const reason =
+        typeof data.reason === "string" && allowed.includes(data.reason) ? data.reason : null;
+      return {
+        insightId: data.insightId,
+        helpful: Boolean(data.helpful),
+        reason,
+        comment: typeof data.comment === "string" ? data.comment.trim().slice(0, 1000) : null,
+      };
+    },
+  )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { supabase, userId } = context;
     const { error } = await supabase.from("weekly_ai_insight_feedback").upsert(
