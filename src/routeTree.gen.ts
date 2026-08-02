@@ -43,6 +43,7 @@ import { Route as AuthenticatedPlacementPlansIndexRouteImport } from './routes/_
 import { Route as AuthenticatedMarketingPacksIndexRouteImport } from './routes/_authenticated/marketing-packs.index'
 import { Route as ResourcesCategoryCategoryRouteImport } from './routes/resources.category.$category'
 import { Route as RCodeViewRouteImport } from './routes/r.$code_.view'
+import { Route as AuthenticatedSettingsEmailRouteImport } from './routes/_authenticated/settings.email'
 import { Route as AuthenticatedQrIdRouteImport } from './routes/_authenticated/qr.$id'
 import { Route as AuthenticatedPlacementPlansIdRouteImport } from './routes/_authenticated/placement-plans.$id'
 import { Route as AuthenticatedMarketingPacksNewRouteImport } from './routes/_authenticated/marketing-packs.new'
@@ -228,6 +229,12 @@ const RCodeViewRoute = RCodeViewRouteImport.update({
   path: '/r/$code/view',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsEmailRoute =
+  AuthenticatedSettingsEmailRouteImport.update({
+    id: '/email',
+    path: '/email',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
 const AuthenticatedQrIdRoute = AuthenticatedQrIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -317,7 +324,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
-  '/settings': typeof AuthenticatedSettingsRoute
+  '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -333,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/placement-plans/$id': typeof AuthenticatedPlacementPlansIdRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
+  '/settings/email': typeof AuthenticatedSettingsEmailRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
@@ -363,7 +371,7 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
-  '/settings': typeof AuthenticatedSettingsRoute
+  '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -379,6 +387,7 @@ export interface FileRoutesByTo {
   '/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/placement-plans/$id': typeof AuthenticatedPlacementPlansIdRoute
   '/qr/$id': typeof AuthenticatedQrIdRoute
+  '/settings/email': typeof AuthenticatedSettingsEmailRoute
   '/r/$code/view': typeof RCodeViewRoute
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
@@ -411,7 +420,7 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -427,6 +436,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing-packs/new': typeof AuthenticatedMarketingPacksNewRoute
   '/_authenticated/placement-plans/$id': typeof AuthenticatedPlacementPlansIdRoute
   '/_authenticated/qr/$id': typeof AuthenticatedQrIdRoute
+  '/_authenticated/settings/email': typeof AuthenticatedSettingsEmailRoute
   '/r/$code_/view': typeof RCodeViewRoute
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
@@ -475,6 +485,7 @@ export interface FileRouteTypes {
     | '/marketing-packs/new'
     | '/placement-plans/$id'
     | '/qr/$id'
+    | '/settings/email'
     | '/r/$code/view'
     | '/resources/category/$category'
     | '/marketing-packs/'
@@ -521,6 +532,7 @@ export interface FileRouteTypes {
     | '/marketing-packs/new'
     | '/placement-plans/$id'
     | '/qr/$id'
+    | '/settings/email'
     | '/r/$code/view'
     | '/resources/category/$category'
     | '/marketing-packs'
@@ -568,6 +580,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing-packs/new'
     | '/_authenticated/placement-plans/$id'
     | '/_authenticated/qr/$id'
+    | '/_authenticated/settings/email'
     | '/r/$code_/view'
     | '/resources/category/$category'
     | '/_authenticated/marketing-packs/'
@@ -841,6 +854,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RCodeViewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings/email': {
+      id: '/_authenticated/settings/email'
+      path: '/email'
+      fullPath: '/settings/email'
+      preLoaderRoute: typeof AuthenticatedSettingsEmailRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
     '/_authenticated/qr/$id': {
       id: '/_authenticated/qr/$id'
       path: '/$id'
@@ -947,6 +967,19 @@ const AuthenticatedQrRouteWithChildren = AuthenticatedQrRoute._addFileChildren(
   AuthenticatedQrRouteChildren,
 )
 
+interface AuthenticatedSettingsRouteChildren {
+  AuthenticatedSettingsEmailRoute: typeof AuthenticatedSettingsEmailRoute
+}
+
+const AuthenticatedSettingsRouteChildren: AuthenticatedSettingsRouteChildren = {
+  AuthenticatedSettingsEmailRoute: AuthenticatedSettingsEmailRoute,
+}
+
+const AuthenticatedSettingsRouteWithChildren =
+  AuthenticatedSettingsRoute._addFileChildren(
+    AuthenticatedSettingsRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
@@ -957,7 +990,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminHealthRoute: typeof AuthenticatedAdminHealthRoute
   AuthenticatedAdminRegionRequestsRoute: typeof AuthenticatedAdminRegionRequestsRoute
@@ -980,7 +1013,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminHealthRoute: AuthenticatedAdminHealthRoute,
   AuthenticatedAdminRegionRequestsRoute: AuthenticatedAdminRegionRequestsRoute,
