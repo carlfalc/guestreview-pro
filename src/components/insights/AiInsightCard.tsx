@@ -88,8 +88,8 @@ export function AiInsightCard({
   });
 
   const insights = listQuery.data ?? [];
-  const latest: StoredInsight | null =
-    (openId ? (insights.find((i) => i.id === openId) ?? null) : null) ?? insights[0] ?? null;
+  const opened = openId ? insights.find((i) => i.id === openId) : undefined;
+  const latest: StoredInsight | null = opened ?? insights[0] ?? null;
   const access = accessQuery.data ?? null;
 
   const loading = accessQuery.isLoading || (Boolean(businessId) && listQuery.isLoading);
