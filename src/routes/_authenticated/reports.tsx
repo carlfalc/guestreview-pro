@@ -1,14 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Printer } from "lucide-react";
+import { Loader2, Printer, Sparkles } from "lucide-react";
 import { getExecutiveOverview } from "@/lib/executive.functions";
 import { PERIOD_OPTIONS } from "@/lib/executive";
 import { RatingBadge, TrendPill } from "@/components/executive/executive-ui";
+import { listWeeklyInsights } from "@/lib/ai-insights.functions";
+import { cardStateFor, AI_DISCLAIMER } from "@/lib/ai-insights";
+import { formatGeneratedDate } from "@/lib/ai-insight-view";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
