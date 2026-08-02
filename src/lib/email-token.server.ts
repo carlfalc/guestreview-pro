@@ -36,8 +36,8 @@ function fromB64url(value: string): Uint8Array {
   return out;
 }
 
-function encode(value: string): Uint8Array {
-  return new TextEncoder().encode(value);
+function encode(value: string): Uint8Array<ArrayBuffer> {
+  return new TextEncoder().encode(value) as Uint8Array<ArrayBuffer>;
 }
 
 async function hmac(secret: string, data: string): Promise<Uint8Array> {
