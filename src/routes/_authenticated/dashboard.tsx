@@ -17,6 +17,7 @@ import {
 } from "@/components/executive/executive-ui";
 import { getExecutiveOverview, setRecommendationAction } from "@/lib/executive.functions";
 import { PERIOD_OPTIONS } from "@/lib/executive";
+import { AiInsightCard } from "@/components/insights/AiInsightCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -41,7 +42,8 @@ function Dashboard() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["executive-overview", businessId, periodDays],
-    queryFn: async () => await getOverview({ data: { businessId: businessId ?? undefined, periodDays } }),
+    queryFn: async () =>
+      await getOverview({ data: { businessId: businessId ?? undefined, periodDays } }),
   });
 
   const action = useMutation({
@@ -204,6 +206,21 @@ function Dashboard() {
               </CardContent>
             </Card>
           </div>
+
+          <AiInsightCard
+            businessId={data.business.id}
+            businessName={data.business.name}
+            businesses={data.businesses}
+            periodDays={periodDays}
+            onSelectBusiness={setBusinessId}
+            onRecommendationComplete={(title) => {
+              const match = data.recommendations.find(
+                (r) => r.title.toLowerCase() === title.toLowerCase() && r.status === "open",
+              );
+              if (match) action.mutate({ key: match.key, action: "completed" });
+              else toast.message("Marked as noted — this action isn't tracked in your checklist.");
+            }}
+          />
 
           <section className="space-y-3">
             <div className="flex items-center gap-2">
