@@ -97,13 +97,18 @@ export function localClock(now: Date, timezone: string): LocalClock {
   };
 }
 
-/** "08:30" or "08:30:00" → minutes since midnight. */
+/** Default local delivery time (minutes since midnight) when a value is unusable. */
+export const DEFAULT_LOCAL_MINUTES = 8 * 60;
+
+/** "08:30" or "08:30:00" → minutes since midnight. Falls back to 08:00. */
 export function parseLocalTime(value: string): number {
-  const [h = "0", m = "0"] = String(value).split(":");
-  const hours = Math.min(23, Math.max(0, Number(h) || 0));
-  const mins = Math.min(59, Math.max(0, Number(m) || 0));
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(String(value).trim());
+  if (!match) return DEFAULT_LOCAL_MINUTES;
+  const hours = Math.min(23, Math.max(0, Number(match[1])));
+  const mins = Math.min(59, Math.max(0, Number(match[2])));
   return hours * 60 + mins;
 }
+
 
 export function formatLocalTime(minutes: number): string {
   const h = Math.floor(minutes / 60);
