@@ -345,11 +345,6 @@ function EmailSettingsPage() {
             <Button onClick={() => form && mutation.mutate(form)} disabled={mutation.isPending}>
               {mutation.isPending ? "Saving…" : "Save preferences"}
             </Button>
-            {ent?.preview ? (
-              <Button asChild variant="outline">
-                <Link to="/settings/email/preview">Preview emails</Link>
-              </Button>
-            ) : null}
           </div>
 
           {ent?.deliveryHistory ? (
