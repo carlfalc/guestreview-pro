@@ -36,6 +36,17 @@ function ReportsPage() {
     queryFn: async () => await getOverview({ data: { periodDays } }),
   });
 
+  const fetchInsights = useServerFn(listWeeklyInsights);
+  const businessId = data?.business?.id ?? null;
+  const { data: insights } = useQuery({
+    queryKey: ["insight-list", businessId],
+    enabled: Boolean(businessId),
+    queryFn: async () => await fetchInsights({ data: { businessId: businessId ?? undefined } }),
+  });
+  const insight = (insights ?? []).find(
+    (i) => i.status === "completed" && i.output && cardStateFor(i) !== "stale",
+  );
+
   const label = (k: string) => data?.labels[k] ?? k;
 
   return (
