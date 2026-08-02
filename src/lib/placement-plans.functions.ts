@@ -20,6 +20,7 @@ import {
   type PriorityKey,
 } from "@/lib/placement-recommendations";
 import type { PlanTierKey } from "@/lib/entitlements";
+import type { LooseClient } from "@/lib/loose-types";
 
 export type PlanStatus =
   | "draft"
@@ -84,7 +85,7 @@ export interface PlanDetail {
   plan_tier: PlanTierKey;
 }
 
-type AnyClient = { from: (t: string) => any; rpc: (n: string, a: unknown) => Promise<any> };
+type AnyClient = LooseClient;
 
 const UUID = /^[0-9a-f-]{36}$/i;
 

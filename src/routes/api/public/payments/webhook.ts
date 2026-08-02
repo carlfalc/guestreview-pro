@@ -12,6 +12,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 import {
+import type { LooseRecord } from "@/lib/loose-types";
   resolveTrustedPlanForPrice,
   backfillStripePriceId,
   UnknownStripePriceError,
@@ -69,7 +70,7 @@ async function finishEvent(eventId: string, status: "processed" | "failed", mess
   });
 }
 
-async function ownerIdFor(subscription: any, env: StripeEnv): Promise<string | null> {
+async function ownerIdFor(subscription: LooseRecord, env: StripeEnv): Promise<string | null> {
   const fromMeta = subscription?.metadata?.owner_id || subscription?.metadata?.userId;
   if (fromMeta) return fromMeta as string;
   const customer =
@@ -84,7 +85,7 @@ async function ownerIdFor(subscription: any, env: StripeEnv): Promise<string | n
   return (data as { owner_id?: string } | null)?.owner_id ?? null;
 }
 
-async function upsertSubscription(subscription: any, env: StripeEnv) {
+async function upsertSubscription(subscription: LooseRecord, env: StripeEnv) {
   const ownerId = await ownerIdFor(subscription, env);
   if (!ownerId) {
     // No owner mapping yet — retrying will not help until checkout completes.
@@ -147,7 +148,7 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
 
 /** Update payment health without ever touching plan entitlement. */
 async function markPayment(
-  invoice: any,
+  invoice: LooseRecord,
   env: StripeEnv,
   status: "paid" | "failed" | "action_required" | "finalization_failed",
 ) {
@@ -164,7 +165,7 @@ async function markPayment(
     .eq("environment", env);
 }
 
-async function setSubscriptionStatus(subscription: any, env: StripeEnv, status: string) {
+async function setSubscriptionStatus(subscription: LooseRecord, env: StripeEnv, status: string) {
   const id = subscription?.id;
   if (!id) return;
   await admin()
@@ -174,7 +175,7 @@ async function setSubscriptionStatus(subscription: any, env: StripeEnv, status: 
     .eq("environment", env);
 }
 
-async function dispatch(event: { type: string; data: { object: any } }, env: StripeEnv) {
+async function dispatch(event: { type: string; data: { object: LooseRecord } }, env: StripeEnv) {
   switch (event.type) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
@@ -219,7 +220,7 @@ async function dispatch(event: { type: string; data: { object: any } }, env: Str
         await upsertSubscription(
           {
             ...(sub as unknown as Record<string, unknown>),
-            metadata: { ...(sub as any).metadata, ...session.metadata },
+            metadata: { ...(sub as LooseRecord).metadata, ...session.metadata },
           },
           env,
         );
@@ -266,7 +267,7 @@ async function handle(request: Request, env: StripeEnv): Promise<number> {
   if (claim === "locked") return 409; // another worker holds it — Stripe retries
 
   try {
-    await dispatch(event as { type: string; data: { object: any } }, env);
+    await dispatch(event as { type: string; data: { object: LooseRecord } }, env);
     await finishEvent(event.id, "processed");
     return 200;
   } catch (e) {

@@ -3,6 +3,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sanitisePath } from "./analytics";
+import type { LooseClient } from "@/lib/loose-types";
 
 export const FEEDBACK_CATEGORIES = ["bug", "idea", "confusing", "praise", "other"] as const;
 export type FeedbackCategory = (typeof FEEDBACK_CATEGORIES)[number];
@@ -74,7 +75,7 @@ export const adminListFeedback = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<FeedbackRow[]> => {
     await assertAdmin(context as never);
-    const { data, error } = await (context.supabase as never as { from: (t: string) => any })
+    const { data, error } = await (context.supabase as never as LooseClient)
       .from("beta_feedback")
       .select("id, category, message, path, rating, status, admin_notes, created_at")
       .order("created_at", { ascending: false })
@@ -96,7 +97,7 @@ export const adminSetFeedbackStatus = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     await assertAdmin(context as never);
-    const { error } = await (context.supabase as never as { from: (t: string) => any })
+    const { error } = await (context.supabase as never as LooseClient)
       .from("beta_feedback")
       .update({ status: data.status })
       .eq("id", data.id);

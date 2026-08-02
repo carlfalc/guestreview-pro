@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useBilling } from "@/hooks/use-billing";
 import { markOverLimit } from "@/lib/entitlements";
+import type { LooseRecord } from "@/lib/loose-types";
 
 type Row = { id: string; name: string; created_at: string; status: string };
 
@@ -54,7 +55,7 @@ export function PlanPrioritiesCard() {
           plan_primary_qr_id?: string | null;
           plan_primary_business_id?: string | null;
         },
-        qrCodes: (qrs.data ?? []).map((q: Record<string, any>) => ({
+        qrCodes: (qrs.data ?? []).map((q: LooseRecord) => ({
           id: q.id,
           name: q.label || q.project_name || "Untitled QR",
           created_at: q.created_at,
