@@ -181,7 +181,9 @@ export function AiInsightCard({
           </div>
           <p className="text-sm text-muted-foreground">{PAYWALL_BODY}</p>
           <p className="text-sm">
-            From <RegionalPrice region={region} plan={plan} className="font-semibold" /> per month.
+            From{" "}
+            <RegionalPrice region={region} plan={`${plan}_monthly`} className="font-semibold" /> per
+            month.
           </p>
           <Button asChild className="rounded-full self-start">
             <Link to="/plans">See plans</Link>
