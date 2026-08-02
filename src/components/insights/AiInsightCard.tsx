@@ -231,7 +231,11 @@ export function AiInsightCard({
         )}
 
         {state === "generating" && (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
+          <p
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Writing this week's summary…
           </p>
         )}
@@ -275,9 +279,12 @@ export function AiInsightCard({
             </div>
 
             <div className="space-y-2 text-sm text-muted-foreground">
-              {out.executiveSummary.split(/\n{1,2}/).filter(Boolean).map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
+              {out.executiveSummary
+                .split(/\n{1,2}/)
+                .filter(Boolean)
+                .map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">

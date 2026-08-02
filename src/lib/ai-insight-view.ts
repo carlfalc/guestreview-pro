@@ -60,8 +60,13 @@ export function resolveCardState(args: {
 export function canGenerateNow(state: AiCardState, access: AccessLike | null): boolean {
   if (!access || !access.canGenerate) return false;
   if (access.remainingThisWeek <= 0) return false;
-  return state === "not_generated" || state === "ready" || state === "stale" ||
-    state === "failed" || state === "insufficient_data";
+  return (
+    state === "not_generated" ||
+    state === "ready" ||
+    state === "stale" ||
+    state === "failed" ||
+    state === "insufficient_data"
+  );
 }
 
 /** Business selection is only offered on plans that cover every location. */
@@ -149,7 +154,9 @@ export function customerFacingError(code: string, serverMessage?: string): strin
 }
 
 function looksTechnical(message: string): boolean {
-  return /\b(gpt|openai|gateway|http|json|token|stack|undefined|null|error:|\{|\})\b/i.test(message);
+  return /\b(gpt|openai|gateway|http|json|token|stack|undefined|null|error:|\{|\})\b/i.test(
+    message,
+  );
 }
 
 export const FEEDBACK_REASONS = [

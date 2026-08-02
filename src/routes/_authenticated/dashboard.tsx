@@ -42,7 +42,8 @@ function Dashboard() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["executive-overview", businessId, periodDays],
-    queryFn: async () => await getOverview({ data: { businessId: businessId ?? undefined, periodDays } }),
+    queryFn: async () =>
+      await getOverview({ data: { businessId: businessId ?? undefined, periodDays } }),
   });
 
   const action = useMutation({
@@ -220,8 +221,6 @@ function Dashboard() {
               else toast.message("Marked as noted — this action isn't tracked in your checklist.");
             }}
           />
-
-
 
           <section className="space-y-3">
             <div className="flex items-center gap-2">

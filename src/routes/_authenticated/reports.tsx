@@ -182,8 +182,6 @@ function ReportsPage() {
             </CardContent>
           </Card>
 
-
-
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {data.email.kpis.map((k) => (
               <Card key={k.label} className="rounded-2xl border-border/70">
@@ -216,7 +214,10 @@ function ReportsPage() {
                 data.recommendations
                   .filter((r) => r.status === "open")
                   .map((r) => (
-                    <div key={r.key} className="space-y-1 border-b border-border/50 pb-2 last:border-0">
+                    <div
+                      key={r.key}
+                      className="space-y-1 border-b border-border/50 pb-2 last:border-0"
+                    >
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-medium">{r.title}</p>
                         <Badge variant="outline">Impact: {r.impact}</Badge>
