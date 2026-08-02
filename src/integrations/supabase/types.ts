@@ -397,6 +397,173 @@ export type Database = {
         }
         Relationships: []
       }
+      email_deliveries: {
+        Row: {
+          attempt_count: number
+          bounced_at: string | null
+          business_id: string | null
+          created_at: string
+          delivered_at: string | null
+          email_type: string
+          error_code: string | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          idempotency_key: string | null
+          metadata: Json
+          next_attempt_at: string | null
+          owner_id: string | null
+          period_start: string | null
+          provider: string
+          provider_message_id: string | null
+          recipient_email: string
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          bounced_at?: string | null
+          business_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          email_type: string
+          error_code?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json
+          next_attempt_at?: string | null
+          owner_id?: string | null
+          period_start?: string | null
+          provider?: string
+          provider_message_id?: string | null
+          recipient_email: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          bounced_at?: string | null
+          business_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          email_type?: string
+          error_code?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json
+          next_attempt_at?: string | null
+          owner_id?: string | null
+          period_start?: string | null
+          provider?: string
+          provider_message_id?: string | null
+          recipient_email?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_deliveries_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_preferences: {
+        Row: {
+          business_ids: Json
+          created_at: string
+          local_time: string
+          owner_id: string
+          portfolio_digest_enabled: boolean
+          product_updates_consent_at: string | null
+          product_updates_consent_source: string | null
+          product_updates_enabled: boolean
+          report_format: string
+          timezone: string
+          unsubscribed_at: string | null
+          updated_at: string
+          weekday: number
+          weekly_report_enabled: boolean
+        }
+        Insert: {
+          business_ids?: Json
+          created_at?: string
+          local_time?: string
+          owner_id: string
+          portfolio_digest_enabled?: boolean
+          product_updates_consent_at?: string | null
+          product_updates_consent_source?: string | null
+          product_updates_enabled?: boolean
+          report_format?: string
+          timezone?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          weekday?: number
+          weekly_report_enabled?: boolean
+        }
+        Update: {
+          business_ids?: Json
+          created_at?: string
+          local_time?: string
+          owner_id?: string
+          portfolio_digest_enabled?: boolean
+          product_updates_consent_at?: string | null
+          product_updates_consent_source?: string | null
+          product_updates_enabled?: boolean
+          report_format?: string
+          timezone?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          weekday?: number
+          weekly_report_enabled?: boolean
+        }
+        Relationships: []
+      }
+      email_suppressions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          owner_id: string | null
+          reason: string
+          scope: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          owner_id?: string | null
+          reason: string
+          scope?: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          owner_id?: string | null
+          reason?: string
+          scope?: string
+          source?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           business_id: string
@@ -1516,6 +1683,26 @@ export type Database = {
         Returns: boolean
       }
       my_onboarding_progress: { Args: never; Returns: Json }
+      suppress_email: {
+        Args: {
+          p_email: string
+          p_owner_id: string
+          p_reason: string
+          p_scope?: string
+          p_source: string
+        }
+        Returns: undefined
+      }
+      weekly_reports_due: {
+        Args: { p_now?: string }
+        Returns: {
+          business_ids: Json
+          local_now: string
+          owner_id: string
+          report_format: string
+          timezone: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
