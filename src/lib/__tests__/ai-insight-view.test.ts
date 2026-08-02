@@ -56,7 +56,13 @@ describe("AI insight card state", () => {
 
   it("paywalls free accounts", () => {
     expect(
-      resolveCardState({ loading: false, hasBusiness: true, access: freeAccess, insight: null, now: NOW }),
+      resolveCardState({
+        loading: false,
+        hasBusiness: true,
+        access: freeAccess,
+        insight: null,
+        now: NOW,
+      }),
     ).toBe("no_access");
     expect(canGenerateNow("not_generated", freeAccess)).toBe(false);
     expect(upgradePlanFor("free")).toBe("pro");
@@ -64,7 +70,13 @@ describe("AI insight card state", () => {
 
   it("lets Pro generate for one business without a selector", () => {
     expect(
-      resolveCardState({ loading: false, hasBusiness: true, access: proAccess, insight: null, now: NOW }),
+      resolveCardState({
+        loading: false,
+        hasBusiness: true,
+        access: proAccess,
+        insight: null,
+        now: NOW,
+      }),
     ).toBe("not_generated");
     expect(canGenerateNow("not_generated", proAccess)).toBe(true);
     expect(canSelectBusiness(proAccess)).toBe(false);
@@ -78,30 +90,51 @@ describe("AI insight card state", () => {
   it("reports insufficient data, generating and failed states", () => {
     const base = { loading: false, hasBusiness: true, access: proAccess, now: NOW };
     expect(
-      resolveCardState({ ...base, insight: { id: "1", status: "insufficient_data", generatedAt: ago(DAY), output: null } }),
+      resolveCardState({
+        ...base,
+        insight: { id: "1", status: "insufficient_data", generatedAt: ago(DAY), output: null },
+      }),
     ).toBe("insufficient_data");
     expect(
-      resolveCardState({ ...base, insight: { id: "1", status: "generating", generatedAt: null, output: null } }),
+      resolveCardState({
+        ...base,
+        insight: { id: "1", status: "generating", generatedAt: null, output: null },
+      }),
     ).toBe("generating");
     expect(
-      resolveCardState({ ...base, insight: { id: "1", status: "failed", generatedAt: ago(DAY), output: null } }),
+      resolveCardState({
+        ...base,
+        insight: { id: "1", status: "failed", generatedAt: ago(DAY), output: null },
+      }),
     ).toBe("failed");
   });
 
   it("marks a fresh generation ready and an old one stale", () => {
     const base = { loading: false, hasBusiness: true, access: proAccess, now: NOW };
     expect(
-      resolveCardState({ ...base, insight: { id: "1", status: "completed", generatedAt: ago(DAY), output } }),
+      resolveCardState({
+        ...base,
+        insight: { id: "1", status: "completed", generatedAt: ago(DAY), output },
+      }),
     ).toBe("ready");
     expect(
-      resolveCardState({ ...base, insight: { id: "1", status: "completed", generatedAt: ago(9 * DAY), output } }),
+      resolveCardState({
+        ...base,
+        insight: { id: "1", status: "completed", generatedAt: ago(9 * DAY), output },
+      }),
     ).toBe("stale");
   });
 
   it("shows the rate-limited state when the weekly allowance is spent", () => {
     const spent = { ...proAccess, remainingThisWeek: 0 };
     expect(
-      resolveCardState({ loading: false, hasBusiness: true, access: spent, insight: null, now: NOW }),
+      resolveCardState({
+        loading: false,
+        hasBusiness: true,
+        access: spent,
+        insight: null,
+        now: NOW,
+      }),
     ).toBe("rate_limited");
     expect(canGenerateNow("ready", spent)).toBe(false);
     expect(allowanceLabel(spent)).toContain("used all 3");

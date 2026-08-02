@@ -23,8 +23,18 @@ const good = {
   topWin: { title: "Table tents", explanation: "They recorded the most scans." },
   mainOpportunity: { title: "Counter card", explanation: "It engaged the fewest people." },
   recommendedActions: [
-    { title: "Reprint the counter card", reason: "It looks faded", effort: "low", expectedImpact: "medium" },
-    { title: "Add a window sticker", reason: "Entrance traffic", effort: "low", expectedImpact: "medium" },
+    {
+      title: "Reprint the counter card",
+      reason: "It looks faded",
+      effort: "low",
+      expectedImpact: "medium",
+    },
+    {
+      title: "Add a window sticker",
+      reason: "Entrance traffic",
+      effort: "low",
+      expectedImpact: "medium",
+    },
     { title: "Brief the team", reason: "Prompts help", effort: "medium", expectedImpact: "high" },
     { title: "Fourth action", reason: "Should be dropped", effort: "low", expectedImpact: "low" },
   ],
