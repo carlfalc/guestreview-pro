@@ -99,6 +99,91 @@ function ReportsPage() {
             </CardContent>
           </Card>
 
+          <Card className="rounded-3xl border-border/70">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Sparkles className="h-4 w-4 text-primary" aria-hidden /> AI Executive Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!insight || !insight.output ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    No AI summary has been written for this period yet.
+                  </p>
+                  <Button asChild variant="outline" className="rounded-full print:hidden">
+                    <Link to="/dashboard">Generate one from your dashboard</Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-1">
+                    <p className="text-base font-semibold tracking-tight">
+                      {insight.output.headline}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Generated {formatGeneratedDate(insight.generatedAt)}
+                    </p>
+                  </div>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    {insight.output.executiveSummary
+                      .split(/\n{1,2}/)
+                      .filter(Boolean)
+                      .map((p, i) => (
+                        <p key={i}>{p}</p>
+                      ))}
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-2xl bg-muted/60 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Top win
+                      </p>
+                      <p className="mt-1 text-sm font-medium">{insight.output.topWin.title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {insight.output.topWin.explanation}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl bg-muted/60 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Main opportunity
+                      </p>
+                      <p className="mt-1 text-sm font-medium">
+                        {insight.output.mainOpportunity.title}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {insight.output.mainOpportunity.explanation}
+                      </p>
+                    </div>
+                  </div>
+                  {insight.output.recommendedActions.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold">Recommended actions</p>
+                      {insight.output.recommendedActions.slice(0, 3).map((a) => (
+                        <div
+                          key={a.title}
+                          className="space-y-1 border-b border-border/50 pb-2 last:border-0"
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-medium">{a.title}</p>
+                            <Badge variant="outline">Impact: {a.expectedImpact}</Badge>
+                            <Badge variant="outline">Effort: {a.effort}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{a.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {insight.output.confidenceDisclaimer}
+                  </p>
+                </>
+              )}
+              <p className="text-xs text-muted-foreground">{AI_DISCLAIMER}</p>
+            </CardContent>
+          </Card>
+
+
+
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {data.email.kpis.map((k) => (
               <Card key={k.label} className="rounded-2xl border-border/70">
