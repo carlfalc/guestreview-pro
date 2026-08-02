@@ -17,6 +17,7 @@ import {
 } from "@/components/executive/executive-ui";
 import { getExecutiveOverview, setRecommendationAction } from "@/lib/executive.functions";
 import { PERIOD_OPTIONS } from "@/lib/executive";
+import { AiInsightCard } from "@/components/insights/AiInsightCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
