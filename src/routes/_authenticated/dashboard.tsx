@@ -206,6 +206,23 @@ function Dashboard() {
             </Card>
           </div>
 
+          <AiInsightCard
+            businessId={data.business.id}
+            businessName={data.business.name}
+            businesses={data.businesses}
+            periodDays={periodDays}
+            onSelectBusiness={setBusinessId}
+            onRecommendationComplete={(title) => {
+              const match = data.recommendations.find(
+                (r) => r.title.toLowerCase() === title.toLowerCase() && r.status === "open",
+              );
+              if (match) action.mutate({ key: match.key, action: "completed" });
+              else toast.message("Marked as noted — this action isn't tracked in your checklist.");
+            }}
+          />
+
+
+
           <section className="space-y-3">
             <div className="flex items-center gap-2">
               <HeartPulse className="h-4 w-4 text-muted-foreground" />
