@@ -55,17 +55,18 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans:
-    "Mona Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "Inter", "Segoe UI", Roboto, sans-serif;
-  --font-display:
-    "Mona Sans", "Hubot Sans", -apple-system, "SF Pro Display", sans-serif;
-  --font-mono:
-    "Hubot Sans", ui-monospace, monospace;
-  --shadow-glass: 0 1px 0 0 color-mix(in oklch, var(--foreground) 6%, transparent),
+    "Mona Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto,
+    sans-serif;
+  --font-display: "Mona Sans", "Hubot Sans", -apple-system, "SF Pro Display", sans-serif;
+  --font-mono: "Hubot Sans", ui-monospace, monospace;
+  --shadow-glass:
+    0 1px 0 0 color-mix(in oklch, var(--foreground) 6%, transparent),
     0 20px 40px -20px color-mix(in oklch, var(--foreground) 12%, transparent);
-  --shadow-card: 0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent),
+  --shadow-card:
+    0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent),
     0 8px 24px -12px color-mix(in oklch, var(--foreground) 10%, transparent);
-  --shadow-elevated: 0 2px 4px color-mix(in oklch, var(--foreground) 5%, transparent),
+  --shadow-elevated:
+    0 2px 4px color-mix(in oklch, var(--foreground) 5%, transparent),
     0 24px 48px -16px color-mix(in oklch, var(--foreground) 14%, transparent);
   --gradient-hero: linear-gradient(
     135deg,
@@ -73,11 +74,7 @@
     oklch(0.65 0.2 280) 50%,
     oklch(0.7 0.18 320) 100%
   );
-  --gradient-subtle: linear-gradient(
-    180deg,
-    oklch(0.99 0.005 250) 0%,
-    oklch(0.97 0.008 260) 100%
-  );
+  --gradient-subtle: linear-gradient(180deg, oklch(0.99 0.005 250) 0%, oklch(0.97 0.008 260) 100%);
 }
 
 :root {
@@ -179,7 +176,10 @@
     min-height: 100vh;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: -0.025em;
   }
@@ -207,13 +207,23 @@
 }
 
 @keyframes shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @utility animate-fade-in-up {

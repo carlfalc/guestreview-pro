@@ -141,12 +141,7 @@ export function RecommendationCard({
   busy?: boolean;
 }) {
   return (
-    <Card
-      className={cn(
-        "rounded-3xl border-border/70",
-        rec.status !== "open" && "opacity-70",
-      )}
-    >
+    <Card className={cn("rounded-3xl border-border/70", rec.status !== "open" && "opacity-70")}>
       <CardContent className="space-y-2 p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold">{rec.title}</p>
@@ -163,7 +158,12 @@ export function RecommendationCard({
           <div className="flex flex-wrap gap-2 pt-1">
             {rec.status === "open" ? (
               <>
-                <Button size="sm" className="rounded-xl" disabled={busy} onClick={() => onAction("completed")}>
+                <Button
+                  size="sm"
+                  className="rounded-xl"
+                  disabled={busy}
+                  onClick={() => onAction("completed")}
+                >
                   Mark as done
                 </Button>
                 <Button

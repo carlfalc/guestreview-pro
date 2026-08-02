@@ -1,6 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { getStripe } from "@/lib/stripe";
 import { createSubscriptionCheckout } from "@/lib/billing.functions";
 import type { PlanTier, PaidInterval } from "@/lib/regional-pricing";
@@ -58,7 +64,8 @@ export function CheckoutDialog({ open, onOpenChange, tier, interval, onAlreadySu
         <DialogHeader>
           <DialogTitle>Upgrade to {tier === "pro" ? "Pro" : "Business"}</DialogTitle>
           <DialogDescription>
-            Billed {interval === "annual" ? "annually" : "monthly"} in your account currency. Cancel any time.
+            Billed {interval === "annual" ? "annually" : "monthly"} in your account currency. Cancel
+            any time.
           </DialogDescription>
         </DialogHeader>
         {failed ? (

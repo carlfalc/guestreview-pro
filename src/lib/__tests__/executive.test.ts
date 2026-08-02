@@ -53,7 +53,14 @@ const base: HealthInput = {
   business,
   qrCodes: [qr],
   plans: [
-    { id: "p1", status: "generated", itemCount: 4, generatedItemCount: 4, checklistTotal: 4, checklistDone: 2 },
+    {
+      id: "p1",
+      status: "generated",
+      itemCount: 4,
+      generatedItemCount: 4,
+      checklistTotal: 4,
+      checklistDone: 2,
+    },
   ],
   scans: [],
   eventDataAvailable: true,
@@ -140,10 +147,17 @@ describe("recommendations and summary language", () => {
   it("hides dismissed recommendations and respects snoozes", () => {
     const all = buildRecommendations({ health });
     const key = all[0]!.key;
-    expect(buildRecommendations({ health, actions: [{ key, action: "dismissed", snoozeUntil: null }] }).map((r) => r.key)).not.toContain(key);
+    expect(
+      buildRecommendations({
+        health,
+        actions: [{ key, action: "dismissed", snoozeUntil: null }],
+      }).map((r) => r.key),
+    ).not.toContain(key);
     const snoozed = buildRecommendations({
       health,
-      actions: [{ key, action: "snoozed", snoozeUntil: new Date(Date.now() + 86400000).toISOString() }],
+      actions: [
+        { key, action: "snoozed", snoozeUntil: new Date(Date.now() + 86400000).toISOString() },
+      ],
     });
     expect(snoozed.find((r) => r.key === key)?.status).toBe("snoozed");
     const expired = buildRecommendations({

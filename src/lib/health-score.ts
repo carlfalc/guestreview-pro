@@ -14,12 +14,7 @@ export const MIN_SCANS_PER_PLACEMENT = 5;
 export const RECENT_WINDOW_DAYS = 30;
 
 /** Every dimension is scored independently and can abstain. */
-export type DimensionKey =
-  | "setup"
-  | "technical"
-  | "rollout"
-  | "activity"
-  | "clickThrough";
+export type DimensionKey = "setup" | "technical" | "rollout" | "activity" | "clickThrough";
 
 export type DimensionState = "good" | "fair" | "attention" | "insufficient_data";
 
@@ -262,14 +257,39 @@ export function computeHealthScore(input: HealthInput): HealthScore {
   const qrById = new Map(input.qrCodes.map((q) => [q.id, q]));
   const dimOf = (s: ScanFact, field: keyof QrFact) =>
     (s[field as keyof ScanFact] as string | null) ??
-    ((qrById.get(s.qrCodeId)?.[field] as string | null) ?? null);
+    (qrById.get(s.qrCodeId)?.[field] as string | null) ??
+    null;
 
-  const byPlacement = group(scans, (s) => dimOf(s, "placementKey"), (k) => k);
-  const byGoal = group(scans, (s) => dimOf(s, "businessGoal"), (k) => k);
-  const byCampaign = group(scans, (s) => dimOf(s, "campaign"), (k) => k);
-  const byLocation = group(scans, (s) => dimOf(s, "locationId"), (k) => k);
-  const byPlan = group(scans, (s) => dimOf(s, "placementPlanId"), (k) => k);
-  const byPlanItem = group(scans, (s) => dimOf(s, "placementPlanItemId"), (k) => k);
+  const byPlacement = group(
+    scans,
+    (s) => dimOf(s, "placementKey"),
+    (k) => k,
+  );
+  const byGoal = group(
+    scans,
+    (s) => dimOf(s, "businessGoal"),
+    (k) => k,
+  );
+  const byCampaign = group(
+    scans,
+    (s) => dimOf(s, "campaign"),
+    (k) => k,
+  );
+  const byLocation = group(
+    scans,
+    (s) => dimOf(s, "locationId"),
+    (k) => k,
+  );
+  const byPlan = group(
+    scans,
+    (s) => dimOf(s, "placementPlanId"),
+    (k) => k,
+  );
+  const byPlanItem = group(
+    scans,
+    (s) => dimOf(s, "placementPlanItemId"),
+    (k) => k,
+  );
 
   // --- Setup quality -------------------------------------------------------
   const b = input.business;

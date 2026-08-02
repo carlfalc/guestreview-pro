@@ -179,6 +179,5 @@ export async function loadHealthFacts(
       total: packs.length,
       ready: packs.filter((p) => p.status === "ready" || p.status === "exported").length,
     },
-
   };
 }

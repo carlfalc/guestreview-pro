@@ -54,7 +54,10 @@ export function FinishUpgradeCard() {
           <Button
             className="rounded-full"
             onClick={() => {
-              track("upgrade_prompt_clicked", { source: "checkout_recovery", plan: pending.planKey });
+              track("upgrade_prompt_clicked", {
+                source: "checkout_recovery",
+                plan: pending.planKey,
+              });
               setCheckoutOpen(true);
             }}
           >

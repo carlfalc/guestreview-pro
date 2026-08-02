@@ -32,7 +32,9 @@ function annualSavings(monthlyMinor: number, annualMinor: number) {
 
 export function RegionalPricingTable({ region }: { region: AccountRegionDTO }) {
   const config = getRegionForCountry(region.countryCode);
-  const prices = getRegionalPlanPrices(region.pricingRegion as ReturnType<typeof getRegionForCountry>["pricingRegion"]);
+  const prices = getRegionalPlanPrices(
+    region.pricingRegion as ReturnType<typeof getRegionForCountry>["pricingRegion"],
+  );
   const billing = useBilling();
   const navigate = useNavigate();
   const [interval, setInterval] = useState<PaidInterval>("monthly");
@@ -44,23 +46,28 @@ export function RegionalPricingTable({ region }: { region: AccountRegionDTO }) {
     interval,
   );
 
-  const rows: Array<{ tier: "free" | "pro" | "business"; monthly: PlanKey; annual: PlanKey | null }> = [
-    { tier: "free",     monthly: "free",             annual: null },
-    { tier: "pro",      monthly: "pro_monthly",      annual: "pro_annual" },
+  const rows: Array<{
+    tier: "free" | "pro" | "business";
+    monthly: PlanKey;
+    annual: PlanKey | null;
+  }> = [
+    { tier: "free", monthly: "free", annual: null },
+    { tier: "pro", monthly: "pro_monthly", annual: "pro_annual" },
     { tier: "business", monthly: "business_monthly", annual: "business_annual" },
   ];
-
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Pricing for {config.countryName}</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Pricing for {config.countryName}
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">{config.taxNote}</p>
           {fallback.usesFallbackCurrency && (
             <p className="mt-1 text-xs text-muted-foreground">
-              Your local currency isn't billable yet — subscriptions in {config.countryName} are charged in
-              US$ at the international rate.
+              Your local currency isn't billable yet — subscriptions in {config.countryName} are
+              charged in US$ at the international rate.
             </p>
           )}
         </div>
@@ -87,8 +94,14 @@ export function RegionalPricingTable({ region }: { region: AccountRegionDTO }) {
           const feature = PLAN_FEATURES.find((p) => p.key === row.tier)!;
           const monthly = prices[row.monthly];
           const annual = row.annual ? prices[row.annual] : null;
-          const monthlyFmt = formatRegionalPriceCompact(monthly.amountMinor, monthly.currency, config.locale);
-          const annualFmt = annual ? formatRegionalPriceCompact(annual.amountMinor, annual.currency, config.locale) : null;
+          const monthlyFmt = formatRegionalPriceCompact(
+            monthly.amountMinor,
+            monthly.currency,
+            config.locale,
+          );
+          const annualFmt = annual
+            ? formatRegionalPriceCompact(annual.amountMinor, annual.currency, config.locale)
+            : null;
           const savings = annual ? annualSavings(monthly.amountMinor, annual.amountMinor) : null;
           const isCurrent = billing.plan === row.tier;
           const paidTier = row.tier !== "free" ? (row.tier as PlanTier) : null;
@@ -110,7 +123,9 @@ export function RegionalPricingTable({ region }: { region: AccountRegionDTO }) {
               <CardContent className="flex h-full flex-col p-6">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">{feature.name}</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                      {feature.name}
+                    </p>
                     <p className="mt-1 text-sm text-muted-foreground">{feature.tagline}</p>
                   </div>
                   {isCurrent && <Badge variant="secondary">Current plan</Badge>}
@@ -120,22 +135,29 @@ export function RegionalPricingTable({ region }: { region: AccountRegionDTO }) {
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-semibold tracking-tight">{monthlyFmt}</span>
                     {monthly.amountMinor > 0 && (
-                      <span className="text-xs text-muted-foreground">per month · billed monthly</span>
+                      <span className="text-xs text-muted-foreground">
+                        per month · billed monthly
+                      </span>
                     )}
                   </div>
                   {annualFmt && annual && (
                     <p className="mt-1 text-xs text-muted-foreground">
                       or {annualFmt} per year · billed annually
-                      {savings ? (
-                        savings.monthsFree >= 2
+                      {savings
+                        ? savings.monthsFree >= 2
                           ? ` — ${savings.monthsFree} months free`
                           : ` — save ${savings.pct}% compared with monthly billing`
-                      ) : ""}
+                        : ""}
                     </p>
                   )}
                   {billable && billable.usesFallbackCurrency && (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Charged as {formatRegionalPriceCompact(billable.amountMinor, billable.currency, config.locale)}{" "}
+                      Charged as{" "}
+                      {formatRegionalPriceCompact(
+                        billable.amountMinor,
+                        billable.currency,
+                        config.locale,
+                      )}{" "}
                       {billable.interval === "annual" ? "per year" : "per month"}.
                     </p>
                   )}
@@ -175,9 +197,9 @@ export function RegionalPricingTable({ region }: { region: AccountRegionDTO }) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Prices are set for your account region and cannot be changed manually. Taxes are calculated at
-        checkout where applicable. Cancel any time — paid features stay available until the end of the
-        billing period.
+        Prices are set for your account region and cannot be changed manually. Taxes are calculated
+        at checkout where applicable. Cancel any time — paid features stay available until the end
+        of the billing period.
       </p>
 
       {checkout && (
@@ -194,5 +216,4 @@ export function RegionalPricingTable({ region }: { region: AccountRegionDTO }) {
       )}
     </div>
   );
-
 }

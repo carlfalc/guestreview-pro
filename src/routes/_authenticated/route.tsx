@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
   MapPin,
-
   Building2,
   QrCode,
   LineChart,
@@ -15,7 +14,6 @@ import {
   CreditCard,
   HeartPulse,
   FileText,
-
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";

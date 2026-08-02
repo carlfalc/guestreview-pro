@@ -6,6 +6,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { StripeEnvName } from "./entitlements.server";
+import type { LooseClient } from "@/lib/loose-types";
 
 export interface WebhookEventRow {
   id: string;
@@ -65,11 +66,7 @@ export const adminListFailedWebhookEvents = createServerFn({ method: "GET" })
     const staleBefore = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    const { data, error } = await (
-      supabaseAdmin as never as {
-        from: (t: string) => any;
-      }
-    )
+    const { data, error } = await (supabaseAdmin as never as LooseClient)
       .from("stripe_webhook_events")
       .select(
         "id, stripe_event_id, event_type, environment, livemode, processing_status, retry_count, error_message, received_at, last_attempt_at, processed_at",
@@ -86,7 +83,7 @@ export const adminListFailedWebhookEvents = createServerFn({ method: "GET" })
       (r) => r.processing_status !== "failed" && (r.last_attempt_at ?? r.received_at) < staleBefore,
     ).length;
 
-    const { count } = await (supabaseAdmin as never as { from: (t: string) => any })
+    const { count } = await (supabaseAdmin as never as LooseClient)
       .from("stripe_webhook_events")
       .select("id", { count: "exact", head: true })
       .eq("environment", environment)
@@ -121,7 +118,7 @@ export const adminRequeueWebhookEvent = createServerFn({ method: "POST" })
     const environment = await trustedEnvironment();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { error } = await (supabaseAdmin as never as { from: (t: string) => any })
+    const { error } = await (supabaseAdmin as never as LooseClient)
       .from("stripe_webhook_events")
       .update({ processing_status: "received", error_message: null })
       .eq("stripe_event_id", data.stripeEventId)

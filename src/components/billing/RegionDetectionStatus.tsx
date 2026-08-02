@@ -12,8 +12,12 @@ const SOURCE_LABEL: Record<string, string> = {
 export function RegionDetectionStatus({ region }: { region: AccountRegionDTO }) {
   return (
     <div className="grid gap-2 text-xs sm:grid-cols-2">
-      <Row label="Detection source">{SOURCE_LABEL[region.detectionSource] ?? region.detectionSource}</Row>
-      <Row label="Confidence"><span className="capitalize">{region.confidence}</span></Row>
+      <Row label="Detection source">
+        {SOURCE_LABEL[region.detectionSource] ?? region.detectionSource}
+      </Row>
+      <Row label="Confidence">
+        <span className="capitalize">{region.confidence}</span>
+      </Row>
       <Row label="Detected on">{new Date(region.detectedAt).toLocaleDateString()}</Row>
       <Row label="Status">{region.isLocked ? "Locked" : "Unlocked"}</Row>
     </div>

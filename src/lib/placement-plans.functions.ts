@@ -20,6 +20,7 @@ import {
   type PriorityKey,
 } from "@/lib/placement-recommendations";
 import type { PlanTierKey } from "@/lib/entitlements";
+import type { LooseClient } from "@/lib/loose-types";
 
 export type PlanStatus =
   | "draft"
@@ -84,7 +85,7 @@ export interface PlanDetail {
   plan_tier: PlanTierKey;
 }
 
-type AnyClient = { from: (t: string) => any; rpc: (n: string, a: unknown) => Promise<any> };
+type AnyClient = LooseClient;
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -260,7 +261,10 @@ export const savePlacementPlan = createServerFn({ method: "POST" })
     return {
       id: data?.id ? assertUuid(data.id, "plan") : null,
       businessId,
-      name: String(data?.name ?? "").trim().slice(0, 140) || "Placement plan",
+      name:
+        String(data?.name ?? "")
+          .trim()
+          .slice(0, 140) || "Placement plan",
       industry: industry as IndustryKey,
       goals: goals as GoalKey[],
       items,
@@ -574,7 +578,11 @@ export const generatePlacementPlan = createServerFn({ method: "POST" })
       (i) => i.qr_code_id,
     ).length;
     const status: PlanStatus =
-      done === 0 ? "ready" : done >= total && !failures.length ? "generated" : "partially_generated";
+      done === 0
+        ? "ready"
+        : done >= total && !failures.length
+          ? "generated"
+          : "partially_generated";
 
     await db
       .from("placement_plans")

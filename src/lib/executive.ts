@@ -340,7 +340,8 @@ export function buildRecommendations(ctx: RecommendationContext): Recommendation
       explanation:
         "Your codes are working but relatively few customers are scanning them, which usually points to placement rather than interest.",
       evidence: activity.summary,
-      action: "Move your quietest code closer to the payment point and add a short prompt above it.",
+      action:
+        "Move your quietest code closer to the payment point and add a short prompt above it.",
       effort: "Low",
       impact: "Medium",
     });

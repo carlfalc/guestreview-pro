@@ -8,15 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import {
-  ArrowLeft,
-  BarChart3,
-  Copy,
-  ExternalLink,
-  Loader2,
-  QrCode,
-  Sparkles,
-} from "lucide-react";
+import { ArrowLeft, BarChart3, Copy, ExternalLink, Loader2, QrCode, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   getPlacementPlan,
@@ -65,9 +57,7 @@ function PlacementPlanDetail() {
   const { plan, items, business, plan_tier } = data;
   const pending = items.filter((i) => !i.qr_code_id);
   const done = plan.checklist.filter((c) => c.done).length;
-  const progress = plan.checklist.length
-    ? Math.round((done / plan.checklist.length) * 100)
-    : 0;
+  const progress = plan.checklist.length ? Math.round((done / plan.checklist.length) * 100) : 0;
 
   async function runGenerate(itemIds?: string[]) {
     setBusy(true);
@@ -263,7 +253,13 @@ function PlacementRow({
             </Link>
           </Button>
         ) : (
-          <Button size="sm" variant="outline" className="rounded-xl" disabled={busy} onClick={onGenerate}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl"
+            disabled={busy}
+            onClick={onGenerate}
+          >
             Generate
           </Button>
         )}

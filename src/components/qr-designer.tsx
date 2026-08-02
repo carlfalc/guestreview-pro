@@ -35,7 +35,15 @@ type Props = {
   filenameStem: string;
 };
 
-export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandColor, filenameStem }: Props) {
+export function QrDesigner({
+  value,
+  onChange,
+  url,
+  logoUrl,
+  onLogoChange,
+  brandColor,
+  filenameStem,
+}: Props) {
   const previewRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<QRCodeStyling | null>(null);
   const [decodeOk, setDecodeOk] = useState<boolean | null>(null);
@@ -48,7 +56,6 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
     qrRef.current = new QRCodeStyling(options);
     previewRef.current.innerHTML = "";
     qrRef.current.append(previewRef.current);
-     
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -94,7 +101,8 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
       list.push({
         code: "decode-failed",
         severity: "warn",
-        message: "The browser could not decode this preview. Increase contrast, reduce the logo size or increase the margin.",
+        message:
+          "The browser could not decode this preview. Increase contrast, reduce the logo size or increase the margin.",
       });
     }
     return list;
@@ -168,7 +176,11 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
           <Button variant="outline" onClick={() => download("svg")} className="rounded-full">
             <Download className="mr-1 h-4 w-4" /> SVG
           </Button>
-          <Button variant="outline" onClick={() => download("png-transparent")} className="rounded-full">
+          <Button
+            variant="outline"
+            onClick={() => download("png-transparent")}
+            className="rounded-full"
+          >
             <Download className="mr-1 h-4 w-4" /> Transparent
           </Button>
         </div>
@@ -176,11 +188,15 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
         <div className="mt-4 space-y-2">
           {decodeOk === true && warnings.length === 0 && (
             <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">
-              <ShieldCheck className="h-4 w-4" /> Preview scanned successfully in-browser (contrast {cr.toFixed(2)}).
+              <ShieldCheck className="h-4 w-4" /> Preview scanned successfully in-browser (contrast{" "}
+              {cr.toFixed(2)}).
             </div>
           )}
           {warnings.map((w, i) => (
-            <div key={i} className="flex items-start gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">
+            <div
+              key={i}
+              className="flex items-start gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100"
+            >
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> {w.message}
             </div>
           ))}
@@ -202,15 +218,25 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
               {p.label}
             </Button>
           ))}
-          <Button size="sm" variant="ghost" className="rounded-full text-muted-foreground" onClick={() => onChange({ ...DEFAULT_DESIGN })}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="rounded-full text-muted-foreground"
+            onClick={() => onChange({ ...DEFAULT_DESIGN })}
+          >
             Reset
           </Button>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Dot style">
-            <Select value={value.dotStyle} onValueChange={(v) => patch({ dotStyle: v as QrDesign["dotStyle"] })}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <Select
+              value={value.dotStyle}
+              onValueChange={(v) => patch({ dotStyle: v as QrDesign["dotStyle"] })}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="square">Square</SelectItem>
                 <SelectItem value="rounded">Rounded</SelectItem>
@@ -222,8 +248,15 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
             </Select>
           </Field>
           <Field label="Corner frame">
-            <Select value={value.cornerSquareStyle} onValueChange={(v) => patch({ cornerSquareStyle: v as QrDesign["cornerSquareStyle"] })}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <Select
+              value={value.cornerSquareStyle}
+              onValueChange={(v) =>
+                patch({ cornerSquareStyle: v as QrDesign["cornerSquareStyle"] })
+              }
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="square">Square</SelectItem>
                 <SelectItem value="rounded">Rounded</SelectItem>
@@ -233,8 +266,13 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
             </Select>
           </Field>
           <Field label="Corner dot">
-            <Select value={value.cornerDotStyle} onValueChange={(v) => patch({ cornerDotStyle: v as QrDesign["cornerDotStyle"] })}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <Select
+              value={value.cornerDotStyle}
+              onValueChange={(v) => patch({ cornerDotStyle: v as QrDesign["cornerDotStyle"] })}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="square">Square</SelectItem>
                 <SelectItem value="dot">Circular</SelectItem>
@@ -243,8 +281,13 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
             </Select>
           </Field>
           <Field label="Error correction">
-            <Select value={value.errorCorrection} onValueChange={(v) => patch({ errorCorrection: v as QrDesign["errorCorrection"] })}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <Select
+              value={value.errorCorrection}
+              onValueChange={(v) => patch({ errorCorrection: v as QrDesign["errorCorrection"] })}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="L">L — 7%</SelectItem>
                 <SelectItem value="M">M — 15%</SelectItem>
@@ -257,8 +300,13 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Colour mode">
-            <Select value={value.colorMode} onValueChange={(v) => patch({ colorMode: v as QrDesign["colorMode"] })}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <Select
+              value={value.colorMode}
+              onValueChange={(v) => patch({ colorMode: v as QrDesign["colorMode"] })}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="solid">Solid colour</SelectItem>
                 <SelectItem value="gradient">Two-colour gradient</SelectItem>
@@ -266,16 +314,31 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
             </Select>
           </Field>
           <Field label="Foreground">
-            <Input type="color" value={value.fg} onChange={(e) => patch({ fg: e.target.value })} className="h-10 rounded-xl p-1" />
+            <Input
+              type="color"
+              value={value.fg}
+              onChange={(e) => patch({ fg: e.target.value })}
+              className="h-10 rounded-xl p-1"
+            />
           </Field>
           {value.colorMode === "gradient" && (
             <>
               <Field label="Gradient colour 2">
-                <Input type="color" value={value.fg2} onChange={(e) => patch({ fg2: e.target.value })} className="h-10 rounded-xl p-1" />
+                <Input
+                  type="color"
+                  value={value.fg2}
+                  onChange={(e) => patch({ fg2: e.target.value })}
+                  className="h-10 rounded-xl p-1"
+                />
               </Field>
               <Field label="Gradient type">
-                <Select value={value.gradientType} onValueChange={(v) => patch({ gradientType: v as QrDesign["gradientType"] })}>
-                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <Select
+                  value={value.gradientType}
+                  onValueChange={(v) => patch({ gradientType: v as QrDesign["gradientType"] })}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="linear">Linear</SelectItem>
                     <SelectItem value="radial">Radial</SelectItem>
@@ -295,18 +358,32 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
           </Field>
           <Field label="Transparent background">
             <div className="flex h-10 items-center">
-              <Switch checked={value.transparentBg} onCheckedChange={(v) => patch({ transparentBg: v })} />
+              <Switch
+                checked={value.transparentBg}
+                onCheckedChange={(v) => patch({ transparentBg: v })}
+              />
             </div>
           </Field>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label={`Quiet zone (${value.margin}px)`}>
-            <Slider value={[value.margin]} min={0} max={40} step={1} onValueChange={([v]) => patch({ margin: v })} />
+            <Slider
+              value={[value.margin]}
+              min={0}
+              max={40}
+              step={1}
+              onValueChange={([v]) => patch({ margin: v })}
+            />
           </Field>
           <Field label="Contrast">
             <div className="flex h-10 items-center text-xs text-muted-foreground">
-              Ratio <span className={`ml-1 font-semibold ${cr < 4 ? "text-amber-300" : "text-emerald-300"}`}>{cr.toFixed(2)}</span>
+              Ratio{" "}
+              <span
+                className={`ml-1 font-semibold ${cr < 4 ? "text-amber-300" : "text-emerald-300"}`}
+              >
+                {cr.toFixed(2)}
+              </span>
               <span className="ml-2">/ 4+ recommended</span>
             </div>
           </Field>
@@ -317,7 +394,9 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">Logo</p>
-            <p className="text-xs text-muted-foreground">Overlay a brand mark in the centre of the QR.</p>
+            <p className="text-xs text-muted-foreground">
+              Overlay a brand mark in the centre of the QR.
+            </p>
           </div>
           <Switch checked={value.logoEnabled} onCheckedChange={(v) => patch({ logoEnabled: v })} />
         </div>
@@ -326,8 +405,12 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
           <>
             <div className="flex items-center gap-3">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-background">
-                {logoUrl ? <img src={logoUrl} alt="logo" className="h-full w-full object-contain" /> : (
-                  <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">No logo</div>
+                {logoUrl ? (
+                  <img src={logoUrl} alt="logo" className="h-full w-full object-contain" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                    No logo
+                  </div>
                 )}
               </div>
               <label className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs hover:bg-accent">
@@ -340,21 +423,41 @@ export function QrDesigner({ value, onChange, url, logoUrl, onLogoChange, brandC
                 />
               </label>
               {logoUrl && (
-                <Button size="sm" variant="ghost" className="rounded-full text-muted-foreground" onClick={() => onLogoChange(null)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="rounded-full text-muted-foreground"
+                  onClick={() => onLogoChange(null)}
+                >
                   <X className="mr-1 h-3.5 w-3.5" /> Remove
                 </Button>
               )}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={`Logo size (${Math.round(value.logoSize * 100)}%)`}>
-                <Slider value={[value.logoSize * 100]} min={10} max={40} step={1} onValueChange={([v]) => patch({ logoSize: v / 100 })} />
+                <Slider
+                  value={[value.logoSize * 100]}
+                  min={10}
+                  max={40}
+                  step={1}
+                  onValueChange={([v]) => patch({ logoSize: v / 100 })}
+                />
               </Field>
               <Field label={`Logo margin (${value.logoMargin}px)`}>
-                <Slider value={[value.logoMargin]} min={0} max={20} step={1} onValueChange={([v]) => patch({ logoMargin: v })} />
+                <Slider
+                  value={[value.logoMargin]}
+                  min={0}
+                  max={20}
+                  step={1}
+                  onValueChange={([v]) => patch({ logoMargin: v })}
+                />
               </Field>
               <Field label="White pad behind logo">
                 <div className="flex h-10 items-center">
-                  <Switch checked={value.logoWhitePad} onCheckedChange={(v) => patch({ logoWhitePad: v })} />
+                  <Switch
+                    checked={value.logoWhitePad}
+                    onCheckedChange={(v) => patch({ logoWhitePad: v })}
+                  />
                 </div>
               </Field>
             </div>
@@ -375,22 +478,21 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function buildOptions(d: QrDesign, url: string, logoUrl: string | null, size = 320) {
-  const fgColorOption = d.colorMode === "gradient"
-    ? {
-        gradient: {
-          type: d.gradientType,
-          rotation: d.gradientRotation,
-          colorStops: [
-            { offset: 0, color: d.fg },
-            { offset: 1, color: d.fg2 },
-          ],
-        },
-      }
-    : { color: d.fg };
+  const fgColorOption =
+    d.colorMode === "gradient"
+      ? {
+          gradient: {
+            type: d.gradientType,
+            rotation: d.gradientRotation,
+            colorStops: [
+              { offset: 0, color: d.fg },
+              { offset: 1, color: d.fg2 },
+            ],
+          },
+        }
+      : { color: d.fg };
 
-  const bgColorOption = d.transparentBg
-    ? { color: "rgba(0,0,0,0)" }
-    : { color: d.bg };
+  const bgColorOption = d.transparentBg ? { color: "rgba(0,0,0,0)" } : { color: d.bg };
 
   return {
     width: size,
