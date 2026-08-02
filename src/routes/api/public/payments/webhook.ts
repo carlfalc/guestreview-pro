@@ -18,7 +18,6 @@ import {
 } from "@/lib/plan-price-map.server";
 import type { LooseRecord } from "@/lib/loose-types";
 
-
 let _admin: SupabaseClient | null = null;
 function admin(): SupabaseClient {
   if (!_admin) {

@@ -452,7 +452,6 @@ function StructureView({ format }: { format: BusinessFormat }) {
   const structureLabel =
     !hasGlue && layout.panels.length === 2 ? "Two-panel folded tent" : "Folded structure";
 
-
   return (
     <div className="grid gap-4 md:grid-cols-[220px_1fr]">
       <div className="space-y-2 text-[11px]">
