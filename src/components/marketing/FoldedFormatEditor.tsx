@@ -425,8 +425,6 @@ function PanelForm({
 
 function StructureView({ format }: { format: BusinessFormat }) {
   const layout = getFoldedLayout(format);
-  if (!layout)
-    return <p className="text-xs text-muted-foreground">No folded layout for this format.</p>;
   const [g, setG] = useState({
     fold: true,
     score: true,
@@ -438,14 +436,22 @@ function StructureView({ format }: { format: BusinessFormat }) {
   const [preview, setPreview] = useState<string>("");
 
   useEffect(() => {
+    if (!layout) {
+      setPreview("");
+      return;
+    }
     // Structure preview: production SVG on top of an empty flat sheet
     const svg = renderStructureSvg(layout, g);
     setPreview(svg);
   }, [layout, g]);
 
+  if (!layout)
+    return <p className="text-xs text-muted-foreground">No folded layout for this format.</p>;
+
   const hasGlue = !!layout.glue;
   const structureLabel =
     !hasGlue && layout.panels.length === 2 ? "Two-panel folded tent" : "Folded structure";
+
 
   return (
     <div className="grid gap-4 md:grid-cols-[220px_1fr]">
