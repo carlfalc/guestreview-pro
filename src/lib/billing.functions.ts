@@ -221,6 +221,8 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
           plan_key: plan.tier,
           billing_interval: plan.interval,
           pricing_region: plan.billingRegion,
+          founder: founderApplied ? "true" : "false",
+          founder_lookup_key: founderApplied ? plan.stripeLookupKey : "",
         },
         subscription_data: {
           metadata: {
@@ -229,9 +231,12 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
             plan_key: plan.tier,
             billing_interval: plan.interval,
             pricing_region: plan.billingRegion,
+            founder: founderApplied ? "true" : "false",
+            founder_lookup_key: founderApplied ? plan.stripeLookupKey : "",
           },
         },
       });
+
 
       // Record the attempt so an abandoned checkout can be recovered later.
       // Best-effort: a failure here must never block a paying customer.
