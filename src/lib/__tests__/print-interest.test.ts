@@ -1,96 +1,120 @@
 import { describe, expect, it } from "vitest";
 import {
-  PRINT_INTEREST_PRODUCTS,
-  PRINT_INTEREST_SOURCES,
   demandThresholds,
   isPrintInterestSource,
+  isPrintProductKey,
   normalisePrintInterestSource,
   printInterestCsv,
+  printProductLabel,
   summarisePrintDemand,
+  PRINT_INTEREST_SOURCES,
+  type AdminPrintInterestRow,
 } from "../print-interest";
 
-const rows = [
-  {
+function row(overrides: Partial<AdminPrintInterestRow> = {}): AdminPrintInterestRow {
+  return {
     id: "1",
-    owner_id: "a",
+    ownerId: "owner-1",
+    businessId: "biz-1",
+    businessName: "Glasshouse",
+    businessIndustry: "restaurant",
+    adminNotes: null,
     email: "a@example.com",
-    country_code: "GB",
-    products: ["circular_sticker", "counter_card"],
-    quantity_band: "50_99",
-    materials: ["vinyl"],
+    countryCode: "GB",
+    productKeys: ["vinyl_stickers", "counter_cards"],
+    expectedQuantity: "50_99",
+    preferredSize: "medium",
+    preferredMaterial: "vinyl",
+    desiredTimeframe: "this_month",
+    comments: null,
+    contactConsent: true,
     source: "marketing_pack",
     status: "new",
-    notes: null,
-    created_at: "2026-01-01T00:00:00.000Z",
-  },
-  {
-    id: "2",
-    owner_id: "b",
-    email: "b@example.com",
-    country_code: "US",
-    products: ["circular_sticker"],
-    quantity_band: "10_49",
-    materials: [],
-    source: "dashboard",
-    status: "contacted",
-    notes: "Wants gloss",
-    created_at: "2026-01-02T00:00:00.000Z",
-  },
-];
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
 
-describe("print interest sources", () => {
+describe("print interest sources and products", () => {
   it("accepts every catalogued source", () => {
     for (const s of PRINT_INTEREST_SOURCES) expect(isPrintInterestSource(s)).toBe(true);
   });
 
-  it("falls back to unknown for junk", () => {
+  it("falls back to unknown for junk sources", () => {
     expect(normalisePrintInterestSource("nope")).toBe("unknown");
     expect(normalisePrintInterestSource(undefined)).toBe("unknown");
+  });
+
+  it("validates product keys and labels them", () => {
+    expect(isPrintProductKey("vinyl_stickers")).toBe(true);
+    expect(isPrintProductKey("spaceship")).toBe(false);
+    expect(printProductLabel("counter_cards")).toBe("Counter cards");
   });
 });
 
 describe("summarisePrintDemand", () => {
-  it("counts signups, products and countries", () => {
-    const s = summarisePrintDemand(rows as never);
-    expect(s.total).toBe(2);
-    const sticker = s.products.find((p) => p.key === "circular_sticker");
-    expect(sticker?.count).toBe(2);
-    expect(s.countries.find((c) => c.code === "GB")?.count).toBe(1);
+  const rows = [
+    row(),
+    row({
+      id: "2",
+      ownerId: "owner-2",
+      countryCode: "US",
+      productKeys: ["vinyl_stickers"],
+      contactConsent: false,
+      status: "contacted",
+      source: "dashboard",
+    }),
+    // Same owner submitting twice must not double-count accounts.
+    row({ id: "3", productKeys: ["posters"] }),
+  ];
+
+  it("counts accounts, submissions and consent distinctly", () => {
+    const s = summarisePrintDemand(rows);
+    expect(s.totalAccounts).toBe(2);
+    expect(s.totalSubmissions).toBe(3);
+    expect(s.consentedAccounts).toBe(1);
+  });
+
+  it("ranks products and countries by demand", () => {
+    const s = summarisePrintDemand(rows);
+    expect(s.byProduct[0]?.key).toBe("vinyl_stickers");
+    expect(s.byProduct[0]?.count).toBe(2);
+    expect(s.byCountry.find((c) => c.key === "GB")?.count).toBe(2);
   });
 
   it("returns an empty, non-throwing shape with no rows", () => {
     const s = summarisePrintDemand([]);
-    expect(s.total).toBe(0);
-    expect(s.products.every((p) => p.count === 0)).toBe(true);
-  });
-
-  it("only reports products from the known catalogue", () => {
-    const keys = new Set(PRINT_INTEREST_PRODUCTS.map((p) => p.key));
-    for (const p of summarisePrintDemand(rows as never).products) expect(keys.has(p.key)).toBe(true);
+    expect(s.totalAccounts).toBe(0);
+    expect(s.byProduct).toEqual([]);
+    expect(s.mostRequestedBundle).toBeNull();
   });
 });
 
 describe("demandThresholds", () => {
-  it("does not recommend building at low demand", () => {
-    expect(demandThresholds(3).shouldBuild).toBe(false);
+  it("reports nothing met with no demand", () => {
+    expect(demandThresholds(summarisePrintDemand([])).every((t) => !t.met)).toBe(true);
   });
 
-  it("recommends building once demand is proven", () => {
-    expect(demandThresholds(500).shouldBuild).toBe(true);
+  it("meets the supplier-research threshold at 10 accounts", () => {
+    const rows = Array.from({ length: 10 }, (_, i) => row({ id: `r${i}`, ownerId: `o${i}` }));
+    const t = demandThresholds(summarisePrintDemand(rows)).find(
+      (x) => x.key === "research_supplier",
+    );
+    expect(t?.met).toBe(true);
+    expect(t?.actual).toBe(10);
   });
 });
 
 describe("printInterestCsv", () => {
   it("emits a header row plus one row per record", () => {
-    const lines = printInterestCsv(rows as never).trim().split("\n");
+    const lines = printInterestCsv([row(), row({ id: "2" })]).trim().split("\n");
     expect(lines).toHaveLength(3);
     expect(lines[0]).toContain("email");
   });
 
-  it("escapes values containing separators", () => {
-    const csv = printInterestCsv([
-      { ...rows[0], notes: 'a,b "quoted"' },
-    ] as never);
-    expect(csv).toContain('"');
+  it("escapes values containing commas or quotes", () => {
+    const csv = printInterestCsv([row({ comments: 'a,b "quoted"' })]);
+    expect(csv).toContain('"a,b ""quoted"""');
   });
 });
