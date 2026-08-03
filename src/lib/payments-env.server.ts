@@ -77,6 +77,9 @@ export const ALLOWED_RETURN_PATHS = [
   "/billing/success",
   "/billing/cancel",
   "/dashboard",
+  "/print-store",
+  "/print-store/cart",
+  "/print-store/orders",
 ] as const;
 
 export type AllowedReturnPath = (typeof ALLOWED_RETURN_PATHS)[number];
