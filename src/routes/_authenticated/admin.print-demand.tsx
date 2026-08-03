@@ -111,7 +111,6 @@ function AdminPrintDemandPage() {
     });
   }, [rowsData, statusFilter, productFilter, search]);
 
-
   const summary = useMemo(() => summarisePrintDemand(filtered), [filtered]);
   const thresholds = useMemo(() => demandThresholds(summary), [summary]);
 

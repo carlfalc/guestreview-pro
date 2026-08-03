@@ -513,7 +513,8 @@ export const createPrintOrderCheckout = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<PrintCheckoutResult> => {
     const { admin, ctx, host } = await ctxFor(context.userId);
-    const { getOrCreateCart, cartTotalsInternal, recordOrderEvent } = await import("./print.server");
+    const { getOrCreateCart, cartTotalsInternal, recordOrderEvent } =
+      await import("./print.server");
     const { DEFAULT_MARGIN_RULES } = await import("./print-pricing");
     const { createStripeClient, getStripeErrorMessage, automaticTaxEnabled } =
       await import("./stripe.server");
