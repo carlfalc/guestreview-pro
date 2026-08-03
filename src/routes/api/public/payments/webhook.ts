@@ -332,6 +332,35 @@ async function dispatch(event: { type: string; data: { object: LooseRecord } }, 
   }
 }
 
+/** Map a refunded/disputed charge back to its account and free the place. */
+async function releaseFounderForCharge(
+  charge: LooseRecord,
+  env: StripeEnv,
+  eventType: string,
+): Promise<void> {
+  const customerId =
+    typeof charge.customer === "string" ? charge.customer : (charge.customer?.id ?? null);
+  if (!customerId) return;
+
+  const { data } = await admin()
+    .from("subscriptions")
+    .select("owner_id")
+    .eq("stripe_customer_id", customerId)
+    .eq("environment", env)
+    .maybeSingle();
+  const ownerId = (data as { owner_id?: string } | null)?.owner_id;
+  if (!ownerId) return;
+
+  const { releaseFounderSlot } = await import("@/lib/founder.server");
+  await releaseFounderSlot(admin(), {
+    ownerId,
+    status: "refunded",
+    reason: eventType,
+    source: "stripe",
+  });
+}
+
+
 /** Returns the HTTP status Stripe should see. */
 async function handle(request: Request, env: StripeEnv): Promise<number> {
   const event = await verifyWebhook(request, env);
