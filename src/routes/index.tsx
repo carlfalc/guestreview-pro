@@ -234,7 +234,6 @@ function Landing() {
         </div>
       </Section>
 
-
       {/* Marketing pack formats */}
       <Section
         title="Marketing pack formats"

@@ -413,14 +413,7 @@ export function ArtworkPreview({
           <rect width={w} height={h} rx={radius} />
         </clipPath>
       </defs>
-      <Panel
-        w={w}
-        h={h}
-        variant={variant}
-        content={content}
-        modules={modules}
-        clipId={uid}
-      />
+      <Panel w={w} h={h} variant={variant} content={content} modules={modules} clipId={uid} />
       <rect
         x={inset / 2}
         y={inset / 2}
