@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PublicShell, PageHero, Section, FinalCta } from "@/components/public/PublicShell";
-import { TemplatePreview } from "@/components/public/TemplatePreview";
+import { TemplateArtwork } from "@/components/public/TemplateArtwork";
 import {
   GALLERY_CATEGORIES,
   GALLERY_TEMPLATES,
@@ -123,7 +123,7 @@ function TemplateGallery() {
               className="flex flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-5"
             >
               <div className="grid h-56 place-items-center overflow-hidden rounded-2xl bg-white/5 p-4">
-                <TemplatePreview template={t} />
+                <TemplateArtwork template={t} />
               </div>
               <p className="mt-2 text-center text-[11px] uppercase tracking-wide text-white/35">
                 Sample preview — demo business, not a scannable code

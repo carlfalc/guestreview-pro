@@ -10,7 +10,7 @@ import {
   FinalCta,
 } from "@/components/public/PublicShell";
 import { LeadCaptureForm } from "@/components/public/LeadCaptureForm";
-import { TemplatePreview } from "@/components/public/TemplatePreview";
+import { TemplateArtwork } from "@/components/public/TemplateArtwork";
 import { industryBySlug, INDUSTRIES, type Industry } from "@/lib/industries";
 import { FORMATS } from "@/lib/qr-formats";
 import { GALLERY_TEMPLATES, templateDimensions } from "@/lib/templates";
@@ -176,7 +176,7 @@ function IndustryPage() {
             {templates.map((t) => (
               <div key={t.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                 <div className="grid h-48 place-items-center overflow-hidden rounded-2xl bg-white/5 p-4">
-                  <TemplatePreview template={t} />
+                  <TemplateArtwork template={t} />
                 </div>
                 <p className="mt-4 text-sm font-semibold">{t.name}</p>
                 <p className="mt-1 text-xs text-white/50">

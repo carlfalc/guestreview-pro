@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { PublicShell, PageHero, Section, FinalCta } from "@/components/public/PublicShell";
-import { TemplatePreview } from "@/components/public/TemplatePreview";
+import { TemplateArtwork } from "@/components/public/TemplateArtwork";
 import { LeadCaptureForm } from "@/components/public/LeadCaptureForm";
 import { INDUSTRIES } from "@/lib/industries";
 import { GALLERY_TEMPLATES, templateDimensions } from "@/lib/templates";
@@ -110,7 +110,7 @@ function ExamplesGallery() {
           {packPreview.map((t) => (
             <div key={t.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
               <div className="grid h-52 place-items-center overflow-hidden rounded-2xl bg-white/5 p-4">
-                <TemplatePreview template={t} />
+                <TemplateArtwork template={t} />
               </div>
               <p className="mt-2 text-center text-[11px] uppercase tracking-wide text-white/35">
                 Sample preview — demo business, not a scannable code
