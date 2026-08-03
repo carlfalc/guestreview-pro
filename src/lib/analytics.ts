@@ -28,7 +28,15 @@ export const PRODUCT_EVENTS = [
   "lead_captured",
   "resource_viewed",
   "resource_cta_clicked",
+  // Founding Member Beta funnel
+  "founder_banner_viewed",
+  "founder_offer_viewed",
+  "founder_checkout_started",
+  "founder_slot_claimed",
+  "founder_sold_out_fallback",
+  "founder_feedback_submitted",
 ] as const;
+
 
 export type ProductEventName = (typeof PRODUCT_EVENTS)[number];
 
