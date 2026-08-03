@@ -1,3 +1,4 @@
+import { FounderBadge } from "@/components/founder/FounderBadge";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +69,9 @@ function SettingsPage() {
     <div className="animate-fade-in-up space-y-8">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
+        <div className="mt-2">
+          <FounderBadge />
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">Preferences and personalization.</p>
       </div>
 

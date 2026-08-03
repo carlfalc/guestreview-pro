@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAccountRegion } from "@/hooks/use-account-region";
 import { RegionalPricingTable } from "@/components/billing/RegionalPricingTable";
 import { useTrackOnce } from "@/hooks/use-analytics";
+import { FounderPlanCard } from "@/components/founder/FounderPlanCard";
 
 export const Route = createFileRoute("/_authenticated/plans")({
   component: PricingPage,
@@ -35,7 +36,10 @@ function PricingPage() {
           </CardContent>
         </Card>
       ) : (
-        <RegionalPricingTable region={region} />
+        <>
+          <FounderPlanCard region={region} />
+          <RegionalPricingTable region={region} />
+        </>
       )}
     </div>
   );

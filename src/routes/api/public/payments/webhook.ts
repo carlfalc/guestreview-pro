@@ -144,6 +144,125 @@ async function upsertSubscription(subscription: LooseRecord, env: StripeEnv) {
     const { onSubscriptionActivated } = await import("@/lib/upgrade-notifications.server");
     await onSubscriptionActivated(admin(), ownerId, planKey);
   }
+
+  await syncFounderSlot(subscription, env, ownerId, planKey, price, trustedRegion);
+}
+
+/**
+ * Founding Member Beta side-effects.
+ *
+ * A place is only ever allocated AFTER Stripe confirms a paid, active
+ * subscription on a founder price. Payment failure keeps the place during the
+ * grace period; a real cancellation or refund releases it.
+ */
+async function syncFounderSlot(
+  subscription: LooseRecord,
+  env: StripeEnv,
+  ownerId: string,
+  planKey: "free" | "pro" | "business",
+  price: LooseRecord | undefined,
+  trustedRegion: string | null,
+) {
+  const { isFounderLookupKey } = await import("@/lib/founder");
+  const { allocateFounderSlot, releaseFounderSlot, getFounderSlot } =
+    await import("@/lib/founder.server");
+
+  const lookupKey = (price?.lookup_key ?? price?.metadata?.lovable_external_id ?? null) as
+    | string
+    | null;
+  const isFounderPrice = isFounderLookupKey(lookupKey) || subscription.metadata?.founder === "true";
+
+  const status = String(subscription.status ?? "");
+
+  if (isFounderPrice && planKey !== "free" && ["active", "trialing"].includes(status)) {
+    const slotNumber = await allocateFounderSlot(admin(), {
+      ownerId,
+      pricingRegion:
+        (subscription.metadata?.pricing_region as string | undefined) ?? trustedRegion ?? "US",
+      billingInterval: intervalFromPrice(price) ?? "monthly",
+      founderPriceId: lookupKey,
+      stripeCustomerId:
+        typeof subscription.customer === "string"
+          ? subscription.customer
+          : (subscription.customer?.id ?? null),
+      stripeSubscriptionId: typeof subscription.id === "string" ? subscription.id : null,
+      environment: env,
+    });
+
+    if (slotNumber) {
+      await notifyFounder(ownerId, slotNumber, {
+        kind: "welcome",
+        priceLine: priceLineFor(price),
+      });
+    }
+
+    // Cancelling at period end loses the locked price permanently — warn once.
+    if (subscription.cancel_at_period_end === true) {
+      const endsAt =
+        typeof subscription.current_period_end === "number"
+          ? new Date(subscription.current_period_end * 1000).toISOString().slice(0, 10)
+          : "the end of your billing period";
+      await notifyFounder(ownerId, slotNumber, { kind: "warning", accessUntil: endsAt });
+    }
+    return;
+  }
+
+  // Paid access has genuinely ended — free the place for the next customer.
+  if (["canceled", "unpaid", "incomplete_expired"].includes(status)) {
+    const slot = await getFounderSlot(admin(), ownerId);
+    if (slot && (slot.status === "active" || slot.status === "pending")) {
+      await releaseFounderSlot(admin(), {
+        ownerId,
+        status: "canceled",
+        reason: `subscription ${status}`,
+        source: "stripe",
+      });
+    }
+  }
+  // `past_due` deliberately keeps the place: Stripe is still retrying.
+}
+
+function priceLineFor(price: LooseRecord | undefined): string {
+  const amount = typeof price?.unit_amount === "number" ? price.unit_amount / 100 : null;
+  const currency = typeof price?.currency === "string" ? price.currency.toUpperCase() : "";
+  const period = price?.recurring?.interval === "year" ? "year" : "month";
+  if (amount === null || !currency) return "your founder rate";
+  return `${currency} ${amount.toFixed(2)} per ${period}`;
+}
+
+/** Best-effort founder email. Delivery problems must never fail a webhook. */
+async function notifyFounder(
+  ownerId: string,
+  slotNumber: number | null,
+  options: { kind: "welcome"; priceLine: string } | { kind: "warning"; accessUntil: string },
+): Promise<void> {
+  try {
+    const { data } = await admin().from("profiles").select("email").eq("id", ownerId).maybeSingle();
+    const email = (data as { email?: string | null } | null)?.email;
+    if (!email) return;
+
+    const { formatSlotNumber } = await import("@/lib/founder");
+    const slotLabel = `Founding Member ${formatSlotNumber(slotNumber)}`.trim();
+    const jobs = await import("@/lib/email-jobs.server");
+
+    if (options.kind === "welcome") {
+      await jobs.sendFounderWelcome({
+        ownerId,
+        email,
+        slotLabel,
+        priceLine: options.priceLine,
+      });
+    } else {
+      await jobs.sendFounderCancellationWarning({
+        ownerId,
+        email,
+        slotLabel,
+        accessUntil: options.accessUntil,
+      });
+    }
+  } catch (e) {
+    console.error("founder email failed:", e);
+  }
 }
 
 /** Update payment health without ever touching plan entitlement. */
@@ -247,9 +366,54 @@ async function dispatch(event: { type: string; data: { object: LooseRecord } }, 
       break;
     }
 
+    // A refund or a lost dispute releases the founder place immediately.
+    case "charge.refunded":
+    case "charge.dispute.closed":
+    case "charge.dispute.created": {
+      const charge = event.data.object;
+      const fullyRefunded =
+        event.type !== "charge.refunded" ||
+        charge.refunded === true ||
+        (typeof charge.amount_refunded === "number" &&
+          typeof charge.amount === "number" &&
+          charge.amount_refunded >= charge.amount);
+      if (fullyRefunded) {
+        await releaseFounderForCharge(charge, env, event.type);
+      }
+      break;
+    }
+
     default:
       console.log("Unhandled Stripe event:", event.type);
   }
+}
+
+/** Map a refunded/disputed charge back to its account and free the place. */
+async function releaseFounderForCharge(
+  charge: LooseRecord,
+  env: StripeEnv,
+  eventType: string,
+): Promise<void> {
+  const customerId =
+    typeof charge.customer === "string" ? charge.customer : (charge.customer?.id ?? null);
+  if (!customerId) return;
+
+  const { data } = await admin()
+    .from("subscriptions")
+    .select("owner_id")
+    .eq("stripe_customer_id", customerId)
+    .eq("environment", env)
+    .maybeSingle();
+  const ownerId = (data as { owner_id?: string } | null)?.owner_id;
+  if (!ownerId) return;
+
+  const { releaseFounderSlot } = await import("@/lib/founder.server");
+  await releaseFounderSlot(admin(), {
+    ownerId,
+    status: "refunded",
+    reason: eventType,
+    source: "stripe",
+  });
 }
 
 /** Returns the HTTP status Stripe should see. */

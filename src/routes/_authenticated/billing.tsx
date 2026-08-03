@@ -14,6 +14,7 @@ import { PLAN_FEATURES } from "@/lib/regional-pricing";
 import { Link } from "@tanstack/react-router";
 import { UpgradeChecklist } from "@/components/billing/UpgradeChecklist";
 import { PlanPrioritiesCard } from "@/components/billing/PlanPrioritiesCard";
+import { FounderBadge } from "@/components/founder/FounderBadge";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   component: BillingPage,
@@ -90,6 +91,9 @@ function BillingPage() {
     <div className="animate-fade-in-up space-y-6">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Billing & subscription</h1>
+        <div className="mt-2">
+          <FounderBadge />
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Your plan, renewal date and payment history. Pricing follows your locked account region.
         </p>

@@ -55,20 +55,39 @@ export interface CheckoutResult {
   clientSecret?: string;
   /** Set when the account already pays — the UI sends them to the portal. */
   alreadySubscribed?: boolean;
+  /**
+   * The founder offer was requested but is no longer available to this
+   * account. No session is created and nothing is charged — the UI must ask
+   * the customer to confirm standard pricing first.
+   */
+  founderUnavailable?: boolean;
+  founderUnavailableReason?: string;
+  /** True when the session that was created uses the locked founder price. */
+  founderApplied?: boolean;
   error?: string;
 }
 
 export const createSubscriptionCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { tier: PlanTier; interval: PaidInterval; returnPath?: string }) => {
-    if (!TIERS.includes(data?.tier)) throw new Error("Unknown plan.");
-    if (!INTERVALS.includes(data?.interval)) throw new Error("Unknown billing interval.");
-    return {
-      tier: data.tier,
-      interval: data.interval,
-      returnPath: typeof data?.returnPath === "string" ? data.returnPath : undefined,
-    };
-  })
+  .inputValidator(
+    (data: {
+      tier: PlanTier;
+      interval: PaidInterval;
+      returnPath?: string;
+      founder?: boolean;
+      acceptStandardIfSoldOut?: boolean;
+    }) => {
+      if (!TIERS.includes(data?.tier)) throw new Error("Unknown plan.");
+      if (!INTERVALS.includes(data?.interval)) throw new Error("Unknown billing interval.");
+      return {
+        tier: data.tier,
+        interval: data.interval,
+        returnPath: typeof data?.returnPath === "string" ? data.returnPath : undefined,
+        founder: data?.founder === true,
+        acceptStandardIfSoldOut: data?.acceptStandardIfSoldOut === true,
+      };
+    },
+  )
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
     const { environment, host } = await trustedContext();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -100,9 +119,46 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       return { alreadySubscribed: true };
     }
 
-    const plan = resolveBillablePlan(region.pricing_region as never, data.tier, data.interval);
+    // 3. Founder pricing — server-resolved only, and only for Pro.
+    let founderApplied = false;
+    let lookupKey: string;
+    if (data.founder && data.tier === "pro") {
+      const { founderOfferEligible } = await import("./founder.server");
+      const { resolveFounderPlan } = await import("./founder");
+      const eligibility = await founderOfferEligible(admin, context.userId);
+      if (eligibility.eligible) {
+        founderApplied = true;
+        lookupKey = resolveFounderPlan(
+          region.pricing_region as never,
+          data.interval,
+        ).stripeLookupKey;
+      } else if (!data.acceptStandardIfSoldOut) {
+        // Sold out (or already used) — never silently charge standard pricing.
+        return {
+          founderUnavailable: true,
+          ...(eligibility.reason ? { founderUnavailableReason: eligibility.reason } : {}),
+        };
+      } else {
+        lookupKey = resolveBillablePlan(
+          region.pricing_region as never,
+          data.tier,
+          data.interval,
+        ).stripeLookupKey;
+      }
+    } else {
+      lookupKey = resolveBillablePlan(
+        region.pricing_region as never,
+        data.tier,
+        data.interval,
+      ).stripeLookupKey;
+    }
 
-    // 3. The plan must exist in the trusted mapping for THIS environment.
+    const plan = {
+      ...resolveBillablePlan(region.pricing_region as never, data.tier, data.interval),
+      stripeLookupKey: lookupKey,
+    };
+
+    // 4. The price must exist in the trusted mapping for THIS environment.
     const trusted = await findTrustedPriceByLookupKey(
       supabaseAdmin as never,
       plan.stripeLookupKey,
@@ -166,6 +222,8 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
           plan_key: plan.tier,
           billing_interval: plan.interval,
           pricing_region: plan.billingRegion,
+          founder: founderApplied ? "true" : "false",
+          founder_lookup_key: founderApplied ? plan.stripeLookupKey : "",
         },
         subscription_data: {
           metadata: {
@@ -174,6 +232,8 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
             plan_key: plan.tier,
             billing_interval: plan.interval,
             pricing_region: plan.billingRegion,
+            founder: founderApplied ? "true" : "false",
+            founder_lookup_key: founderApplied ? plan.stripeLookupKey : "",
           },
         },
       });
@@ -200,7 +260,7 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
         console.error("checkout_attempts insert failed:", e);
       }
 
-      return { clientSecret: session.client_secret ?? "" };
+      return { clientSecret: session.client_secret ?? "", founderApplied };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }

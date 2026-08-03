@@ -4,6 +4,8 @@ import type { ComponentType } from "react";
 import { template as weeklyReputationHealth } from "./weekly-reputation-health";
 import { template as qrPlacementGuide } from "./qr-placement-guide";
 import { template as portfolioDigest } from "./portfolio-digest";
+import { template as founderWelcome } from "./founder-welcome";
+import { template as founderCancellationWarning } from "./founder-cancellation-warning";
 
 export interface TemplateEntry {
   component: ComponentType<any>;
@@ -33,4 +35,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   weekly_reputation_health: weeklyReputationHealth,
   qr_placement_guide: qrPlacementGuide,
   portfolio_digest: portfolioDigest,
+  founder_welcome: founderWelcome,
+  founder_cancellation_warning: founderCancellationWarning,
 };
