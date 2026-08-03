@@ -260,7 +260,7 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
         console.error("checkout_attempts insert failed:", e);
       }
 
-      return { clientSecret: session.client_secret ?? "" };
+      return { clientSecret: session.client_secret ?? "", founderApplied };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
