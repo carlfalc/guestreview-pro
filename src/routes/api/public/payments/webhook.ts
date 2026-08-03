@@ -309,8 +309,26 @@ async function dispatch(event: { type: string; data: { object: LooseRecord } }, 
       break;
     }
 
+    // A refund or a lost dispute releases the founder place immediately.
+    case "charge.refunded":
+    case "charge.dispute.closed":
+    case "charge.dispute.created": {
+      const charge = event.data.object;
+      const fullyRefunded =
+        event.type !== "charge.refunded" ||
+        charge.refunded === true ||
+        (typeof charge.amount_refunded === "number" &&
+          typeof charge.amount === "number" &&
+          charge.amount_refunded >= charge.amount);
+      if (fullyRefunded) {
+        await releaseFounderForCharge(charge, env, event.type);
+      }
+      break;
+    }
+
     default:
       console.log("Unhandled Stripe event:", event.type);
+
   }
 }
 
