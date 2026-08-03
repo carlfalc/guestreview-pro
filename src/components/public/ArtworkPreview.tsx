@@ -317,7 +317,6 @@ function CircleFace({
   );
 }
 
-
 export interface ArtworkPreviewProps {
   formatId: string;
   variant?: ArtworkVariant;
