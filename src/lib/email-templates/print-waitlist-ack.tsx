@@ -54,8 +54,8 @@ const PrintWaitlistAckEmail = (props: Record<string, unknown>) => {
           </Heading>
 
           <Text style={body}>
-            Thanks — your preferences were received. We use them to decide which printed products
-            to prepare first and which regions to serve.
+            Thanks — your preferences were received. We use them to decide which printed products to
+            prepare first and which regions to serve.
           </Text>
 
           {products.length > 0 && (
@@ -82,9 +82,8 @@ const PrintWaitlistAckEmail = (props: Record<string, unknown>) => {
           </Section>
 
           <Text style={footer}>
-            You received this because you joined the print waitlist in your GuestReview Pro
-            account. Manage your email preferences in Settings → Email, or reply to opt out of
-            print updates.
+            You received this because you joined the print waitlist in your GuestReview Pro account.
+            Manage your email preferences in Settings → Email, or reply to opt out of print updates.
           </Text>
         </Container>
       </Body>

@@ -285,7 +285,9 @@ export function computeCartTotals(
   const taxMinor = estimateTaxMinor(netMinor + shippingMinor, region);
 
   // Inclusive regimes already have tax inside the retail price.
-  const totalMinor = rule.inclusive ? netMinor + shippingMinor : netMinor + shippingMinor + taxMinor;
+  const totalMinor = rule.inclusive
+    ? netMinor + shippingMinor
+    : netMinor + shippingMinor + taxMinor;
 
   const marginMinor = netMinor - costMinor;
   return {
