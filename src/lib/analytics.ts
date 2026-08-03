@@ -35,6 +35,19 @@ export const PRODUCT_EVENTS = [
   "founder_slot_claimed",
   "founder_sold_out_fallback",
   "founder_feedback_submitted",
+  // Print Store funnel
+  "print_store_viewed",
+  "print_product_viewed",
+  "print_mockup_created",
+  "print_proof_generated",
+  "print_proof_approved",
+  "print_cart_started",
+  "print_checkout_started",
+  "print_order_paid",
+  "print_order_submitted",
+  "print_order_shipped",
+  "print_order_delivered",
+  "print_order_refunded",
 ] as const;
 
 export type ProductEventName = (typeof PRODUCT_EVENTS)[number];

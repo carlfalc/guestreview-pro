@@ -6,6 +6,14 @@ import { template as qrPlacementGuide } from "./qr-placement-guide";
 import { template as portfolioDigest } from "./portfolio-digest";
 import { template as founderWelcome } from "./founder-welcome";
 import { template as founderCancellationWarning } from "./founder-cancellation-warning";
+import {
+  printOrderConfirmed,
+  printOrderSubmitted,
+  printOrderShipped,
+  printOrderDelivered,
+  printOrderIssue,
+  printOrderRefunded,
+} from "./print-order";
 
 export interface TemplateEntry {
   component: ComponentType<any>;
@@ -37,4 +45,10 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   portfolio_digest: portfolioDigest,
   founder_welcome: founderWelcome,
   founder_cancellation_warning: founderCancellationWarning,
+  print_order_confirmed: printOrderConfirmed,
+  print_order_submitted: printOrderSubmitted,
+  print_order_shipped: printOrderShipped,
+  print_order_delivered: printOrderDelivered,
+  print_order_issue: printOrderIssue,
+  print_order_refunded: printOrderRefunded,
 };

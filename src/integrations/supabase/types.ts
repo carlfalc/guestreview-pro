@@ -1068,6 +1068,839 @@ export type Database = {
           },
         ]
       }
+      print_bundle_items: {
+        Row: {
+          bundle_id: string
+          created_at: string
+          id: string
+          label: string
+          product_id: string
+          quantity: number
+          sort_order: number
+          variant_id: string | null
+        }
+        Insert: {
+          bundle_id: string
+          created_at?: string
+          id?: string
+          label: string
+          product_id: string
+          quantity?: number
+          sort_order?: number
+          variant_id?: string | null
+        }
+        Update: {
+          bundle_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+          product_id?: string
+          quantity?: number
+          sort_order?: number
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_bundle_items_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "print_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_bundle_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "print_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_bundle_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "print_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      print_bundles: {
+        Row: {
+          active: boolean
+          bundle_key: string
+          created_at: string
+          description: string
+          discount_percent: number
+          id: string
+          industry: string | null
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bundle_key: string
+          created_at?: string
+          description?: string
+          discount_percent?: number
+          id?: string
+          industry?: string | null
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bundle_key?: string
+          created_at?: string
+          description?: string
+          discount_percent?: number
+          id?: string
+          industry?: string | null
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      print_cart_items: {
+        Row: {
+          approved_at: string | null
+          artwork_version: number
+          bundle_group: string | null
+          bundle_id: string | null
+          business_id: string
+          campaign: string | null
+          cart_id: string
+          created_at: string
+          currency_code: string
+          design: Json
+          id: string
+          marketing_pack_id: string | null
+          owner_id: string
+          placement_plan_id: string | null
+          product_id: string
+          proof_id: string | null
+          qr_code_id: string
+          quantity: number
+          unit_cost_minor: number
+          unit_retail_minor: number
+          updated_at: string
+          validation_snapshot: Json
+          validation_status: string
+          variant_id: string
+          warnings_acknowledged: boolean
+        }
+        Insert: {
+          approved_at?: string | null
+          artwork_version?: number
+          bundle_group?: string | null
+          bundle_id?: string | null
+          business_id: string
+          campaign?: string | null
+          cart_id: string
+          created_at?: string
+          currency_code?: string
+          design?: Json
+          id?: string
+          marketing_pack_id?: string | null
+          owner_id: string
+          placement_plan_id?: string | null
+          product_id: string
+          proof_id?: string | null
+          qr_code_id: string
+          quantity?: number
+          unit_cost_minor?: number
+          unit_retail_minor?: number
+          updated_at?: string
+          validation_snapshot?: Json
+          validation_status?: string
+          variant_id: string
+          warnings_acknowledged?: boolean
+        }
+        Update: {
+          approved_at?: string | null
+          artwork_version?: number
+          bundle_group?: string | null
+          bundle_id?: string | null
+          business_id?: string
+          campaign?: string | null
+          cart_id?: string
+          created_at?: string
+          currency_code?: string
+          design?: Json
+          id?: string
+          marketing_pack_id?: string | null
+          owner_id?: string
+          placement_plan_id?: string | null
+          product_id?: string
+          proof_id?: string | null
+          qr_code_id?: string
+          quantity?: number
+          unit_cost_minor?: number
+          unit_retail_minor?: number
+          updated_at?: string
+          validation_snapshot?: Json
+          validation_status?: string
+          variant_id?: string
+          warnings_acknowledged?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_cart_items_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "print_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_cart_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "print_carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_cart_items_marketing_pack_id_fkey"
+            columns: ["marketing_pack_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_packs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_cart_items_placement_plan_id_fkey"
+            columns: ["placement_plan_id"]
+            isOneToOne: false
+            referencedRelation: "placement_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "print_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_cart_items_proof_fk"
+            columns: ["proof_id"]
+            isOneToOne: false
+            referencedRelation: "print_proofs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_cart_items_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_cart_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "print_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      print_carts: {
+        Row: {
+          created_at: string
+          currency_code: string
+          id: string
+          owner_id: string
+          pricing_region: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency_code?: string
+          id?: string
+          owner_id: string
+          pricing_region?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency_code?: string
+          id?: string
+          owner_id?: string
+          pricing_region?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      print_order_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          new_status: string | null
+          note: string | null
+          order_id: string
+          owner_id: string
+          previous_status: string | null
+          visibility: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          new_status?: string | null
+          note?: string | null
+          order_id: string
+          owner_id: string
+          previous_status?: string | null
+          visibility?: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          new_status?: string | null
+          note?: string | null
+          order_id?: string
+          owner_id?: string
+          previous_status?: string | null
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "print_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      print_order_items: {
+        Row: {
+          artwork_version: number
+          bundle_id: string | null
+          business_id: string | null
+          created_at: string
+          design: Json
+          id: string
+          line_total_minor: number
+          order_id: string
+          owner_id: string
+          product_id: string
+          product_name: string
+          proof_id: string | null
+          qr_code_id: string | null
+          qr_destination: string | null
+          quantity: number
+          unit_cost_minor: number
+          unit_retail_minor: number
+          validation_snapshot: Json
+          variant_id: string
+          variant_label: string
+        }
+        Insert: {
+          artwork_version?: number
+          bundle_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          design?: Json
+          id?: string
+          line_total_minor?: number
+          order_id: string
+          owner_id: string
+          product_id: string
+          product_name: string
+          proof_id?: string | null
+          qr_code_id?: string | null
+          qr_destination?: string | null
+          quantity?: number
+          unit_cost_minor?: number
+          unit_retail_minor?: number
+          validation_snapshot?: Json
+          variant_id: string
+          variant_label?: string
+        }
+        Update: {
+          artwork_version?: number
+          bundle_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          design?: Json
+          id?: string
+          line_total_minor?: number
+          order_id?: string
+          owner_id?: string
+          product_id?: string
+          product_name?: string
+          proof_id?: string | null
+          qr_code_id?: string | null
+          qr_destination?: string | null
+          quantity?: number
+          unit_cost_minor?: number
+          unit_retail_minor?: number
+          validation_snapshot?: Json
+          variant_id?: string
+          variant_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_order_items_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "print_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_order_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "print_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "print_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_order_items_proof_fk"
+            columns: ["proof_id"]
+            isOneToOne: false
+            referencedRelation: "print_proofs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_order_items_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "print_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      print_orders: {
+        Row: {
+          canceled_at: string | null
+          contact_email: string | null
+          created_at: string
+          currency_code: string
+          delivered_at: string | null
+          discount_minor: number
+          discount_percent: number
+          environment: string
+          estimated_cost_minor: number
+          estimated_delivery_date: string | null
+          estimated_margin_minor: number
+          estimated_ship_date: string | null
+          failure_reason: string | null
+          id: string
+          internal_notes: string | null
+          order_number: string
+          owner_id: string
+          paid_at: string | null
+          payment_status: string
+          plan_key: string
+          pricing_region: string
+          printer_name: string | null
+          provider_key: string
+          provider_order_id: string | null
+          refund_amount_minor: number | null
+          refunded_at: string | null
+          shipped_at: string | null
+          shipping_address: Json
+          shipping_minor: number
+          shipping_name: string | null
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          submitted_at: string | null
+          subtotal_minor: number
+          supplier_cost_minor: number | null
+          supplier_shipping_minor: number | null
+          tax_minor: number
+          total_minor: number
+          tracking_carrier: string | null
+          tracking_number: string | null
+          tracking_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          canceled_at?: string | null
+          contact_email?: string | null
+          created_at?: string
+          currency_code?: string
+          delivered_at?: string | null
+          discount_minor?: number
+          discount_percent?: number
+          environment?: string
+          estimated_cost_minor?: number
+          estimated_delivery_date?: string | null
+          estimated_margin_minor?: number
+          estimated_ship_date?: string | null
+          failure_reason?: string | null
+          id?: string
+          internal_notes?: string | null
+          order_number: string
+          owner_id: string
+          paid_at?: string | null
+          payment_status?: string
+          plan_key?: string
+          pricing_region?: string
+          printer_name?: string | null
+          provider_key?: string
+          provider_order_id?: string | null
+          refund_amount_minor?: number | null
+          refunded_at?: string | null
+          shipped_at?: string | null
+          shipping_address?: Json
+          shipping_minor?: number
+          shipping_name?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          submitted_at?: string | null
+          subtotal_minor?: number
+          supplier_cost_minor?: number | null
+          supplier_shipping_minor?: number | null
+          tax_minor?: number
+          total_minor?: number
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          canceled_at?: string | null
+          contact_email?: string | null
+          created_at?: string
+          currency_code?: string
+          delivered_at?: string | null
+          discount_minor?: number
+          discount_percent?: number
+          environment?: string
+          estimated_cost_minor?: number
+          estimated_delivery_date?: string | null
+          estimated_margin_minor?: number
+          estimated_ship_date?: string | null
+          failure_reason?: string | null
+          id?: string
+          internal_notes?: string | null
+          order_number?: string
+          owner_id?: string
+          paid_at?: string | null
+          payment_status?: string
+          plan_key?: string
+          pricing_region?: string
+          printer_name?: string | null
+          provider_key?: string
+          provider_order_id?: string | null
+          refund_amount_minor?: number | null
+          refunded_at?: string | null
+          shipped_at?: string | null
+          shipping_address?: Json
+          shipping_minor?: number
+          shipping_name?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          submitted_at?: string | null
+          subtotal_minor?: number
+          supplier_cost_minor?: number | null
+          supplier_shipping_minor?: number | null
+          tax_minor?: number
+          total_minor?: number
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      print_product_variants: {
+        Row: {
+          active: boolean
+          created_at: string
+          currency_code: string
+          fulfilment_cost_minor: number
+          id: string
+          label: string
+          product_id: string
+          quantity: number
+          retail_price_minor: number
+          sort_order: number
+          updated_at: string
+          variant_key: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          currency_code?: string
+          fulfilment_cost_minor: number
+          id?: string
+          label: string
+          product_id: string
+          quantity: number
+          retail_price_minor: number
+          sort_order?: number
+          updated_at?: string
+          variant_key: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          currency_code?: string
+          fulfilment_cost_minor?: number
+          id?: string
+          label?: string
+          product_id?: string
+          quantity?: number
+          retail_price_minor?: number
+          sort_order?: number
+          updated_at?: string
+          variant_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "print_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      print_products: {
+        Row: {
+          active: boolean
+          artwork_format: string
+          base_currency: string
+          bleed_mm: number
+          category: string
+          created_at: string
+          description: string
+          finish: string
+          format_id: string | null
+          height_mm: number
+          id: string
+          material: string
+          min_qr_mm: number
+          name: string
+          print_sides: number
+          product_key: string
+          production_days_max: number
+          production_days_min: number
+          safe_area_mm: number
+          shape: string
+          shipping_class: string
+          slug: string
+          sort_order: number
+          supported_countries: string[]
+          updated_at: string
+          width_mm: number
+        }
+        Insert: {
+          active?: boolean
+          artwork_format?: string
+          base_currency?: string
+          bleed_mm?: number
+          category?: string
+          created_at?: string
+          description?: string
+          finish?: string
+          format_id?: string | null
+          height_mm: number
+          id?: string
+          material?: string
+          min_qr_mm?: number
+          name: string
+          print_sides?: number
+          product_key: string
+          production_days_max?: number
+          production_days_min?: number
+          safe_area_mm?: number
+          shape?: string
+          shipping_class?: string
+          slug: string
+          sort_order?: number
+          supported_countries?: string[]
+          updated_at?: string
+          width_mm: number
+        }
+        Update: {
+          active?: boolean
+          artwork_format?: string
+          base_currency?: string
+          bleed_mm?: number
+          category?: string
+          created_at?: string
+          description?: string
+          finish?: string
+          format_id?: string | null
+          height_mm?: number
+          id?: string
+          material?: string
+          min_qr_mm?: number
+          name?: string
+          print_sides?: number
+          product_key?: string
+          production_days_max?: number
+          production_days_min?: number
+          safe_area_mm?: number
+          shape?: string
+          shipping_class?: string
+          slug?: string
+          sort_order?: number
+          supported_countries?: string[]
+          updated_at?: string
+          width_mm?: number
+        }
+        Relationships: []
+      }
+      print_proofs: {
+        Row: {
+          approval_statement: string | null
+          approved_at: string | null
+          approved_by: string | null
+          artwork_hash: string
+          back_svg: string | null
+          business_id: string | null
+          cart_item_id: string | null
+          created_at: string
+          design_snapshot: Json
+          front_svg: string | null
+          id: string
+          order_item_id: string | null
+          owner_id: string
+          product_id: string
+          proof_url: string | null
+          qr_code_id: string | null
+          qr_destination: string | null
+          qr_short_url: string | null
+          status: string
+          updated_at: string
+          validation_snapshot: Json
+          version: number
+        }
+        Insert: {
+          approval_statement?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          artwork_hash?: string
+          back_svg?: string | null
+          business_id?: string | null
+          cart_item_id?: string | null
+          created_at?: string
+          design_snapshot?: Json
+          front_svg?: string | null
+          id?: string
+          order_item_id?: string | null
+          owner_id: string
+          product_id: string
+          proof_url?: string | null
+          qr_code_id?: string | null
+          qr_destination?: string | null
+          qr_short_url?: string | null
+          status?: string
+          updated_at?: string
+          validation_snapshot?: Json
+          version?: number
+        }
+        Update: {
+          approval_statement?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          artwork_hash?: string
+          back_svg?: string | null
+          business_id?: string | null
+          cart_item_id?: string | null
+          created_at?: string
+          design_snapshot?: Json
+          front_svg?: string | null
+          id?: string
+          order_item_id?: string | null
+          owner_id?: string
+          product_id?: string
+          proof_url?: string | null
+          qr_code_id?: string | null
+          qr_destination?: string | null
+          qr_short_url?: string | null
+          status?: string
+          updated_at?: string
+          validation_snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_proofs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_proofs_cart_item_id_fkey"
+            columns: ["cart_item_id"]
+            isOneToOne: false
+            referencedRelation: "print_cart_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_proofs_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "print_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_proofs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "print_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_proofs_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_events: {
         Row: {
           created_at: string
@@ -1863,6 +2696,7 @@ export type Database = {
       }
       my_founder_status: { Args: never; Returns: Json }
       my_onboarding_progress: { Args: never; Returns: Json }
+      next_print_order_number: { Args: never; Returns: string }
       release_founder_slot: {
         Args: {
           p_actor_id?: string
