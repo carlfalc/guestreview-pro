@@ -12,6 +12,7 @@ import {
 import { allowedBusinessIds, emailEntitlementsFor } from "@/lib/email-entitlements";
 import type { EmailEntitlements } from "@/lib/email-entitlements";
 import type { PlanTierKey } from "@/lib/entitlements";
+import type { DomainStatus } from "@/lib/email-throttle";
 import type { LooseClient } from "@/lib/loose-types";
 
 export interface EmailPreferencesRow {
@@ -22,6 +23,9 @@ export interface EmailPreferencesRow {
   businessIds: string[];
   productUpdatesEnabled: boolean;
   portfolioDigestEnabled: boolean;
+  portfolioWeekday: number;
+  portfolioLocalTime: string;
+  portfolioBusinessIds: string[];
   reportFormat: "full" | "summary";
   unsubscribedAt: string | null;
   productUpdatesConsentAt: string | null;
@@ -36,6 +40,8 @@ export interface EmailSettings {
   emailConfirmed: boolean;
   timezones: string[];
   suppressed: boolean;
+  domainStatus: DomainStatus;
+  domainMessage: string | null;
 }
 
 export const DEFAULT_PREFERENCES: EmailPreferencesRow = {
@@ -46,6 +52,9 @@ export const DEFAULT_PREFERENCES: EmailPreferencesRow = {
   businessIds: [],
   productUpdatesEnabled: false,
   portfolioDigestEnabled: false,
+  portfolioWeekday: 1,
+  portfolioLocalTime: "09:00",
+  portfolioBusinessIds: [],
   reportFormat: "full",
   unsubscribedAt: null,
   productUpdatesConsentAt: null,
@@ -62,6 +71,14 @@ function rowToPreferences(row: Record<string, unknown> | null): EmailPreferences
     businessIds: ids.filter((v): v is string => typeof v === "string"),
     productUpdatesEnabled: Boolean(row.product_updates_enabled),
     portfolioDigestEnabled: Boolean(row.portfolio_digest_enabled),
+    portfolioWeekday: Number(row.portfolio_weekday ?? row.weekday ?? 1),
+    portfolioLocalTime: formatLocalTime(
+      parseLocalTime(String(row.portfolio_local_time ?? row.local_time ?? "09:00")),
+    ),
+    portfolioBusinessIds: (Array.isArray(row.portfolio_business_ids)
+      ? (row.portfolio_business_ids as unknown[])
+      : []
+    ).filter((v): v is string => typeof v === "string"),
     reportFormat: row.report_format === "summary" ? "summary" : "full",
     unsubscribedAt: (row.unsubscribed_at as string | null) ?? null,
     productUpdatesConsentAt: (row.product_updates_consent_at as string | null) ?? null,
@@ -96,6 +113,9 @@ export const loadEmailSettings = createServerFn({ method: "GET" })
       preferences.businessIds = [businesses[0].id];
     }
 
+    const { domainStatusFrom } = await import("@/lib/email-throttle");
+    const domainStatus = domainStatusFrom(process.env["EMAIL_DOMAIN_STATUS"]);
+
     const claims = context.claims as Record<string, unknown> | undefined;
     const email = typeof claims?.email === "string" ? claims.email : null;
 
@@ -121,6 +141,9 @@ export const loadEmailSettings = createServerFn({ method: "GET" })
       ),
       timezones: [...COMMON_TIMEZONES],
       suppressed,
+      domainStatus,
+      domainMessage:
+        domainStatus === "active" ? null : "Email delivery is waiting for DNS verification.",
     };
   });
 
@@ -132,6 +155,9 @@ export interface SavePreferencesInput {
   businessIds: string[];
   productUpdatesEnabled: boolean;
   portfolioDigestEnabled: boolean;
+  portfolioWeekday?: number;
+  portfolioLocalTime?: string;
+  portfolioBusinessIds?: string[];
   reportFormat: string;
 }
 
@@ -157,6 +183,13 @@ export const saveEmailPreferences = createServerFn({ method: "POST" })
       businessIds,
       productUpdatesEnabled: Boolean(data?.productUpdatesEnabled),
       portfolioDigestEnabled: Boolean(data?.portfolioDigestEnabled),
+      portfolioWeekday: Number.isInteger(Number(data?.portfolioWeekday))
+        ? Math.min(6, Math.max(0, Number(data?.portfolioWeekday)))
+        : weekday,
+      portfolioLocalTime: formatLocalTime(parseLocalTime(String(data?.portfolioLocalTime ?? "09:00"))),
+      portfolioBusinessIds: Array.isArray(data?.portfolioBusinessIds)
+        ? data.portfolioBusinessIds.filter((v) => typeof v === "string").slice(0, 20)
+        : [],
       reportFormat: data?.reportFormat === "summary" ? "summary" : "full",
     };
   })
@@ -204,6 +237,11 @@ export const saveEmailPreferences = createServerFn({ method: "POST" })
         : null,
       product_updates_consent_source: data.productUpdatesEnabled ? "settings" : null,
       portfolio_digest_enabled: ent.portfolioDigest ? data.portfolioDigestEnabled : false,
+      portfolio_weekday: data.portfolioWeekday,
+      portfolio_local_time: `${data.portfolioLocalTime}:00`,
+      portfolio_business_ids: ent.portfolioDigest
+        ? data.portfolioBusinessIds.filter((id) => owned.has(id)).slice(0, 10)
+        : [],
       report_format: data.reportFormat,
       unsubscribed_at: null,
     };
