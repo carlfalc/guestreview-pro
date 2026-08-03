@@ -96,21 +96,21 @@ function AdminPrintDemandPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Update failed."),
   });
 
-  const rows: AdminPrintInterestRow[] = demandQ.data?.rows ?? [];
+  const rowsData = demandQ.data?.rows;
 
-  const filtered = useMemo(
-    () =>
-      rows.filter((r) => {
-        if (statusFilter !== "all" && r.status !== statusFilter) return false;
-        if (productFilter !== "all" && !r.productKeys.includes(productFilter)) return false;
-        const q = search.trim().toLowerCase();
-        if (!q) return true;
-        return [r.email, r.businessName, r.countryCode, r.comments]
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q));
-      }),
-    [rows, statusFilter, productFilter, search],
-  );
+  const filtered = useMemo(() => {
+    const rows: AdminPrintInterestRow[] = rowsData ?? [];
+    return rows.filter((r) => {
+      if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (productFilter !== "all" && !r.productKeys.includes(productFilter)) return false;
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      return [r.email, r.businessName, r.countryCode, r.comments]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q));
+    });
+  }, [rowsData, statusFilter, productFilter, search]);
+
 
   const summary = useMemo(() => summarisePrintDemand(filtered), [filtered]);
   const thresholds = useMemo(() => demandThresholds(summary), [summary]);
