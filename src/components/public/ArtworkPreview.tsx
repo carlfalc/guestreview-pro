@@ -202,19 +202,21 @@ function Panel({
 
       <QrBlock x={qrX} y={qrY} size={qrSize} modules={modules} />
 
-      <Stars cx={w / 2} y={h * 0.735} size={min * 0.035} fill="#f5b544" />
+      <Stars cx={w / 2} y={starsY} size={min * 0.035} fill="#f5b544" />
 
       <text
         x={w / 2}
-        y={h * 0.79}
+        y={headlineY}
         textAnchor="middle"
-        fontSize={min * 0.082}
+        fontSize={min * (compact ? 0.075 : 0.082)}
         fontWeight={800}
         fill={fg}
         fontFamily="system-ui, sans-serif"
       >
         {content.headline}
       </text>
+
+
 
       <rect
         x={(w - ctaW) / 2}
