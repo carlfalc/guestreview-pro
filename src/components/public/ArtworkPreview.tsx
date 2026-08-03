@@ -1,17 +1,23 @@
 import { useMemo } from "react";
-import { FORMATS, safeArea } from "@/lib/qr-formats";
+import { FORMATS, templateColors, type LayoutTemplate } from "@/lib/qr-formats";
 import venueAsset from "@/assets/venue-interior.jpg.asset.json";
 
 /**
- * Marketing-grade artwork preview for the public landing page.
+ * Marketing-grade artwork preview shared by every public page.
  *
  * Rendered as inline SVG at the real trim proportions from the format
- * catalogue, so what the visitor sees matches the geometry of an actual
- * production export. No `qr-code-styling` on the public bundle, no network
- * request beyond one shared photo, no layout shift.
+ * catalogue, so what a visitor sees matches the geometry of a production
+ * export. No `qr-code-styling` on the public bundle, no layout shift, one
+ * shared photo.
  *
- * The module grid is deterministic decorative art — these previews are
- * artwork, not scannable codes.
+ * Layout is a single vertical flow inside the format's safe area: rows are
+ * allocated as fractions of the safe height, type is sized from its own row
+ * and then shrunk to fit the safe width, and every face is clipped to the die
+ * shape. That combination is what keeps text off the bleed and cut lines on
+ * circular, small and folded formats alike.
+ *
+ * The module grid is deterministic decorative art — previews are artwork, not
+ * scannable codes.
  */
 
 export type ArtworkVariant = "photo" | "clean";
@@ -25,18 +31,25 @@ export interface ArtworkContent {
   accent: string;
 }
 
+/** Mirrors the production "premium dark" pack used as the design reference. */
 export const DEMO_BRAND: ArtworkContent = {
   business: "Harbour Lane",
   headline: "Loved your visit?",
   subline: "Scan to leave us a review.",
   cta: "Leave a review",
-  footer: "Created with GuestReview Pro",
+  footer: "Thank you for supporting us",
   accent: "#1f4d3a",
 };
 
 const PHOTO_URL = venueAsset.url;
+const FONT = "system-ui, -apple-system, Segoe UI, sans-serif";
 
-function useModules(seedKey: string, size = 21) {
+/** Layouts that read best over a photograph. */
+const PHOTO_LAYOUTS: LayoutTemplate[] = ["premium-dark", "hospitality"];
+
+type Modules = { size: number; cells: boolean[] };
+
+function useModules(seedKey: string, size = 21): Modules {
   return useMemo(() => {
     let seed = 7;
     for (const ch of seedKey) seed = (seed * 31 + ch.charCodeAt(0)) % 100000;
@@ -49,22 +62,68 @@ function useModules(seedKey: string, size = 21) {
   }, [seedKey, size]);
 }
 
+/** Shrink a font size until the string fits the available width. */
+function fitFont(text: string, maxWidth: number, desired: number, weight = 1): number {
+  const estimated = text.length * desired * (weight >= 700 ? 0.58 : 0.53);
+  return estimated > maxWidth ? (desired * maxWidth) / estimated : desired;
+}
+
+function FitText({
+  text,
+  cx,
+  y,
+  maxWidth,
+  size,
+  weight = 400,
+  fill,
+  opacity = 1,
+  letterSpacing,
+}: {
+  text: string;
+  cx: number;
+  y: number;
+  maxWidth: number;
+  size: number;
+  weight?: number;
+  fill: string;
+  opacity?: number;
+  letterSpacing?: number;
+}) {
+  if (!text) return null;
+  return (
+    <text
+      x={cx}
+      y={y}
+      textAnchor="middle"
+      dominantBaseline="middle"
+      fontFamily={FONT}
+      fontSize={fitFont(text, maxWidth, size, weight)}
+      fontWeight={weight}
+      fill={fill}
+      opacity={opacity}
+      letterSpacing={letterSpacing}
+    >
+      {text}
+    </text>
+  );
+}
+
 function QrBlock({
   x,
   y,
   size,
   modules,
-  fg = "#0b0d10",
-  bg = "#ffffff",
+  fg,
+  bg,
 }: {
   x: number;
   y: number;
   size: number;
-  modules: { size: number; cells: boolean[] };
-  fg?: string;
-  bg?: string;
+  modules: Modules;
+  fg: string;
+  bg: string;
 }) {
-  const pad = size * 0.055;
+  const pad = size * 0.06;
   const inner = size - pad * 2;
   const cell = inner / modules.size;
   const finders: [number, number][] = [
@@ -123,7 +182,7 @@ function QrBlock({
 }
 
 function Stars({ cx, y, size, fill }: { cx: number; y: number; size: number; fill: string }) {
-  const gap = size * 1.6;
+  const gap = size * 1.55;
   return (
     <g fill={fill}>
       {[-2, -1, 0, 1, 2].map((i) => (
@@ -137,303 +196,474 @@ function Stars({ cx, y, size, fill }: { cx: number; y: number; size: number; fil
   );
 }
 
-/** One printed face: photo or clean panel with brand, QR, headline and CTA. */
-function Panel({
+type Palette = {
+  fg: string;
+  muted: string;
+  accent: string;
+  qrFg: string;
+  qrBg: string;
+  bg: string;
+  photo: boolean;
+};
+
+function palette(layout: LayoutTemplate, accent: string): Palette {
+  const c = templateColors(layout, accent);
+  const photo = PHOTO_LAYOUTS.includes(layout);
+  if (photo) {
+    return {
+      fg: "#ffffff",
+      muted: "rgba(255,255,255,0.78)",
+      accent: layout === "hospitality" ? "#c2703a" : accent,
+      qrFg: "#0b0d10",
+      qrBg: "#ffffff",
+      bg: "#050a09",
+      photo: true,
+    };
+  }
+  const darkBg = layout === "brand-colour";
+  return {
+    fg: c.fg,
+    muted: darkBg ? "rgba(255,255,255,0.75)" : "rgba(11,13,16,0.6)",
+    accent: c.accent,
+    qrFg: c.qrFg,
+    qrBg: c.qrBg,
+    bg: c.bg,
+    photo: false,
+  };
+}
+
+/**
+ * Vertical row flow inside a safe-area box. Weights are fractions of the box
+ * height, so nothing can ever be pushed past the edge of the safe area.
+ */
+type RowKey = "business" | "stars" | "headline" | "qr" | "subline" | "cta" | "footer";
+
+const FULL_ROWS: { key: RowKey; weight: number }[] = [
+  { key: "business", weight: 0.1 },
+  { key: "stars", weight: 0.07 },
+  { key: "headline", weight: 0.14 },
+  { key: "qr", weight: 0.36 },
+  { key: "subline", weight: 0.09 },
+  { key: "cta", weight: 0.14 },
+  { key: "footer", weight: 0.07 },
+];
+
+const COMPACT_ROWS: { key: RowKey; weight: number }[] = [
+  { key: "business", weight: 0.12 },
+  { key: "headline", weight: 0.16 },
+  { key: "qr", weight: 0.42 },
+  { key: "stars", weight: 0.09 },
+  { key: "cta", weight: 0.16 },
+];
+
+const TINY_ROWS: { key: RowKey; weight: number }[] = [
+  { key: "business", weight: 0.15 },
+  { key: "qr", weight: 0.5 },
+  { key: "headline", weight: 0.18 },
+];
+
+function rowsFor(mode: "full" | "compact" | "tiny") {
+  if (mode === "tiny") return TINY_ROWS;
+  if (mode === "compact") return COMPACT_ROWS;
+  return FULL_ROWS;
+}
+
+/** Content flow shared by every face — rectangular, circular or folded. */
+function Flow({
+  x,
+  y,
   w,
   h,
-  variant,
+  mode,
+  colors,
   content,
   modules,
-  clipId,
-  compact = false,
+}: {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  mode: "full" | "compact" | "tiny";
+  colors: Palette;
+  content: ArtworkContent;
+  modules: Modules;
+}) {
+  const rows = rowsFor(mode);
+  const total = rows.reduce((sum, r) => sum + r.weight, 0);
+  const gap = h * 0.02;
+  const usable = h - gap * (rows.length - 1);
+  const cx = x + w / 2;
+
+  let cursor = y;
+  const nodes: React.ReactNode[] = [];
+
+  for (const row of rows) {
+    const rowH = (usable * row.weight) / total;
+    const mid = cursor + rowH / 2;
+
+    switch (row.key) {
+      case "business":
+        nodes.push(
+          <FitText
+            key="business"
+            text={content.business}
+            cx={cx}
+            y={mid}
+            maxWidth={w}
+            size={rowH * 0.78}
+            weight={700}
+            fill={colors.fg}
+            letterSpacing={rowH * 0.03}
+          />,
+        );
+        break;
+      case "stars":
+        nodes.push(
+          <Stars
+            key="stars"
+            cx={cx}
+            y={mid}
+            size={Math.min(rowH * 0.9, w * 0.075)}
+            fill="#f5b544"
+          />,
+        );
+        break;
+      case "headline":
+        nodes.push(
+          <FitText
+            key="headline"
+            text={content.headline}
+            cx={cx}
+            y={mid}
+            maxWidth={w}
+            size={rowH * 0.85}
+            weight={800}
+            fill={colors.fg}
+          />,
+        );
+        break;
+      case "qr": {
+        const side = Math.min(rowH, w * 0.62);
+        nodes.push(
+          <QrBlock
+            key="qr"
+            x={cx - side / 2}
+            y={mid - side / 2}
+            size={side}
+            modules={modules}
+            fg={colors.qrFg}
+            bg={colors.qrBg}
+          />,
+        );
+        break;
+      }
+      case "subline":
+        nodes.push(
+          <FitText
+            key="subline"
+            text={content.subline}
+            cx={cx}
+            y={mid}
+            maxWidth={w}
+            size={rowH * 0.7}
+            fill={colors.muted}
+          />,
+        );
+        break;
+      case "cta": {
+        const pillH = Math.min(rowH * 0.92, h * 0.13);
+        const label = content.cta;
+        const fontSize = fitFont(label, w * 0.78, pillH * 0.46, 700);
+        const pillW = Math.min(w, Math.max(w * 0.5, label.length * fontSize * 0.62 + pillH));
+        nodes.push(
+          <g key="cta">
+            <rect
+              x={cx - pillW / 2}
+              y={mid - pillH / 2}
+              width={pillW}
+              height={pillH}
+              rx={pillH / 2}
+              fill={colors.accent}
+            />
+            <text
+              x={cx}
+              y={mid}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontFamily={FONT}
+              fontSize={fontSize}
+              fontWeight={700}
+              fill={colors.accent.toLowerCase() === "#ffffff" ? "#0b0d10" : "#ffffff"}
+            >
+              {label}
+            </text>
+          </g>,
+        );
+        break;
+      }
+      case "footer":
+        nodes.push(
+          <FitText
+            key="footer"
+            text={content.footer}
+            cx={cx}
+            y={mid}
+            maxWidth={w}
+            size={rowH * 0.66}
+            fill={colors.muted}
+          />,
+        );
+        break;
+    }
+
+    cursor += rowH + gap;
+  }
+
+  return <>{nodes}</>;
+}
+
+function Background({
+  w,
+  h,
+  colors,
+  rounded,
 }: {
   w: number;
   h: number;
-  variant: ArtworkVariant;
-  content: ArtworkContent;
-  modules: { size: number; cells: boolean[] };
-  clipId: string;
-  compact?: boolean;
+  colors: Palette;
+  rounded: number;
 }) {
-  const min = Math.min(w, h);
-  const dark = variant === "photo";
-  const fg = dark ? "#ffffff" : "#0b0d10";
-  const muted = dark ? "rgba(255,255,255,0.78)" : "rgba(11,13,16,0.62)";
-  const qrSize = min * (compact ? 0.4 : 0.42);
-  const qrX = (w - qrSize) / 2;
-  const qrY = h * (compact ? 0.17 : 0.22);
-  const ctaW = w * 0.58;
-  const ctaH = h * (compact ? 0.085 : 0.068);
-  const ctaY = h * (compact ? 0.775 : 0.815);
-  const starsY = h * (compact ? 0.65 : 0.735);
-  const headlineY = h * (compact ? 0.73 : 0.79);
-
+  if (!colors.photo) {
+    return <rect width={w} height={h} rx={rounded} fill={colors.bg} />;
+  }
   return (
-    <g clipPath={`url(#${clipId})`}>
-      {dark ? (
-        <>
-          <image
-            href={PHOTO_URL}
-            x={0}
-            y={0}
-            width={w}
-            height={h}
-            preserveAspectRatio="xMidYMid slice"
-          />
-          <rect width={w} height={h} fill="#050a09" opacity={0.42} />
-        </>
-      ) : (
-        <rect width={w} height={h} fill="#ffffff" />
-      )}
-
-      <text
-        x={w / 2}
-        y={h * 0.115}
-        textAnchor="middle"
-        fontSize={min * 0.062}
-        fontWeight={700}
-        letterSpacing={min * 0.004}
-        fill={fg}
-        fontFamily="system-ui, sans-serif"
-      >
-        {content.business}
-      </text>
-
-      <QrBlock x={qrX} y={qrY} size={qrSize} modules={modules} />
-
-      <Stars cx={w / 2} y={starsY} size={min * 0.035} fill="#f5b544" />
-
-      <text
-        x={w / 2}
-        y={headlineY}
-        textAnchor="middle"
-        fontSize={min * (compact ? 0.075 : 0.082)}
-        fontWeight={800}
-        fill={fg}
-        fontFamily="system-ui, sans-serif"
-      >
-        {content.headline}
-      </text>
-
-      <rect
-        x={(w - ctaW) / 2}
-        y={ctaY}
-        width={ctaW}
-        height={ctaH}
-        rx={ctaH / 2}
-        fill={content.accent}
+    <>
+      <image
+        href={PHOTO_URL}
+        x={0}
+        y={0}
+        width={w}
+        height={h}
+        preserveAspectRatio="xMidYMid slice"
       />
-      <text
-        x={w / 2}
-        y={ctaY + ctaH * 0.68}
-        textAnchor="middle"
-        fontSize={min * 0.05}
-        fontWeight={700}
-        fill="#ffffff"
-        fontFamily="system-ui, sans-serif"
-      >
-        {content.cta}
-      </text>
-
-      <text
-        x={w / 2}
-        y={h * 0.955}
-        textAnchor="middle"
-        fontSize={min * 0.038}
-        fill={muted}
-        fontFamily="system-ui, sans-serif"
-      >
-        {compact ? content.subline : content.footer}
-      </text>
-    </g>
-  );
-}
-
-/** Circular sticker face — tighter composition, no photo. */
-function CircleFace({
-  d,
-  content,
-  modules,
-}: {
-  d: number;
-  content: ArtworkContent;
-  modules: { size: number; cells: boolean[] };
-}) {
-  const qr = d * 0.4;
-  const clip = `circle-safe-${Math.round(d)}`;
-  return (
-    <g>
-      <defs>
-        <clipPath id={clip}>
-          <circle cx={d / 2} cy={d / 2} r={d / 2} />
-        </clipPath>
-      </defs>
-      <g clipPath={`url(#${clip})`}>
-        <circle cx={d / 2} cy={d / 2} r={d / 2} fill="#ffffff" />
-        <circle
-          cx={d / 2}
-          cy={d / 2}
-          r={d / 2 - d * 0.045}
-          fill="none"
-          stroke={content.accent}
-          strokeWidth={d * 0.014}
-        />
-        <text
-          x={d / 2}
-          y={d * 0.205}
-          textAnchor="middle"
-          fontSize={d * 0.055}
-          fontWeight={700}
-          fill={content.accent}
-          fontFamily="system-ui, sans-serif"
-        >
-          {content.business}
-        </text>
-        <QrBlock x={(d - qr) / 2} y={d * 0.255} size={qr} modules={modules} />
-        <Stars cx={d / 2} y={d * 0.715} size={d * 0.028} fill="#f5b544" />
-        <text
-          x={d / 2}
-          y={d * 0.792}
-          textAnchor="middle"
-          fontSize={d * 0.062}
-          fontWeight={800}
-          fill="#0b0d10"
-          fontFamily="system-ui, sans-serif"
-        >
-          {content.headline}
-        </text>
-        <text
-          x={d / 2}
-          y={d * 0.85}
-          textAnchor="middle"
-          fontSize={d * 0.035}
-          fill="rgba(11,13,16,0.6)"
-          fontFamily="system-ui, sans-serif"
-        >
-          Scan to review us
-        </text>
-      </g>
-    </g>
+      <rect width={w} height={h} fill="#050a09" opacity={0.46} />
+    </>
   );
 }
 
 export interface ArtworkPreviewProps {
   formatId: string;
+  /** Layout style from the pack editor. `variant` is the legacy shorthand. */
+  layout?: LayoutTemplate;
   variant?: ArtworkVariant;
-  content?: ArtworkContent;
+  content?: Partial<ArtworkContent>;
   label: string;
 }
 
 export function ArtworkPreview({
   formatId,
-  variant = "photo",
-  content = DEMO_BRAND,
+  layout,
+  variant,
+  content: override,
   label,
 }: ArtworkPreviewProps) {
   const format = FORMATS.find((f) => f.id === formatId) ?? FORMATS[0];
   const modules = useModules(formatId);
-  const uid = `art-${formatId}`;
+  const content: ArtworkContent = { ...DEMO_BRAND, ...override };
+  const resolvedLayout: LayoutTemplate =
+    layout ?? (variant === "clean" ? "clean-minimal" : "premium-dark");
+  const colors = palette(resolvedLayout, content.accent);
+  const uid = `art-${formatId}-${resolvedLayout}`;
+  const shadow = "h-full w-full drop-shadow-[0_18px_36px_rgba(0,0,0,0.55)]";
+
+  // Safe area: 4 mm inset for print, 40 px for digital, never less than 5%.
+  const baseInset = format.medium === "print" ? 4 : 40;
+  const inset = Math.max(baseInset, Math.min(format.width, format.height) * 0.06);
 
   if (format.shape === "circular") {
     const d = format.width;
+    const r = d / 2;
+    // Content lives in the square inscribed in the inner keyline circle, so it
+    // is geometrically impossible for type to reach the die-cut edge.
+    const innerR = r - inset;
+    const side = innerR * 1.414 * 0.94;
     return (
       <svg
         viewBox={`0 0 ${d} ${d}`}
         role="img"
         aria-label={label}
-        className="h-full w-full drop-shadow-[0_18px_36px_rgba(0,0,0,0.55)]"
+        className={shadow}
         preserveAspectRatio="xMidYMid meet"
       >
-        <CircleFace d={d} content={content} modules={modules} />
+        <defs>
+          <clipPath id={`${uid}-circle`}>
+            <circle cx={r} cy={r} r={r} />
+          </clipPath>
+        </defs>
+        <g clipPath={`url(#${uid}-circle)`}>
+          {colors.photo ? (
+            <Background w={d} h={d} colors={colors} rounded={0} />
+          ) : (
+            <circle cx={r} cy={r} r={r} fill={colors.bg} />
+          )}
+          <circle
+            cx={r}
+            cy={r}
+            r={r - inset * 0.55}
+            fill="none"
+            stroke={colors.accent}
+            strokeWidth={d * 0.012}
+            opacity={colors.photo ? 0.9 : 1}
+          />
+          <Flow
+            x={r - side / 2}
+            y={r - side / 2}
+            w={side}
+            h={side}
+            mode="compact"
+            colors={colors}
+            content={content}
+            modules={modules}
+          />
+        </g>
       </svg>
     );
   }
 
   if (format.shape === "folded") {
-    // Folded tent: printed flat, back panel rotated 180 degrees above the fold.
+    // Table tent shown as it stands on the table: the front panel at its true
+    // panel proportions, with the folded spine implied above it. The flat
+    // print sheet is twice this height, which the size line states.
     const w = format.width;
     const panelH = format.height / 2;
+    const spine = panelH * 0.1;
+    const total = panelH + spine;
+    const side = { x: inset, y: spine + inset, w: w - inset * 2, h: panelH - inset * 2 };
     return (
       <svg
-        viewBox={`0 0 ${w} ${format.height}`}
+        viewBox={`0 0 ${w} ${total}`}
         role="img"
         aria-label={label}
-        className="h-full w-full drop-shadow-[0_18px_36px_rgba(0,0,0,0.55)]"
+        className={shadow}
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
-          <clipPath id={`${uid}-back`}>
-            <rect width={w} height={panelH} />
-          </clipPath>
-          <clipPath id={`${uid}-front`}>
-            <rect width={w} height={panelH} />
+          <clipPath id={`${uid}-panel`}>
+            <rect y={spine} width={w} height={panelH} />
           </clipPath>
         </defs>
-        <rect width={w} height={format.height} fill="#ffffff" />
-        <g transform={`rotate(180 ${w / 2} ${panelH / 2})`}>
-          <Panel
-            w={w}
-            h={panelH}
-            variant="clean"
-            content={content}
-            modules={modules}
-            clipId={`${uid}-back`}
-            compact
-          />
-        </g>
-        <g transform={`translate(0 ${panelH})`}>
-          <Panel
-            w={w}
-            h={panelH}
-            variant={variant}
-            content={content}
-            modules={modules}
-            clipId={`${uid}-front`}
-            compact
-          />
+        {/* Folded spine seen from the front */}
+        <path
+          d={`M ${w * 0.06} ${spine} L ${w * 0.14} 0 L ${w * 0.86} 0 L ${w * 0.94} ${spine} Z`}
+          fill={colors.photo ? "#0d1512" : colors.bg}
+          opacity={0.85}
+        />
+        <g clipPath={`url(#${uid}-panel)`}>
+          <g transform={`translate(0 ${spine})`}>
+            <Background w={w} h={panelH} colors={colors} rounded={0} />
+          </g>
+          <Flow {...side} mode="compact" colors={colors} content={content} modules={modules} />
         </g>
         <line
           x1={0}
-          y1={panelH}
+          y1={spine}
           x2={w}
-          y2={panelH}
-          stroke="rgba(11,13,16,0.35)"
+          y2={spine}
+          stroke="rgba(255,255,255,0.35)"
           strokeWidth={Math.max(0.4, w * 0.004)}
-          strokeDasharray={`${w * 0.02} ${w * 0.015}`}
         />
       </svg>
     );
   }
 
-  const { w, h } = { w: format.width, h: format.height };
-  const safe = safeArea(format);
-  const inset = (w - safe.w) / 2;
-  const radius = Math.min(w, h) * 0.03;
+
+  const w = format.width;
+  const h = format.height;
+  const min = Math.min(w, h);
+  const rounded = min * 0.03;
+  const safe = { x: inset, y: inset, w: w - inset * 2, h: h - inset * 2 };
+
+  // Landscape and very small pieces cannot carry the full seven-row flow.
+  const aspect = w / h;
+  const mode: "full" | "compact" | "tiny" =
+    aspect > 1.35 || min <= 60 ? "tiny" : aspect > 1.05 || h < 100 ? "compact" : "full";
+
+  if (mode === "tiny" && aspect > 1.35) {
+    // Wide strips read as a two-column lockup: code left, message right.
+    const qr = Math.min(safe.h, safe.w * 0.3);
+    const textX = safe.x + qr + safe.w * 0.06;
+    const textW = safe.x + safe.w - textX;
+    return (
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        role="img"
+        aria-label={label}
+        className={shadow}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <defs>
+          <clipPath id={`${uid}-rect`}>
+            <rect width={w} height={h} rx={rounded} />
+          </clipPath>
+        </defs>
+        <g clipPath={`url(#${uid}-rect)`}>
+          <Background w={w} h={h} colors={colors} rounded={rounded} />
+          <QrBlock
+            x={safe.x}
+            y={safe.y + (safe.h - qr) / 2}
+            size={qr}
+            modules={modules}
+            fg={colors.qrFg}
+            bg={colors.qrBg}
+          />
+          <FitText
+            text={content.business}
+            cx={textX + textW / 2}
+            y={safe.y + safe.h * 0.28}
+            maxWidth={textW}
+            size={safe.h * 0.17}
+            weight={700}
+            fill={colors.fg}
+          />
+          <FitText
+            text={content.headline}
+            cx={textX + textW / 2}
+            y={safe.y + safe.h * 0.55}
+            maxWidth={textW}
+            size={safe.h * 0.2}
+            weight={800}
+            fill={colors.fg}
+          />
+          <FitText
+            text={content.subline}
+            cx={textX + textW / 2}
+            y={safe.y + safe.h * 0.8}
+            maxWidth={textW}
+            size={safe.h * 0.13}
+            fill={colors.muted}
+          />
+        </g>
+      </svg>
+    );
+  }
 
   return (
     <svg
       viewBox={`0 0 ${w} ${h}`}
       role="img"
       aria-label={label}
-      className="h-full w-full drop-shadow-[0_18px_36px_rgba(0,0,0,0.55)]"
+      className={shadow}
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
-        <clipPath id={uid}>
-          <rect width={w} height={h} rx={radius} />
+        <clipPath id={`${uid}-rect`}>
+          <rect width={w} height={h} rx={rounded} />
         </clipPath>
       </defs>
-      <Panel w={w} h={h} variant={variant} content={content} modules={modules} clipId={uid} />
-      <rect
-        x={inset / 2}
-        y={inset / 2}
-        width={w - inset}
-        height={h - inset}
-        rx={radius}
-        fill="none"
-        stroke="rgba(255,255,255,0.14)"
-        strokeWidth={Math.max(0.3, w * 0.003)}
-      />
+      <g clipPath={`url(#${uid}-rect)`}>
+        <Background w={w} h={h} colors={colors} rounded={rounded} />
+        <Flow {...safe} mode={mode} colors={colors} content={content} modules={modules} />
+      </g>
     </svg>
   );
 }
