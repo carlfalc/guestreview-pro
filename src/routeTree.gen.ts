@@ -54,8 +54,10 @@ import { Route as AuthenticatedAdminSeoRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
 import { Route as AuthenticatedAdminHealthRouteImport } from './routes/_authenticated/admin.health'
 import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
+import { Route as AuthenticatedAdminEmailRouteImport } from './routes/_authenticated/admin.email'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicHooksEmailWorkerRouteImport } from './routes/api/public/hooks/email-worker'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -294,6 +296,11 @@ const AuthenticatedAdminFunnelRoute =
     path: '/admin/funnel',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminEmailRoute = AuthenticatedAdminEmailRouteImport.update({
+  id: '/admin/email',
+  path: '/admin/email',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -304,6 +311,12 @@ const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
     path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksEmailWorkerRoute =
+  ApiPublicHooksEmailWorkerRouteImport.update({
+    id: '/api/public/hooks/email-worker',
+    path: '/api/public/hooks/email-worker',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -337,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/resources/$slug': typeof ResourcesSlugRoute
   '/industries/': typeof IndustriesIndexRoute
   '/resources/': typeof ResourcesIndexRoute
+  '/admin/email': typeof AuthenticatedAdminEmailRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -352,6 +366,7 @@ export interface FileRoutesByFullPath {
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/placement-plans/': typeof AuthenticatedPlacementPlansIndexRoute
+  '/api/public/hooks/email-worker': typeof ApiPublicHooksEmailWorkerRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -385,6 +400,7 @@ export interface FileRoutesByTo {
   '/resources/$slug': typeof ResourcesSlugRoute
   '/industries': typeof IndustriesIndexRoute
   '/resources': typeof ResourcesIndexRoute
+  '/admin/email': typeof AuthenticatedAdminEmailRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -400,6 +416,7 @@ export interface FileRoutesByTo {
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/marketing-packs': typeof AuthenticatedMarketingPacksIndexRoute
   '/placement-plans': typeof AuthenticatedPlacementPlansIndexRoute
+  '/api/public/hooks/email-worker': typeof ApiPublicHooksEmailWorkerRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -435,6 +452,7 @@ export interface FileRoutesById {
   '/resources/$slug': typeof ResourcesSlugRoute
   '/industries/': typeof IndustriesIndexRoute
   '/resources/': typeof ResourcesIndexRoute
+  '/_authenticated/admin/email': typeof AuthenticatedAdminEmailRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/health': typeof AuthenticatedAdminHealthRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -450,6 +468,7 @@ export interface FileRoutesById {
   '/resources/category/$category': typeof ResourcesCategoryCategoryRoute
   '/_authenticated/marketing-packs/': typeof AuthenticatedMarketingPacksIndexRoute
   '/_authenticated/placement-plans/': typeof AuthenticatedPlacementPlansIndexRoute
+  '/api/public/hooks/email-worker': typeof ApiPublicHooksEmailWorkerRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -485,6 +504,7 @@ export interface FileRouteTypes {
     | '/resources/$slug'
     | '/industries/'
     | '/resources/'
+    | '/admin/email'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -500,6 +520,7 @@ export interface FileRouteTypes {
     | '/resources/category/$category'
     | '/marketing-packs/'
     | '/placement-plans/'
+    | '/api/public/hooks/email-worker'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -533,6 +554,7 @@ export interface FileRouteTypes {
     | '/resources/$slug'
     | '/industries'
     | '/resources'
+    | '/admin/email'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -548,6 +570,7 @@ export interface FileRouteTypes {
     | '/resources/category/$category'
     | '/marketing-packs'
     | '/placement-plans'
+    | '/api/public/hooks/email-worker'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   id:
@@ -582,6 +605,7 @@ export interface FileRouteTypes {
     | '/resources/$slug'
     | '/industries/'
     | '/resources/'
+    | '/_authenticated/admin/email'
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/health'
     | '/_authenticated/admin/region-requests'
@@ -597,6 +621,7 @@ export interface FileRouteTypes {
     | '/resources/category/$category'
     | '/_authenticated/marketing-packs/'
     | '/_authenticated/placement-plans/'
+    | '/api/public/hooks/email-worker'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -624,6 +649,7 @@ export interface RootRouteChildren {
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   RCodeViewRoute: typeof RCodeViewRoute
   ResourcesCategoryCategoryRoute: typeof ResourcesCategoryCategoryRoute
+  ApiPublicHooksEmailWorkerRoute: typeof ApiPublicHooksEmailWorkerRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -945,6 +971,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFunnelRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/email': {
+      id: '/_authenticated/admin/email'
+      path: '/admin/email'
+      fullPath: '/admin/email'
+      preLoaderRoute: typeof AuthenticatedAdminEmailRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -957,6 +990,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/payments/webhook'
       fullPath: '/api/public/payments/webhook'
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/email-worker': {
+      id: '/api/public/hooks/email-worker'
+      path: '/api/public/hooks/email-worker'
+      fullPath: '/api/public/hooks/email-worker'
+      preLoaderRoute: typeof ApiPublicHooksEmailWorkerRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -1012,6 +1052,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
+  AuthenticatedAdminEmailRoute: typeof AuthenticatedAdminEmailRoute
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminHealthRoute: typeof AuthenticatedAdminHealthRoute
   AuthenticatedAdminRegionRequestsRoute: typeof AuthenticatedAdminRegionRequestsRoute
@@ -1035,6 +1076,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
+  AuthenticatedAdminEmailRoute: AuthenticatedAdminEmailRoute,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminHealthRoute: AuthenticatedAdminHealthRoute,
   AuthenticatedAdminRegionRequestsRoute: AuthenticatedAdminRegionRequestsRoute,
@@ -1073,9 +1115,20 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesIndexRoute: ResourcesIndexRoute,
   RCodeViewRoute: RCodeViewRoute,
   ResourcesCategoryCategoryRoute: ResourcesCategoryCategoryRoute,
+  ApiPublicHooksEmailWorkerRoute: ApiPublicHooksEmailWorkerRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

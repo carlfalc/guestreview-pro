@@ -483,7 +483,10 @@ export type Database = {
           created_at: string;
           local_time: string;
           owner_id: string;
+          portfolio_business_ids: Json;
           portfolio_digest_enabled: boolean;
+          portfolio_local_time: string | null;
+          portfolio_weekday: number | null;
           product_updates_consent_at: string | null;
           product_updates_consent_source: string | null;
           product_updates_enabled: boolean;
@@ -499,7 +502,10 @@ export type Database = {
           created_at?: string;
           local_time?: string;
           owner_id: string;
+          portfolio_business_ids?: Json;
           portfolio_digest_enabled?: boolean;
+          portfolio_local_time?: string | null;
+          portfolio_weekday?: number | null;
           product_updates_consent_at?: string | null;
           product_updates_consent_source?: string | null;
           product_updates_enabled?: boolean;
@@ -515,7 +521,10 @@ export type Database = {
           created_at?: string;
           local_time?: string;
           owner_id?: string;
+          portfolio_business_ids?: Json;
           portfolio_digest_enabled?: boolean;
+          portfolio_local_time?: string | null;
+          portfolio_weekday?: number | null;
           product_updates_consent_at?: string | null;
           product_updates_consent_source?: string | null;
           product_updates_enabled?: boolean;

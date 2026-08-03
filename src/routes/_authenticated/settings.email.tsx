@@ -21,6 +21,7 @@ import {
   loadEmailDeliveries,
   loadEmailSettings,
   saveEmailPreferences,
+  sendTestEmail,
   type EmailPreferencesRow,
 } from "@/lib/email-preferences.functions";
 import { WEEKDAYS, formatLocalTime } from "@/lib/email-schedule";
@@ -53,6 +54,7 @@ function EmailSettingsPage() {
   const load = useServerFn(loadEmailSettings);
   const loadHistory = useServerFn(loadEmailDeliveries);
   const save = useServerFn(saveEmailPreferences);
+  const testSend = useServerFn(sendTestEmail);
   const queryClient = useQueryClient();
 
   const settings = useQuery({ queryKey: ["email-settings"], queryFn: () => load() });
@@ -82,6 +84,9 @@ function EmailSettingsPage() {
           businessIds: input.businessIds,
           productUpdatesEnabled: input.productUpdatesEnabled,
           portfolioDigestEnabled: input.portfolioDigestEnabled,
+          portfolioWeekday: input.portfolioWeekday,
+          portfolioLocalTime: input.portfolioLocalTime,
+          portfolioBusinessIds: input.portfolioBusinessIds,
           reportFormat: input.reportFormat,
         },
       }),
@@ -91,6 +96,17 @@ function EmailSettingsPage() {
       void queryClient.invalidateQueries({ queryKey: ["email-settings"] });
     },
     onError: (error: Error) => toast.error(error.message || "Could not save your preferences."),
+  });
+
+  const test = useMutation({
+    mutationFn: (template: "weekly_reputation_health" | "portfolio_digest") =>
+      testSend({ data: { template } }),
+    onSuccess: (result) => {
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
+      void queryClient.invalidateQueries({ queryKey: ["email-deliveries"] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Could not send the test email."),
   });
 
   const selectedCount = form?.businessIds.length ?? 0;
@@ -131,6 +147,17 @@ function EmailSettingsPage() {
         </Card>
       ) : (
         <>
+          {settings.data && settings.data.domainStatus !== "active" ? (
+            <Card className="border-primary/40">
+              <CardContent className="py-4 text-sm">
+                <strong>Delivery is warming up.</strong>{" "}
+                {settings.data.domainMessage ?? "Email delivery is waiting for DNS verification."}{" "}
+                Your preferences are saved and reports start arriving as soon as the sending domain
+                is verified.
+              </CardContent>
+            </Card>
+          ) : null}
+
           {settings.data?.suppressed ? (
             <Card className="border-destructive/40">
               <CardContent className="py-4 text-sm">
@@ -289,6 +316,78 @@ function EmailSettingsPage() {
                   </label>
                 </div>
               </div>
+
+              {ent?.portfolioDigest ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="portfolio-weekday">Digest day</Label>
+                    <Select
+                      value={String(form.portfolioWeekday)}
+                      onValueChange={(v) => update({ portfolioWeekday: Number(v) })}
+                    >
+                      <SelectTrigger id="portfolio-weekday">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {WEEKDAYS.map((d) => (
+                          <SelectItem key={d.value} value={String(d.value)}>
+                            {d.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="portfolio-time">Digest time</Label>
+                    <Select
+                      value={form.portfolioLocalTime}
+                      onValueChange={(v) => update({ portfolioLocalTime: v })}
+                    >
+                      <SelectTrigger id="portfolio-time">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {TIME_OPTIONS.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ) : null}
+
+              {ent?.preview ? (
+                <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-3 py-3 text-sm">
+                  <span>
+                    <span className="block font-medium">Send yourself a test</span>
+                    <span className="text-muted-foreground">
+                      Goes only to your own address, using your real data.
+                    </span>
+                  </span>
+                  <span className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={test.isPending}
+                      onClick={() => test.mutate("weekly_reputation_health")}
+                    >
+                      Test weekly report
+                    </Button>
+                    {ent.portfolioDigest ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={test.isPending}
+                        onClick={() => test.mutate("portfolio_digest")}
+                      >
+                        Test digest
+                      </Button>
+                    ) : null}
+                  </span>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 

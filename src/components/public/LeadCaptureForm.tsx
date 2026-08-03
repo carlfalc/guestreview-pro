@@ -24,6 +24,7 @@ export function LeadCaptureForm({
   const [consent, setConsent] = useState(false);
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState<{ queued: boolean; message: string } | null>(null);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -32,6 +33,7 @@ export function LeadCaptureForm({
     try {
       const result = await submit({ data: { email, industry, sourcePath, consent } });
       if (result.ok) {
+        setOutcome({ queued: result.emailQueued, message: result.message });
         setState("done");
         track("lead_captured", { guide: "qr-placement-guide", industry: industry ?? "general" });
       } else {
@@ -47,10 +49,13 @@ export function LeadCaptureForm({
   if (state === "done") {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center">
-        <p className="text-lg font-semibold">Thanks — we’ve got your request</p>
+        <p className="text-lg font-semibold">
+          {outcome?.queued ? "Check your inbox" : "Thanks — we’ve got your request"}
+        </p>
         <p className="mt-2 text-sm text-white/60">
-          We’ve recorded your details and will email the QR Placement Guide shortly. You can
-          unsubscribe from any email we send.
+          {outcome?.message ??
+            "We’ve recorded your details and will email the QR Placement Guide shortly."}{" "}
+          You can unsubscribe from any email we send.
         </p>
       </div>
     );
