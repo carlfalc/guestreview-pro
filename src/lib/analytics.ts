@@ -37,6 +37,12 @@ export const PRODUCT_EVENTS = [
   "founder_feedback_submitted",
   // Print Store funnel
   "print_store_viewed",
+  // Print demand validation
+  "print_interest_card_viewed",
+  "print_waitlist_opened",
+  "print_interest_submitted",
+  "print_preferences_updated",
+  "print_coming_soon_viewed",
   "print_product_viewed",
   "print_mockup_created",
   "print_proof_generated",
