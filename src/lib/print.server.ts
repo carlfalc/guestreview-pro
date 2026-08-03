@@ -3,7 +3,7 @@
 // Everything a customer could tamper with — prices, discounts, margins, order
 // numbers, fulfilment cost — is resolved here from database state.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PricingRegion } from "./regional-pricing";
+import type { PricingRegion } from "./regions";
 import type { PlanTierKey } from "./entitlements";
 import type { StripeEnvName } from "./entitlements.server";
 import {
