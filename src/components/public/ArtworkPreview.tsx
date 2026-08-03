@@ -531,13 +531,17 @@ export function ArtworkPreview({
   }
 
   if (format.shape === "folded") {
-    // Table tent printed flat: back panel rotated 180° above the fold line.
+    // Table tent shown as it stands on the table: the front panel at its true
+    // panel proportions, with the folded spine implied above it. The flat
+    // print sheet is twice this height, which the size line states.
     const w = format.width;
     const panelH = format.height / 2;
-    const side = { x: inset, y: inset, w: w - inset * 2, h: panelH - inset * 2 };
+    const spine = panelH * 0.1;
+    const total = panelH + spine;
+    const side = { x: inset, y: spine + inset, w: w - inset * 2, h: panelH - inset * 2 };
     return (
       <svg
-        viewBox={`0 0 ${w} ${format.height}`}
+        viewBox={`0 0 ${w} ${total}`}
         role="img"
         aria-label={label}
         className={shadow}
@@ -545,44 +549,33 @@ export function ArtworkPreview({
       >
         <defs>
           <clipPath id={`${uid}-panel`}>
-            <rect width={w} height={panelH} />
+            <rect y={spine} width={w} height={panelH} />
           </clipPath>
         </defs>
-        <rect width={w} height={format.height} fill={colors.photo ? "#050a09" : colors.bg} />
-        <g transform={`rotate(180 ${w / 2} ${panelH / 2})`} clipPath={`url(#${uid}-panel)`}>
-          <Background w={w} h={panelH} colors={colors} rounded={0} />
-          <Flow
-            {...side}
-            mode="compact"
-            colors={colors}
-            content={content}
-            modules={modules}
-          />
-        </g>
-        <g transform={`translate(0 ${panelH})`}>
-          <g clipPath={`url(#${uid}-panel)`}>
+        {/* Folded spine seen from the front */}
+        <path
+          d={`M ${w * 0.06} ${spine} L ${w * 0.14} 0 L ${w * 0.86} 0 L ${w * 0.94} ${spine} Z`}
+          fill={colors.photo ? "#0d1512" : colors.bg}
+          opacity={0.85}
+        />
+        <g clipPath={`url(#${uid}-panel)`}>
+          <g transform={`translate(0 ${spine})`}>
             <Background w={w} h={panelH} colors={colors} rounded={0} />
-            <Flow
-              {...side}
-              mode="compact"
-              colors={colors}
-              content={content}
-              modules={modules}
-            />
           </g>
+          <Flow {...side} mode="compact" colors={colors} content={content} modules={modules} />
         </g>
         <line
           x1={0}
-          y1={panelH}
+          y1={spine}
           x2={w}
-          y2={panelH}
-          stroke="rgba(11,13,16,0.35)"
+          y2={spine}
+          stroke="rgba(255,255,255,0.35)"
           strokeWidth={Math.max(0.4, w * 0.004)}
-          strokeDasharray={`${w * 0.02} ${w * 0.015}`}
         />
       </svg>
     );
   }
+
 
   const w = format.width;
   const h = format.height;
