@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- templates declare their own prop shapes */
 import type { ComponentType } from "react";
 
 export interface TemplateEntry {
