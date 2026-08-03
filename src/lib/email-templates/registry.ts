@@ -4,6 +4,9 @@ import type { ComponentType } from "react";
 import { template as weeklyReputationHealth } from "./weekly-reputation-health";
 import { template as qrPlacementGuide } from "./qr-placement-guide";
 import { template as portfolioDigest } from "./portfolio-digest";
+import { template as founderWelcome } from "./founder-welcome";
+import { template as founderCancellationWarning } from "./founder-cancellation-warning";
+
 
 export interface TemplateEntry {
   component: ComponentType<any>;
