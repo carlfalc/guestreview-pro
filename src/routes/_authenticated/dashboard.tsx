@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus, FileText, HeartPulse } from "lucide-react";
 import { toast } from "sonner";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
+import { DashboardPrintInterest } from "@/components/print/PrintInterestCard";
 import { FounderBadge } from "@/components/founder/FounderBadge";
 import { FounderWelcomeCard } from "@/components/founder/FounderWelcomeCard";
 
@@ -95,6 +96,7 @@ function Dashboard() {
       <FounderWelcomeCard />
       <FinishUpgradeCard />
       <OnboardingChecklist />
+      <DashboardPrintInterest />
 
       <div className="flex flex-wrap items-center gap-2">
         {(data?.businesses.length ?? 0) > 1 &&

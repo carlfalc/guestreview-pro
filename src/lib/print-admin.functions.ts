@@ -303,11 +303,13 @@ export const updatePrintOrderStatus = createServerFn({ method: "POST" })
 
 export const addPrintOrderNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { orderId: string; note: string; visibility?: "customer" | "internal" }) => ({
-    orderId: uuid(data?.orderId, "order"),
-    note: text(data?.note, 1000),
-    visibility: data?.visibility === "customer" ? ("customer" as const) : ("internal" as const),
-  }))
+  .inputValidator(
+    (data: { orderId: string; note: string; visibility?: "customer" | "internal" }) => ({
+      orderId: uuid(data?.orderId, "order"),
+      note: text(data?.note, 1000),
+      visibility: data?.visibility === "customer" ? ("customer" as const) : ("internal" as const),
+    }),
+  )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const admin = await requireAdmin(context as never);
     if (!data.note) throw new Error("A note is required.");
@@ -343,9 +345,8 @@ export const getPrintOrderArtwork = createServerFn({ method: "POST" })
       .in(
         "order_item_id",
         (
-          ((
-            await admin.from("print_order_items").select("id").eq("order_id", data.orderId)
-          ).data as Row[] | null) ?? []
+          ((await admin.from("print_order_items").select("id").eq("order_id", data.orderId))
+            .data as Row[] | null) ?? []
         ).map((r) => r.id as string),
       );
     if (error) throw new Error(error.message);
@@ -379,7 +380,9 @@ export const getPrintAdminOverview = createServerFn({ method: "POST" })
     const since = new Date(Date.now() - 30 * 86400000).toISOString();
 
     const [{ data: orders }, { data: carts }] = await Promise.all([
-      admin.from("print_orders").select("status, total_minor, estimated_cost_minor, currency_code, created_at, paid_at"),
+      admin
+        .from("print_orders")
+        .select("status, total_minor, estimated_cost_minor, currency_code, created_at, paid_at"),
       admin.from("print_cart_items").select("id").limit(1000),
     ]);
 
@@ -463,5 +466,8 @@ export const updatePrintVariantPricing = createServerFn({ method: "POST" })
       })
       .eq("id", data.variantId);
     if (error) throw new Error(error.message);
-    return { ok: true, marginPercent: marginFor(data.retailPriceMinor, data.fulfilmentCostMinor).marginPercent };
+    return {
+      ok: true,
+      marginPercent: marginFor(data.retailPriceMinor, data.fulfilmentCostMinor).marginPercent,
+    };
   });

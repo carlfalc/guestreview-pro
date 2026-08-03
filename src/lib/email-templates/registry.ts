@@ -6,6 +6,7 @@ import { template as qrPlacementGuide } from "./qr-placement-guide";
 import { template as portfolioDigest } from "./portfolio-digest";
 import { template as founderWelcome } from "./founder-welcome";
 import { template as founderCancellationWarning } from "./founder-cancellation-warning";
+import { template as printWaitlistAck } from "./print-waitlist-ack";
 import {
   printOrderConfirmed,
   printOrderSubmitted,
@@ -45,6 +46,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   portfolio_digest: portfolioDigest,
   founder_welcome: founderWelcome,
   founder_cancellation_warning: founderCancellationWarning,
+  print_waitlist_ack: printWaitlistAck,
   print_order_confirmed: printOrderConfirmed,
   print_order_submitted: printOrderSubmitted,
   print_order_shipped: printOrderShipped,

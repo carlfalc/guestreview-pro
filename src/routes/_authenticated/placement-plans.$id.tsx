@@ -20,6 +20,7 @@ import {
 } from "@/lib/placement-plans.functions";
 import { goalLabel, industryLabel, type PriorityKey } from "@/lib/placement-recommendations";
 import { friendlyMutationError } from "@/lib/plan-errors";
+import { PrintInterestCard } from "@/components/print/PrintInterestCard";
 
 export const Route = createFileRoute("/_authenticated/placement-plans/$id")({
   component: PlacementPlanDetail,
@@ -202,6 +203,8 @@ function PlacementPlanDetail() {
           </CardContent>
         </Card>
       )}
+
+      <PrintInterestCard source="placement_plan" businessId={plan.business_id} />
     </div>
   );
 }

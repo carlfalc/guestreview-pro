@@ -2,6 +2,7 @@ import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-r
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildScanUrl } from "@/lib/public-url";
 import { supabase } from "@/integrations/supabase/client";
+import { PrintInterestCard } from "@/components/print/PrintInterestCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -366,6 +367,8 @@ function QrDetail() {
           </Button>
         </div>
       </div>
+
+      <PrintInterestCard source="qr_export" businessId={qr.business_id} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
         <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">

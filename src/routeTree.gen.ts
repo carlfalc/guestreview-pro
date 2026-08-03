@@ -32,6 +32,7 @@ import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
+import { Route as AuthenticatedPrintStoreRouteImport } from './routes/_authenticated/print-store'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedPlacementWizardRouteImport } from './routes/_authenticated/placement-wizard'
 import { Route as AuthenticatedHealthRouteImport } from './routes/_authenticated/health'
@@ -52,6 +53,7 @@ import { Route as AuthenticatedBusinessesIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminWebhookEventsRouteImport } from './routes/_authenticated/admin.webhook-events'
 import { Route as AuthenticatedAdminSeoRouteImport } from './routes/_authenticated/admin.seo'
 import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
+import { Route as AuthenticatedAdminPrintDemandRouteImport } from './routes/_authenticated/admin.print-demand'
 import { Route as AuthenticatedAdminHealthRouteImport } from './routes/_authenticated/admin.health'
 import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
 import { Route as AuthenticatedAdminFoundersRouteImport } from './routes/_authenticated/admin.founders'
@@ -174,6 +176,11 @@ const AuthenticatedQrRoute = AuthenticatedQrRouteImport.update({
   path: '/qr',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPrintStoreRoute = AuthenticatedPrintStoreRouteImport.update({
+  id: '/print-store',
+  path: '/print-store',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPlansRoute = AuthenticatedPlansRouteImport.update({
   id: '/plans',
   path: '/plans',
@@ -285,6 +292,12 @@ const AuthenticatedAdminRegionRequestsRoute =
     path: '/admin/region-requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPrintDemandRoute =
+  AuthenticatedAdminPrintDemandRouteImport.update({
+    id: '/admin/print-demand',
+    path: '/admin/print-demand',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminHealthRoute =
   AuthenticatedAdminHealthRouteImport.update({
     id: '/admin/health',
@@ -349,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/health': typeof AuthenticatedHealthRoute
   '/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/plans': typeof AuthenticatedPlansRoute
+  '/print-store': typeof AuthenticatedPrintStoreRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
@@ -361,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/admin/founders': typeof AuthenticatedAdminFoundersRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
+  '/admin/print-demand': typeof AuthenticatedAdminPrintDemandRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
@@ -400,6 +415,7 @@ export interface FileRoutesByTo {
   '/health': typeof AuthenticatedHealthRoute
   '/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/plans': typeof AuthenticatedPlansRoute
+  '/print-store': typeof AuthenticatedPrintStoreRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
@@ -412,6 +428,7 @@ export interface FileRoutesByTo {
   '/admin/founders': typeof AuthenticatedAdminFoundersRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
+  '/admin/print-demand': typeof AuthenticatedAdminPrintDemandRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
@@ -453,6 +470,7 @@ export interface FileRoutesById {
   '/_authenticated/health': typeof AuthenticatedHealthRoute
   '/_authenticated/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
+  '/_authenticated/print-store': typeof AuthenticatedPrintStoreRoute
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
@@ -465,6 +483,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/founders': typeof AuthenticatedAdminFoundersRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/health': typeof AuthenticatedAdminHealthRoute
+  '/_authenticated/admin/print-demand': typeof AuthenticatedAdminPrintDemandRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
   '/_authenticated/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/_authenticated/admin/webhook-events': typeof AuthenticatedAdminWebhookEventsRoute
@@ -506,6 +525,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/placement-wizard'
     | '/plans'
+    | '/print-store'
     | '/qr'
     | '/reports'
     | '/settings'
@@ -518,6 +538,7 @@ export interface FileRouteTypes {
     | '/admin/founders'
     | '/admin/funnel'
     | '/admin/health'
+    | '/admin/print-demand'
     | '/admin/region-requests'
     | '/admin/seo'
     | '/admin/webhook-events'
@@ -557,6 +578,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/placement-wizard'
     | '/plans'
+    | '/print-store'
     | '/qr'
     | '/reports'
     | '/settings'
@@ -569,6 +591,7 @@ export interface FileRouteTypes {
     | '/admin/founders'
     | '/admin/funnel'
     | '/admin/health'
+    | '/admin/print-demand'
     | '/admin/region-requests'
     | '/admin/seo'
     | '/admin/webhook-events'
@@ -609,6 +632,7 @@ export interface FileRouteTypes {
     | '/_authenticated/health'
     | '/_authenticated/placement-wizard'
     | '/_authenticated/plans'
+    | '/_authenticated/print-store'
     | '/_authenticated/qr'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
@@ -621,6 +645,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/founders'
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/health'
+    | '/_authenticated/admin/print-demand'
     | '/_authenticated/admin/region-requests'
     | '/_authenticated/admin/seo'
     | '/_authenticated/admin/webhook-events'
@@ -830,6 +855,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQrRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/print-store': {
+      id: '/_authenticated/print-store'
+      path: '/print-store'
+      fullPath: '/print-store'
+      preLoaderRoute: typeof AuthenticatedPrintStoreRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/plans': {
       id: '/_authenticated/plans'
       path: '/plans'
@@ -970,6 +1002,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRegionRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/print-demand': {
+      id: '/_authenticated/admin/print-demand'
+      path: '/admin/print-demand'
+      fullPath: '/admin/print-demand'
+      preLoaderRoute: typeof AuthenticatedAdminPrintDemandRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/health': {
       id: '/_authenticated/admin/health'
       path: '/admin/health'
@@ -1069,6 +1108,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHealthRoute: typeof AuthenticatedHealthRoute
   AuthenticatedPlacementWizardRoute: typeof AuthenticatedPlacementWizardRoute
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
+  AuthenticatedPrintStoreRoute: typeof AuthenticatedPrintStoreRoute
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
@@ -1076,6 +1116,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminFoundersRoute: typeof AuthenticatedAdminFoundersRoute
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminHealthRoute: typeof AuthenticatedAdminHealthRoute
+  AuthenticatedAdminPrintDemandRoute: typeof AuthenticatedAdminPrintDemandRoute
   AuthenticatedAdminRegionRequestsRoute: typeof AuthenticatedAdminRegionRequestsRoute
   AuthenticatedAdminSeoRoute: typeof AuthenticatedAdminSeoRoute
   AuthenticatedAdminWebhookEventsRoute: typeof AuthenticatedAdminWebhookEventsRoute
@@ -1094,6 +1135,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHealthRoute: AuthenticatedHealthRoute,
   AuthenticatedPlacementWizardRoute: AuthenticatedPlacementWizardRoute,
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
+  AuthenticatedPrintStoreRoute: AuthenticatedPrintStoreRoute,
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
@@ -1101,6 +1143,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminFoundersRoute: AuthenticatedAdminFoundersRoute,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminHealthRoute: AuthenticatedAdminHealthRoute,
+  AuthenticatedAdminPrintDemandRoute: AuthenticatedAdminPrintDemandRoute,
   AuthenticatedAdminRegionRequestsRoute: AuthenticatedAdminRegionRequestsRoute,
   AuthenticatedAdminSeoRoute: AuthenticatedAdminSeoRoute,
   AuthenticatedAdminWebhookEventsRoute: AuthenticatedAdminWebhookEventsRoute,
