@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus, FileText, HeartPulse } from "lucide-react";
 import { toast } from "sonner";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
+import { FounderBadge } from "@/components/founder/FounderBadge";
+import { FounderWelcomeCard } from "@/components/founder/FounderWelcomeCard";
+
 import { FinishUpgradeCard } from "@/components/billing/FinishUpgradeCard";
 import {
   BreakdownList,
@@ -68,6 +71,9 @@ function Dashboard() {
           <h1 className="text-3xl font-semibold tracking-tight">
             {data?.business?.name ?? "Your business"}
           </h1>
+          <div className="mt-2">
+            <FounderBadge />
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Where your reputation stands, what changed, and what to do next.
           </p>
@@ -86,8 +92,10 @@ function Dashboard() {
         </div>
       </div>
 
+      <FounderWelcomeCard />
       <FinishUpgradeCard />
       <OnboardingChecklist />
+
 
       <div className="flex flex-wrap items-center gap-2">
         {(data?.businesses.length ?? 0) > 1 &&
