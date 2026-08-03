@@ -259,52 +259,60 @@ function CircleFace({
   content: ArtworkContent;
   modules: { size: number; cells: boolean[] };
 }) {
-  const qr = d * 0.44;
+  const qr = d * 0.4;
+  const clip = `circle-safe-${Math.round(d)}`;
   return (
     <g>
-      <circle cx={d / 2} cy={d / 2} r={d / 2} fill="#ffffff" />
-      <circle
-        cx={d / 2}
-        cy={d / 2}
-        r={d / 2 - d * 0.035}
-        fill="none"
-        stroke={content.accent}
-        strokeWidth={d * 0.016}
-      />
-      <text
-        x={d / 2}
-        y={d * 0.185}
-        textAnchor="middle"
-        fontSize={d * 0.062}
-        fontWeight={700}
-        fill={content.accent}
-        fontFamily="system-ui, sans-serif"
-      >
-        {content.business}
-      </text>
-      <QrBlock x={(d - qr) / 2} y={d * 0.235} size={qr} modules={modules} />
-      <Stars cx={d / 2} y={d * 0.755} size={d * 0.032} fill="#f5b544" />
-      <text
-        x={d / 2}
-        y={d * 0.835}
-        textAnchor="middle"
-        fontSize={d * 0.07}
-        fontWeight={800}
-        fill="#0b0d10"
-        fontFamily="system-ui, sans-serif"
-      >
-        {content.headline}
-      </text>
-      <text
-        x={d / 2}
-        y={d * 0.895}
-        textAnchor="middle"
-        fontSize={d * 0.04}
-        fill="rgba(11,13,16,0.6)"
-        fontFamily="system-ui, sans-serif"
-      >
-        Scan to review us
-      </text>
+      <defs>
+        <clipPath id={clip}>
+          <circle cx={d / 2} cy={d / 2} r={d / 2} />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${clip})`}>
+        <circle cx={d / 2} cy={d / 2} r={d / 2} fill="#ffffff" />
+        <circle
+          cx={d / 2}
+          cy={d / 2}
+          r={d / 2 - d * 0.045}
+          fill="none"
+          stroke={content.accent}
+          strokeWidth={d * 0.014}
+        />
+        <text
+          x={d / 2}
+          y={d * 0.205}
+          textAnchor="middle"
+          fontSize={d * 0.055}
+          fontWeight={700}
+          fill={content.accent}
+          fontFamily="system-ui, sans-serif"
+        >
+          {content.business}
+        </text>
+        <QrBlock x={(d - qr) / 2} y={d * 0.255} size={qr} modules={modules} />
+        <Stars cx={d / 2} y={d * 0.715} size={d * 0.028} fill="#f5b544" />
+        <text
+          x={d / 2}
+          y={d * 0.792}
+          textAnchor="middle"
+          fontSize={d * 0.062}
+          fontWeight={800}
+          fill="#0b0d10"
+          fontFamily="system-ui, sans-serif"
+        >
+          {content.headline}
+        </text>
+        <text
+          x={d / 2}
+          y={d * 0.85}
+          textAnchor="middle"
+          fontSize={d * 0.035}
+          fill="rgba(11,13,16,0.6)"
+          fontFamily="system-ui, sans-serif"
+        >
+          Scan to review us
+        </text>
+      </g>
     </g>
   );
 }
