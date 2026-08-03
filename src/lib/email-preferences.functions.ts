@@ -296,3 +296,97 @@ export const loadEmailDeliveries = createServerFn({ method: "GET" })
       errorMessage: (row.error_message as string | null) ?? null,
     }));
   });
+
+/* -------------------------------------------------------------------------- */
+/* Test sends — always to the signed-in user's own address                     */
+/* -------------------------------------------------------------------------- */
+
+export type TestSendResult = { ok: boolean; message: string };
+
+/** Max test sends per account per hour, so the new domain isn't hammered. */
+export const TEST_SEND_LIMIT_PER_HOUR = 3;
+
+export const sendTestEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { template: string; businessId?: string }) => ({
+    template: data?.template === "portfolio_digest" ? "portfolio_digest" : "weekly_reputation_health",
+    businessId:
+      typeof data?.businessId === "string" && /^[0-9a-f-]{36}$/i.test(data.businessId)
+        ? data.businessId
+        : null,
+  }))
+  .handler(async ({ data, context }): Promise<TestSendResult> => {
+    const claims = context.claims as { email?: string } | undefined;
+    const email = typeof claims?.email === "string" ? claims.email : null;
+    if (!email) return { ok: false, message: "Your account has no email address." };
+
+    const { accountPlanFor } = await import("@/lib/email-plan.server");
+    const plan = await accountPlanFor(context.userId);
+    const ent = emailEntitlementsFor(plan);
+    if (!ent.preview) {
+      return { ok: false, message: "Upgrade to preview and test your report emails." };
+    }
+    if (data.template === "portfolio_digest" && !ent.portfolioDigest) {
+      return { ok: false, message: "The portfolio digest is a Business-plan email." };
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as unknown as LooseClient;
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await db
+      .from("email_deliveries")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", context.userId)
+      .gte("created_at", since)
+      .contains("metadata", { kind: "test" });
+    if (typeof count === "number" && count >= TEST_SEND_LIMIT_PER_HOUR) {
+      return { ok: false, message: "Test send limit reached — try again in an hour." };
+    }
+
+    const supabase = context.supabase as unknown as LooseClient;
+    const { data: businessRows } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("owner_id", context.userId)
+      .eq("status", "active")
+      .order("created_at", { ascending: true });
+    const owned = ((businessRows ?? []) as Array<{ id: string }>).map((b) => b.id);
+    if (owned.length === 0) return { ok: false, message: "Add a business first." };
+
+    const now = new Date();
+    const endDate = now.toISOString().slice(0, 10);
+    const periodStart = new Date(now.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
+
+    const jobs = await import("@/lib/email-jobs.server");
+    const result =
+      data.template === "portfolio_digest"
+        ? await jobs.sendPortfolioDigest({
+            userId: context.userId,
+            email,
+            businessIds: owned.slice(0, 10),
+            periodStart,
+            endDate,
+            kind: "test",
+          })
+        : await jobs.sendWeeklyReport({
+            userId: context.userId,
+            email,
+            businessId: data.businessId && owned.includes(data.businessId) ? data.businessId : owned[0]!,
+            periodStart,
+            endDate,
+            kind: "test",
+          });
+
+    switch (result.status) {
+      case "sent":
+        return { ok: true, message: `Test email sent to ${maskEmail(email)}.` };
+      case "insufficient_data":
+        return { ok: false, message: "Not enough activity yet to build that email." };
+      case "throttled":
+        return { ok: false, message: result.reason };
+      case "suppressed":
+        return { ok: false, message: "Your address is suppressed, so we can't send to it." };
+      default:
+        return { ok: false, message: "Could not send the test email just now." };
+    }
+  });
