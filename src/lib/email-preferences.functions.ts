@@ -186,7 +186,9 @@ export const saveEmailPreferences = createServerFn({ method: "POST" })
       portfolioWeekday: Number.isInteger(Number(data?.portfolioWeekday))
         ? Math.min(6, Math.max(0, Number(data?.portfolioWeekday)))
         : weekday,
-      portfolioLocalTime: formatLocalTime(parseLocalTime(String(data?.portfolioLocalTime ?? "09:00"))),
+      portfolioLocalTime: formatLocalTime(
+        parseLocalTime(String(data?.portfolioLocalTime ?? "09:00")),
+      ),
       portfolioBusinessIds: Array.isArray(data?.portfolioBusinessIds)
         ? data.portfolioBusinessIds.filter((v) => typeof v === "string").slice(0, 20)
         : [],
@@ -309,7 +311,8 @@ export const TEST_SEND_LIMIT_PER_HOUR = 3;
 export const sendTestEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { template: string; businessId?: string }) => ({
-    template: data?.template === "portfolio_digest" ? "portfolio_digest" : "weekly_reputation_health",
+    template:
+      data?.template === "portfolio_digest" ? "portfolio_digest" : "weekly_reputation_health",
     businessId:
       typeof data?.businessId === "string" && /^[0-9a-f-]{36}$/i.test(data.businessId)
         ? data.businessId
@@ -371,7 +374,8 @@ export const sendTestEmail = createServerFn({ method: "POST" })
         : await jobs.sendWeeklyReport({
             userId: context.userId,
             email,
-            businessId: data.businessId && owned.includes(data.businessId) ? data.businessId : owned[0]!,
+            businessId:
+              data.businessId && owned.includes(data.businessId) ? data.businessId : owned[0]!,
             periodStart,
             endDate,
             kind: "test",

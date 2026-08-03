@@ -125,7 +125,10 @@ describe("deliverability guard rails", () => {
   });
 
   it("blocks scheduled email when paused but allows tests", () => {
-    const config = throttleConfigFromEnv({ EMAIL_SENDING_PAUSED: "1", EMAIL_DOMAIN_STATUS: "active" });
+    const config = throttleConfigFromEnv({
+      EMAIL_SENDING_PAUSED: "1",
+      EMAIL_DOMAIN_STATUS: "active",
+    });
     const counts = { sentLastHour: 0, sentLastDay: 0 };
     expect(evaluateThrottle({ config, counts, kind: "scheduled" }).allowed).toBe(false);
     expect(evaluateThrottle({ config, counts, kind: "test" }).allowed).toBe(true);

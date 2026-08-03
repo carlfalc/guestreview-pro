@@ -151,8 +151,7 @@ function EmailSettingsPage() {
             <Card className="border-primary/40">
               <CardContent className="py-4 text-sm">
                 <strong>Delivery is warming up.</strong>{" "}
-                {settings.data.domainMessage ??
-                  "Email delivery is waiting for DNS verification."}{" "}
+                {settings.data.domainMessage ?? "Email delivery is waiting for DNS verification."}{" "}
                 Your preferences are saved and reports start arriving as soon as the sending domain
                 is verified.
               </CardContent>

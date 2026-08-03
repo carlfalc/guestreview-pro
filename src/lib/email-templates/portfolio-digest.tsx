@@ -151,9 +151,7 @@ const PortfolioDigestEmail = (props: Record<string, unknown>) => {
 
           <Hr />
           {d.unsubscribeNote ? <Text style={footer}>{d.unsubscribeNote}</Text> : null}
-          <Text style={footer}>
-            Figures come from verified GuestReview Pro scan activity only.
-          </Text>
+          <Text style={footer}>Figures come from verified GuestReview Pro scan activity only.</Text>
         </Container>
       </Body>
     </Html>

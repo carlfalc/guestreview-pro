@@ -90,9 +90,7 @@ export async function dispatchEmail(input: DispatchInput): Promise<DispatchResul
   // Validate + sanitise before anything is persisted or sent.
   let templateData: Record<string, unknown>;
   try {
-    templateData = template.validate
-      ? template.validate(input.templateData)
-      : input.templateData;
+    templateData = template.validate ? template.validate(input.templateData) : input.templateData;
   } catch (error) {
     return { status: "failed", error: (error as Error).message, willRetry: false };
   }

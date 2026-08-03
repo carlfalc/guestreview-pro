@@ -188,9 +188,7 @@ export async function buildPortfolioPayload(args: {
   }
 
   const avgMovement =
-    movements.length > 0
-      ? Math.round(movements.reduce((a, b) => a + b, 0) / movements.length)
-      : 0;
+    movements.length > 0 ? Math.round(movements.reduce((a, b) => a + b, 0) / movements.length) : 0;
   const scored = rows
     .map((r) => ({ name: String(r.businessName), score: r.score as number | null }))
     .filter((r): r is { name: string; score: number } => typeof r.score === "number")
@@ -318,10 +316,7 @@ export async function runEmailWorker(now = new Date()): Promise<WorkerSummary> {
       timezone: pref.timezone,
     };
     if (ent.weeklyReport && pref.weekly_report_enabled && isWeeklyReportDue(weeklyPref, now)) {
-      for (const businessId of (pref.business_ids ?? []).slice(
-        0,
-        ent.weeklyReportBusinessesMax,
-      )) {
+      for (const businessId of (pref.business_ids ?? []).slice(0, ent.weeklyReportBusinessesMax)) {
         if (budget <= 0) break;
         const result = await sendWeeklyReport({
           userId: pref.owner_id,
@@ -415,7 +410,10 @@ export async function sendLeadGuide(args: {
   const { GUIDE_RESEND_WINDOW_HOURS } = await import("./email-content");
   const { sentRecently } = await import("./email-dispatch.server");
 
-  if (!args.force && (await sentRecently("qr_placement_guide", args.email, GUIDE_RESEND_WINDOW_HOURS))) {
+  if (
+    !args.force &&
+    (await sentRecently("qr_placement_guide", args.email, GUIDE_RESEND_WINDOW_HOURS))
+  ) {
     return {
       queued: true,
       message: "We already sent your guide — check your inbox (and spam folder).",
