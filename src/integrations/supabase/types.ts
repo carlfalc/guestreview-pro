@@ -573,6 +573,161 @@ export type Database = {
         }
         Relationships: []
       }
+      founder_feedback: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          missing: string | null
+          most_important_feature: string | null
+          nearly_stopped: string | null
+          owner_id: string
+          recommend_score: number | null
+          setup_ease: number | null
+          slot_number: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          missing?: string | null
+          most_important_feature?: string | null
+          nearly_stopped?: string | null
+          owner_id: string
+          recommend_score?: number | null
+          setup_ease?: number | null
+          slot_number?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          missing?: string | null
+          most_important_feature?: string | null
+          nearly_stopped?: string | null
+          owner_id?: string
+          recommend_score?: number | null
+          setup_ease?: number | null
+          slot_number?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      founder_slot_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          new_status: string
+          owner_id: string
+          previous_status: string | null
+          reason: string | null
+          slot_id: string
+          slot_number: number
+          source: string
+          stripe_event_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          new_status: string
+          owner_id: string
+          previous_status?: string | null
+          reason?: string | null
+          slot_id: string
+          slot_number: number
+          source?: string
+          stripe_event_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          new_status?: string
+          owner_id?: string
+          previous_status?: string | null
+          reason?: string | null
+          slot_id?: string
+          slot_number?: number
+          source?: string
+          stripe_event_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "founder_slot_events_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "founding_member_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      founding_member_slots: {
+        Row: {
+          activated_at: string | null
+          billing_interval: string
+          created_at: string
+          environment: string
+          founder_price_id: string | null
+          id: string
+          owner_id: string
+          pricing_region: string
+          release_reason: string | null
+          released_at: string | null
+          reserved_at: string | null
+          slot_number: number
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          billing_interval: string
+          created_at?: string
+          environment?: string
+          founder_price_id?: string | null
+          id?: string
+          owner_id: string
+          pricing_region: string
+          release_reason?: string | null
+          released_at?: string | null
+          reserved_at?: string | null
+          slot_number: number
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          billing_interval?: string
+          created_at?: string
+          environment?: string
+          founder_price_id?: string | null
+          id?: string
+          owner_id?: string
+          pricing_region?: string
+          release_reason?: string | null
+          released_at?: string | null
+          reserved_at?: string | null
+          slot_number?: number
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           business_id: string
@@ -1641,6 +1796,20 @@ export type Database = {
           step_order: number
         }[]
       }
+      admin_founder_stats: { Args: never; Returns: Json }
+      allocate_founder_slot: {
+        Args: {
+          p_billing_interval: string
+          p_environment?: string
+          p_founder_price_id?: string
+          p_owner_id: string
+          p_pricing_region: string
+          p_stripe_customer_id?: string
+          p_stripe_event_id?: string
+          p_stripe_subscription_id?: string
+        }
+        Returns: number
+      }
       claim_stripe_webhook_event: {
         Args: {
           p_environment: string
@@ -1655,6 +1824,7 @@ export type Database = {
         Args: { p_error?: string; p_event_id: string; p_status: string }
         Returns: undefined
       }
+      founder_slots_remaining: { Args: never; Returns: number }
       has_paid_access: {
         Args: { _environment?: string; _owner_id: string }
         Returns: boolean
@@ -1691,7 +1861,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      my_founder_status: { Args: never; Returns: Json }
       my_onboarding_progress: { Args: never; Returns: Json }
+      release_founder_slot: {
+        Args: {
+          p_actor_id?: string
+          p_owner_id: string
+          p_reason?: string
+          p_source?: string
+          p_status: string
+          p_stripe_event_id?: string
+        }
+        Returns: boolean
+      }
+      restore_founder_slot: {
+        Args: { p_actor_id?: string; p_owner_id: string; p_reason?: string }
+        Returns: number
+      }
       suppress_email: {
         Args: {
           p_email: string
