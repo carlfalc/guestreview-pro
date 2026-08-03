@@ -393,3 +393,66 @@ async function ownerEmail(db: LooseClient, ownerId: string): Promise<string | nu
 }
 
 export { idempotencyKey };
+
+/* -------------------------------------------------------------------------- */
+/* QR Placement Guide delivery                                                 */
+/* -------------------------------------------------------------------------- */
+
+const GUIDE_URL = `${PUBLIC_SITE_URL}/resources/qr-code-size-and-placement`;
+const CREATE_QR_URL = `${PUBLIC_SITE_URL}/auth`;
+
+function industryLabel(slug: string | null): string | null {
+  if (!slug) return null;
+  return slug.replace(/-/g, " ");
+}
+
+/** Public guide delivery. Resend-protected per address. */
+export async function sendLeadGuide(args: {
+  email: string;
+  industry?: string | null;
+  force?: boolean;
+}): Promise<{ queued: boolean; message: string }> {
+  const { GUIDE_RESEND_WINDOW_HOURS } = await import("./email-content");
+  const { sentRecently } = await import("./email-dispatch.server");
+
+  if (!args.force && (await sentRecently("qr_placement_guide", args.email, GUIDE_RESEND_WINDOW_HOURS))) {
+    return {
+      queued: true,
+      message: "We already sent your guide — check your inbox (and spam folder).",
+    };
+  }
+
+  const day = new Date().toISOString().slice(0, 10);
+  const result = await dispatchEmail({
+    templateKey: "qr_placement_guide",
+    to: args.email,
+    idempotencyKey: args.force
+      ? `lead-guide-resend:${args.email}:${Date.now()}`
+      : `lead-guide:${args.email}:${day}`,
+    templateData: {
+      guideUrl: GUIDE_URL,
+      createQrUrl: CREATE_QR_URL,
+      industryLabel: industryLabel(args.industry ?? null),
+    },
+    kind: "triggered",
+  });
+
+  switch (result.status) {
+    case "sent":
+      return { queued: true, message: "Check your inbox — your guide is on its way." };
+    case "duplicate":
+      return { queued: true, message: "We already sent your guide — check your inbox." };
+    case "suppressed":
+      return {
+        queued: false,
+        message: "That address can't receive our email. Please try another address.",
+      };
+    case "throttled":
+      return { queued: false, message: `You're on the list. ${result.reason}` };
+    default:
+      return {
+        queued: false,
+        message: "You're on the list — we'll email the guide as soon as delivery resumes.",
+      };
+  }
+}
