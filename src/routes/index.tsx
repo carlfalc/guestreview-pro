@@ -19,6 +19,8 @@ import {
   Faq,
   FinalCta,
 } from "@/components/public/PublicShell";
+import { ArtworkPreview } from "@/components/public/ArtworkPreview";
+
 import { seo, jsonLd } from "@/lib/seo";
 
 const FAQS = [
