@@ -281,12 +281,12 @@ function CircleFace({
         {content.business}
       </text>
       <QrBlock x={(d - qr) / 2} y={d * 0.235} size={qr} modules={modules} />
-      <Stars cx={d / 2} y={d * 0.775} size={d * 0.033} fill="#f5b544" />
+      <Stars cx={d / 2} y={d * 0.755} size={d * 0.032} fill="#f5b544" />
       <text
         x={d / 2}
-        y={d * 0.86}
+        y={d * 0.835}
         textAnchor="middle"
-        fontSize={d * 0.075}
+        fontSize={d * 0.07}
         fontWeight={800}
         fill="#0b0d10"
         fontFamily="system-ui, sans-serif"
@@ -295,14 +295,15 @@ function CircleFace({
       </text>
       <text
         x={d / 2}
-        y={d * 0.925}
+        y={d * 0.895}
         textAnchor="middle"
-        fontSize={d * 0.045}
+        fontSize={d * 0.04}
         fill="rgba(11,13,16,0.6)"
         fontFamily="system-ui, sans-serif"
       >
-        {content.subline}
+        Scan to review us
       </text>
+
     </g>
   );
 }
