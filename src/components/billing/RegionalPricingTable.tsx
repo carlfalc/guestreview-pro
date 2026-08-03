@@ -210,7 +210,7 @@ export function RegionalPricingTable({ region }: { region: AccountRegionDTO }) {
           interval={interval}
           onAlreadySubscribed={() => {
             setCheckout(null);
-            navigate({ to: "/billing" });
+            navigate({ to: "/billing", search: { checkout: undefined } });
           }}
         />
       )}

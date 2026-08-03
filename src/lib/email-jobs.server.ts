@@ -46,7 +46,6 @@ export async function buildWeeklyPayload(args: {
 }): Promise<WeeklyPayloadResult> {
   const db = await admin();
   const { buildExecutiveOverview } = await import("./executive.server");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const overview = await buildExecutiveOverview({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: db as any,
