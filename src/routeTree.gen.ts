@@ -32,6 +32,7 @@ import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
+import { Route as AuthenticatedPrintStoreRouteImport } from './routes/_authenticated/print-store'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedPlacementWizardRouteImport } from './routes/_authenticated/placement-wizard'
 import { Route as AuthenticatedHealthRouteImport } from './routes/_authenticated/health'
@@ -172,6 +173,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
 const AuthenticatedQrRoute = AuthenticatedQrRouteImport.update({
   id: '/qr',
   path: '/qr',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPrintStoreRoute = AuthenticatedPrintStoreRouteImport.update({
+  id: '/print-store',
+  path: '/print-store',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPlansRoute = AuthenticatedPlansRouteImport.update({
@@ -349,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/health': typeof AuthenticatedHealthRoute
   '/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/plans': typeof AuthenticatedPlansRoute
+  '/print-store': typeof AuthenticatedPrintStoreRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
@@ -400,6 +407,7 @@ export interface FileRoutesByTo {
   '/health': typeof AuthenticatedHealthRoute
   '/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/plans': typeof AuthenticatedPlansRoute
+  '/print-store': typeof AuthenticatedPrintStoreRoute
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
@@ -453,6 +461,7 @@ export interface FileRoutesById {
   '/_authenticated/health': typeof AuthenticatedHealthRoute
   '/_authenticated/placement-wizard': typeof AuthenticatedPlacementWizardRoute
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
+  '/_authenticated/print-store': typeof AuthenticatedPrintStoreRoute
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
@@ -506,6 +515,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/placement-wizard'
     | '/plans'
+    | '/print-store'
     | '/qr'
     | '/reports'
     | '/settings'
@@ -557,6 +567,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/placement-wizard'
     | '/plans'
+    | '/print-store'
     | '/qr'
     | '/reports'
     | '/settings'
@@ -609,6 +620,7 @@ export interface FileRouteTypes {
     | '/_authenticated/health'
     | '/_authenticated/placement-wizard'
     | '/_authenticated/plans'
+    | '/_authenticated/print-store'
     | '/_authenticated/qr'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
@@ -828,6 +840,13 @@ declare module '@tanstack/react-router' {
       path: '/qr'
       fullPath: '/qr'
       preLoaderRoute: typeof AuthenticatedQrRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/print-store': {
+      id: '/_authenticated/print-store'
+      path: '/print-store'
+      fullPath: '/print-store'
+      preLoaderRoute: typeof AuthenticatedPrintStoreRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/plans': {
@@ -1069,6 +1088,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHealthRoute: typeof AuthenticatedHealthRoute
   AuthenticatedPlacementWizardRoute: typeof AuthenticatedPlacementWizardRoute
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
+  AuthenticatedPrintStoreRoute: typeof AuthenticatedPrintStoreRoute
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
@@ -1094,6 +1114,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHealthRoute: AuthenticatedHealthRoute,
   AuthenticatedPlacementWizardRoute: AuthenticatedPlacementWizardRoute,
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
+  AuthenticatedPrintStoreRoute: AuthenticatedPrintStoreRoute,
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
