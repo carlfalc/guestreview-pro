@@ -6,6 +6,7 @@ import { template as qrPlacementGuide } from "./qr-placement-guide";
 import { template as portfolioDigest } from "./portfolio-digest";
 import { template as founderWelcome } from "./founder-welcome";
 import { template as founderCancellationWarning } from "./founder-cancellation-warning";
+import { template as printWaitlistAck } from "./print-waitlist-ack";
 import {
   printOrderConfirmed,
   printOrderSubmitted,
