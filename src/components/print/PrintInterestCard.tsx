@@ -76,3 +76,20 @@ export function PrintInterestCard({ source, businessId, className }: Props) {
     </>
   );
 }
+
+/**
+ * Dashboard placement. Only shown once the account has created its first QR
+ * code — before that, printing is not a meaningful next step.
+ */
+export function DashboardPrintInterest() {
+  const fetchProgress = useServerFn(getOnboardingProgress);
+  const { data } = useQuery({
+    queryKey: ["onboarding-progress"],
+    queryFn: () => fetchProgress(),
+    staleTime: 30_000,
+  });
+
+  if (!data?.hasQrCode) return null;
+  return <PrintInterestCard source="dashboard" />;
+}
+
