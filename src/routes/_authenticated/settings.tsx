@@ -68,8 +68,12 @@ function SettingsPage() {
     <div className="animate-fade-in-up space-y-8">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
+        <div className="mt-2">
+          <FounderBadge />
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">Preferences and personalization.</p>
       </div>
+
 
       {region ? <AccountRegionCard region={region} /> : null}
 
