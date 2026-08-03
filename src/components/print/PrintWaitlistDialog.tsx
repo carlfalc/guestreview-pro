@@ -32,10 +32,7 @@ import {
   PRINT_TIMEFRAME_OPTIONS,
   type PrintInterestSource,
 } from "@/lib/print-interest";
-import {
-  getPrintInterestContext,
-  submitPrintInterest,
-} from "@/lib/print-interest.functions";
+import { getPrintInterestContext, submitPrintInterest } from "@/lib/print-interest.functions";
 
 const UNSET = "__unset__";
 
@@ -100,8 +97,7 @@ export function PrintWaitlistDialog({ open, onOpenChange, source, businessId }: 
     setReady(true);
   }, [open, ready, contextQ.data, existing, businessId]);
 
-  const industry =
-    contextQ.data?.businesses.find((b) => b.id === business)?.industry ?? null;
+  const industry = contextQ.data?.businesses.find((b) => b.id === business)?.industry ?? null;
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -166,8 +162,8 @@ export function PrintWaitlistDialog({ open, onOpenChange, source, businessId }: 
             <DialogHeader>
               <DialogTitle>Join the print waitlist</DialogTitle>
               <DialogDescription>
-                Printing isn&rsquo;t available yet. Tell us what you need and we&rsquo;ll
-                prioritise the most requested products.
+                Printing isn&rsquo;t available yet. Tell us what you need and we&rsquo;ll prioritise
+                the most requested products.
               </DialogDescription>
             </DialogHeader>
 

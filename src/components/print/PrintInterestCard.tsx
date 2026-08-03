@@ -96,4 +96,3 @@ export function DashboardPrintInterest() {
   if (!data?.hasQrCode) return null;
   return <PrintInterestCard source="dashboard" />;
 }
-

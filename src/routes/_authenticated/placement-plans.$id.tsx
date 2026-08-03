@@ -206,7 +206,6 @@ function PlacementPlanDetail() {
 
       <PrintInterestCard source="placement_plan" businessId={plan.business_id} />
     </div>
-
   );
 }
 

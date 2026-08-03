@@ -196,8 +196,10 @@ export function summarisePrintDemand(rows: readonly AdminPrintInterestRow[]): Pr
     byQuantity: tally(rows, (r) => r.expectedQuantity),
     byTimeframe: tally(rows, (r) => r.desiredTimeframe),
     byIndustry: tally(rows, (r) => r.businessIndustry),
-    byStatus: tally(rows, (r) => r.status, (k) =>
-      isPrintInterestStatus(k) ? PRINT_INTEREST_STATUS_LABEL[k] : k,
+    byStatus: tally(
+      rows,
+      (r) => r.status,
+      (k) => (isPrintInterestStatus(k) ? PRINT_INTEREST_STATUS_LABEL[k] : k),
     ),
     mostRequestedBundle: bundles[0] ?? null,
   };

@@ -15,10 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { currentUserIsAdmin } from "@/lib/authorised-plan.functions";
-import {
-  adminPrintDemand,
-  adminUpdatePrintInterest,
-} from "@/lib/print-interest.functions";
+import { adminPrintDemand, adminUpdatePrintInterest } from "@/lib/print-interest.functions";
 import {
   demandThresholds,
   printInterestCsv,
@@ -91,8 +88,7 @@ function AdminPrintDemandPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
 
   const update = useMutation({
-    mutationFn: (v: { id: string; status?: string; adminNotes?: string }) =>
-      updateFn({ data: v }),
+    mutationFn: (v: { id: string; status?: string; adminNotes?: string }) => updateFn({ data: v }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "print-demand"] });
       toast.success("Updated.");

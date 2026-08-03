@@ -65,7 +65,11 @@ export const getPrintInterestContext = createServerFn({ method: "GET" })
     const db = context.supabase as never as LooseClient;
     const [profile, region, businesses, entries] = await Promise.all([
       db.from("profiles").select("email").eq("id", context.userId).maybeSingle(),
-      db.from("account_regions").select("country_code").eq("owner_id", context.userId).maybeSingle(),
+      db
+        .from("account_regions")
+        .select("country_code")
+        .eq("owner_id", context.userId)
+        .maybeSingle(),
       db
         .from("businesses")
         .select("id, name, industry")
@@ -257,7 +261,9 @@ export const adminPrintDemand = createServerFn({ method: "GET" })
         step: "contacted",
         label: "Contacted",
         accounts: new Set(
-          rows.filter((r) => ["contacted", "quoted", "converted"].includes(r.status)).map((r) => r.ownerId),
+          rows
+            .filter((r) => ["contacted", "quoted", "converted"].includes(r.status))
+            .map((r) => r.ownerId),
         ).size,
       },
       {

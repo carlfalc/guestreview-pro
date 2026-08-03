@@ -108,7 +108,9 @@ describe("demandThresholds", () => {
 
 describe("printInterestCsv", () => {
   it("emits a header row plus one row per record", () => {
-    const lines = printInterestCsv([row(), row({ id: "2" })]).trim().split("\n");
+    const lines = printInterestCsv([row(), row({ id: "2" })])
+      .trim()
+      .split("\n");
     expect(lines).toHaveLength(3);
     expect(lines[0]).toContain("email");
   });

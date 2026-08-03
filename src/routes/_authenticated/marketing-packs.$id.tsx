@@ -1464,7 +1464,6 @@ function MarketingPackEditor() {
 
       <PrintInterestCard source="marketing_pack" businessId={pack?.business_id ?? null} />
 
-
       <AutoFixDialog
         open={autoFixOpen}
         onOpenChange={(v) => {
