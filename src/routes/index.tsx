@@ -19,6 +19,8 @@ import {
   Faq,
   FinalCta,
 } from "@/components/public/PublicShell";
+import { ArtworkPreview } from "@/components/public/ArtworkPreview";
+
 import { seo, jsonLd } from "@/lib/seo";
 
 const FAQS = [
@@ -179,24 +181,57 @@ function Landing() {
       {/* QR design examples */}
       <Section
         title="QR design examples"
-        intro="Deterministic previews generated from the same renderer used for production exports — no stock mockups."
+        intro="Real artwork at true print proportions — the same layouts, safe areas and folded geometry your exports use. Demo brand shown."
       >
         <CardGrid cols={4}>
           {[
-            { name: "Circular sticker", detail: "50 mm · vinyl · counter or window" },
-            { name: "Square sticker", detail: "70 mm · laminated · packaging" },
-            { name: "Table tent", detail: "A6 folded · 350 gsm card" },
-            { name: "Counter card", detail: "A5 · rigid board · reception" },
+            {
+              formatId: "sticker-circle-80",
+              variant: "clean" as const,
+              name: "Circular sticker",
+              detail: "80 mm · matte vinyl · counter or window",
+            },
+            {
+              formatId: "a6-portrait",
+              variant: "photo" as const,
+              name: "A6 counter card",
+              detail: "A6 · 350 gsm · till point or reception",
+            },
+            {
+              formatId: "tent-a5",
+              variant: "photo" as const,
+              name: "Folded A5 table tent",
+              detail: "A5 folded · front and back panels · fold line shown",
+            },
+            {
+              formatId: "poster-a4-p",
+              variant: "photo" as const,
+              name: "A4 poster",
+              detail: "A4 · sized for scanning at walking distance",
+            },
           ].map((item) => (
-            <div key={item.name} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
-              <div className="grid aspect-square place-items-center rounded-2xl bg-white">
-                <SampleQr />
+            <div
+              key={item.formatId}
+              className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/25 hover:bg-white/[0.06]"
+            >
+              <div className="flex h-56 items-center justify-center">
+                <ArtworkPreview
+                  formatId={item.formatId}
+                  variant={item.variant}
+                  label={`${item.name} artwork example`}
+                />
               </div>
               <p className="mt-4 text-sm font-medium">{item.name}</p>
               <p className="text-xs text-white/50">{item.detail}</p>
             </div>
           ))}
         </CardGrid>
+        <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-white/60">
+          <span>Every format ships with bleed, safe area and cut lines checked before export.</span>
+          <Link to="/templates" className="text-white underline underline-offset-4">
+            Browse the full template gallery
+          </Link>
+        </div>
       </Section>
 
       {/* Marketing pack formats */}
