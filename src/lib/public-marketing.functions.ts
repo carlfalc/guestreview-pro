@@ -39,7 +39,9 @@ export const trackPublicEvent = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export type LeadResult = { ok: true } | { ok: false; message: string };
+export type LeadResult =
+  | { ok: true; emailQueued: boolean; message: string }
+  | { ok: false; message: string };
 
 /** QR Placement Guide sign-up. Consent is explicit and never pre-ticked. */
 export const submitMarketingLead = createServerFn({ method: "POST" })
@@ -71,5 +73,13 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
       console.error("marketing_leads insert failed:", error.message);
       return { ok: false, message: "We could not save that just now. Please try again." };
     }
-    return { ok: true };
+
+    const { sendLeadGuide } = await import("./email-jobs.server");
+    const outcome = await sendLeadGuide({ email: data.email, industry: data.industry });
+    return {
+      ok: true,
+      emailQueued: outcome.queued,
+      message: outcome.message,
+    };
   });
+
