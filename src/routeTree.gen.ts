@@ -54,6 +54,7 @@ import { Route as AuthenticatedAdminSeoRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminRegionRequestsRouteImport } from './routes/_authenticated/admin.region-requests'
 import { Route as AuthenticatedAdminHealthRouteImport } from './routes/_authenticated/admin.health'
 import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
+import { Route as AuthenticatedAdminFoundersRouteImport } from './routes/_authenticated/admin.founders'
 import { Route as AuthenticatedAdminEmailRouteImport } from './routes/_authenticated/admin.email'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -296,6 +297,12 @@ const AuthenticatedAdminFunnelRoute =
     path: '/admin/funnel',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminFoundersRoute =
+  AuthenticatedAdminFoundersRouteImport.update({
+    id: '/admin/founders',
+    path: '/admin/founders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminEmailRoute = AuthenticatedAdminEmailRouteImport.update({
   id: '/admin/email',
   path: '/admin/email',
@@ -351,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/industries/': typeof IndustriesIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/admin/email': typeof AuthenticatedAdminEmailRoute
+  '/admin/founders': typeof AuthenticatedAdminFoundersRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -401,6 +409,7 @@ export interface FileRoutesByTo {
   '/industries': typeof IndustriesIndexRoute
   '/resources': typeof ResourcesIndexRoute
   '/admin/email': typeof AuthenticatedAdminEmailRoute
+  '/admin/founders': typeof AuthenticatedAdminFoundersRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/health': typeof AuthenticatedAdminHealthRoute
   '/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -453,6 +462,7 @@ export interface FileRoutesById {
   '/industries/': typeof IndustriesIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/_authenticated/admin/email': typeof AuthenticatedAdminEmailRoute
+  '/_authenticated/admin/founders': typeof AuthenticatedAdminFoundersRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/health': typeof AuthenticatedAdminHealthRoute
   '/_authenticated/admin/region-requests': typeof AuthenticatedAdminRegionRequestsRoute
@@ -505,6 +515,7 @@ export interface FileRouteTypes {
     | '/industries/'
     | '/resources/'
     | '/admin/email'
+    | '/admin/founders'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -555,6 +566,7 @@ export interface FileRouteTypes {
     | '/industries'
     | '/resources'
     | '/admin/email'
+    | '/admin/founders'
     | '/admin/funnel'
     | '/admin/health'
     | '/admin/region-requests'
@@ -606,6 +618,7 @@ export interface FileRouteTypes {
     | '/industries/'
     | '/resources/'
     | '/_authenticated/admin/email'
+    | '/_authenticated/admin/founders'
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/health'
     | '/_authenticated/admin/region-requests'
@@ -971,6 +984,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFunnelRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/founders': {
+      id: '/_authenticated/admin/founders'
+      path: '/admin/founders'
+      fullPath: '/admin/founders'
+      preLoaderRoute: typeof AuthenticatedAdminFoundersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/email': {
       id: '/_authenticated/admin/email'
       path: '/admin/email'
@@ -1053,6 +1073,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedAdminEmailRoute: typeof AuthenticatedAdminEmailRoute
+  AuthenticatedAdminFoundersRoute: typeof AuthenticatedAdminFoundersRoute
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminHealthRoute: typeof AuthenticatedAdminHealthRoute
   AuthenticatedAdminRegionRequestsRoute: typeof AuthenticatedAdminRegionRequestsRoute
@@ -1077,6 +1098,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedAdminEmailRoute: AuthenticatedAdminEmailRoute,
+  AuthenticatedAdminFoundersRoute: AuthenticatedAdminFoundersRoute,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminHealthRoute: AuthenticatedAdminHealthRoute,
   AuthenticatedAdminRegionRequestsRoute: AuthenticatedAdminRegionRequestsRoute,
