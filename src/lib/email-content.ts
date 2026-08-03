@@ -30,8 +30,11 @@ export function plainText(value: unknown, maxLength = 300): string {
   const stripped = raw
     .replace(/<[^>]*>/g, " ")
     .replace(/[<>]/g, "")
+    // eslint-disable-next-line no-control-regex -- strip control characters
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
   if (stripped.length <= maxLength) return stripped;
   return `${stripped.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
 }
