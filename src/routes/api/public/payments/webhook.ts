@@ -176,7 +176,7 @@ async function syncFounderSlot(
   const status = String(subscription.status ?? "");
 
   if (isFounderPrice && planKey !== "free" && ["active", "trialing"].includes(status)) {
-    await allocateFounderSlot(admin(), {
+    const slotNumber = await allocateFounderSlot(admin(), {
       ownerId,
       pricingRegion:
         (subscription.metadata?.pricing_region as string | undefined) ?? trustedRegion ?? "US",
@@ -189,6 +189,22 @@ async function syncFounderSlot(
       stripeSubscriptionId: typeof subscription.id === "string" ? subscription.id : null,
       environment: env,
     });
+
+    if (slotNumber) {
+      await notifyFounder(ownerId, slotNumber, {
+        kind: "welcome",
+        priceLine: priceLineFor(price),
+      });
+    }
+
+    // Cancelling at period end loses the locked price permanently — warn once.
+    if (subscription.cancel_at_period_end === true) {
+      const endsAt =
+        typeof subscription.current_period_end === "number"
+          ? new Date(subscription.current_period_end * 1000).toISOString().slice(0, 10)
+          : "the end of your billing period";
+      await notifyFounder(ownerId, slotNumber, { kind: "warning", accessUntil: endsAt });
+    }
     return;
   }
 
@@ -206,6 +222,54 @@ async function syncFounderSlot(
   }
   // `past_due` deliberately keeps the place: Stripe is still retrying.
 }
+
+function priceLineFor(price: LooseRecord | undefined): string {
+  const amount = typeof price?.unit_amount === "number" ? price.unit_amount / 100 : null;
+  const currency = typeof price?.currency === "string" ? price.currency.toUpperCase() : "";
+  const period = price?.recurring?.interval === "year" ? "year" : "month";
+  if (amount === null || !currency) return "your founder rate";
+  return `${currency} ${amount.toFixed(2)} per ${period}`;
+}
+
+/** Best-effort founder email. Delivery problems must never fail a webhook. */
+async function notifyFounder(
+  ownerId: string,
+  slotNumber: number | null,
+  options: { kind: "welcome"; priceLine: string } | { kind: "warning"; accessUntil: string },
+): Promise<void> {
+  try {
+    const { data } = await admin()
+      .from("profiles")
+      .select("email")
+      .eq("id", ownerId)
+      .maybeSingle();
+    const email = (data as { email?: string | null } | null)?.email;
+    if (!email) return;
+
+    const { formatSlotNumber } = await import("@/lib/founder");
+    const slotLabel = `Founding Member ${formatSlotNumber(slotNumber)}`.trim();
+    const jobs = await import("@/lib/email-jobs.server");
+
+    if (options.kind === "welcome") {
+      await jobs.sendFounderWelcome({
+        ownerId,
+        email,
+        slotLabel,
+        priceLine: options.priceLine,
+      });
+    } else {
+      await jobs.sendFounderCancellationWarning({
+        ownerId,
+        email,
+        slotLabel,
+        accessUntil: options.accessUntil,
+      });
+    }
+  } catch (e) {
+    console.error("founder email failed:", e);
+  }
+}
+
 
 
 /** Update payment health without ever touching plan entitlement. */
