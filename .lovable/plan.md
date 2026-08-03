@@ -1,28 +1,31 @@
-# Remove the "Lovable" branding from Google sign-in
+# Upgrade the "QR design examples" section on the landing page
 
-Right now Google sign-in uses Lovable's managed OAuth credentials. That means the Google consent screen shows Lovable's app name and a generic callback domain instead of GuestReview Pro. This is a configuration change, not an app-code change — nothing in the sign-in code needs to be rewritten.
+Today that section shows four identical white squares with the same decorative QR motif. It looks like placeholder art and undersells the product. Your Glasshouse screenshots show what the app actually produces: a photographic venue background, brand name, star row, headline, subline, "Leave a review" CTA pill and a footer credit — in real format shapes.
 
-## What to change
+## What changes
 
-Swap the managed Google credentials for your own Google Cloud OAuth client, so the consent screen reads "GuestReview Pro" with your logo and your domain.
+Replace the four flat squares with four real-looking artwork previews that mirror what a customer gets in the editor:
 
-Steps (you do these, I can't do them for you):
+- **Circular sticker (80 mm)** — genuinely round, brand mark + QR + short CTA.
+- **Folded A5 table tent** — shown as a real folded tent: back panel rotated 180°, fold line across the middle, exactly like the editor proof.
+- **A6 counter card** — portrait, photographic background with dark scrim, name, stars, headline, subline, CTA pill, footer credit.
+- **A4 poster** — portrait, larger QR, same brand system.
 
-1. In Google Cloud Console, configure the OAuth consent screen:
-   - App name: GuestReview Pro
-   - Support email + logo
-   - Authorised domains: `googlereviewpro.com`, `guestreviewpro.com`
-   - Scopes: `openid`, `userinfo.email`, `userinfo.profile`
-2. Create an OAuth client ID (type: Web application).
-3. Paste the callback URL shown in the backend auth settings (Users → Authentication Settings → Sign In Methods → Google) into "Authorised redirect URIs".
-4. Copy the client ID and secret back into that same Google provider panel and save.
+Each card gains: true aspect ratio for its format, a soft drop shadow and slight perspective so it reads as a physical product on the dark page, and a small caption line with real size/material ("A6 · 350 gsm · counter or reception").
 
-## Reducing the callback domain reference
+Under the grid, one line of proof text plus a link to the full template gallery (`/templates`) and the pricing CTA.
 
-The redirect URI itself still shows the backend auth host during the round trip. To make that read as your own brand, a custom auth domain (e.g. `auth.googlereviewpro.com`) has to be pointed at the auth service via DNS. That is optional — most users never see it, since it flashes for under a second.
+## Content shown
 
-## Code impact
+Safe demo brand content only (no customer data on a public page), styled to match your Glasshouse example: warm hospitality interior photo, deep-green accent, "Loved your visit?" / "Scan to leave us a review." / "Leave a review" pill / "Created with GuestReview Pro".
 
-None. `src/routes/auth.tsx` keeps calling `lovable.auth.signInWithOAuth("google", ...)`; the provider swap is purely credential configuration. Email/password sign-up already shows no Lovable branding.
+If you would rather showcase Glasshouse by name as a real customer example, say so and I will swap the demo name and photo for it.
 
-If you also see a Lovable badge on the published site itself, that is a separate publish setting I can turn off — say the word and I'll include it.
+## Technical notes
+
+- New component `src/components/public/ArtworkPreview.tsx`, built the same dependency-free way as the existing `TemplatePreview` — inline SVG, no `qr-code-styling` on the public bundle, no layout shift, sharp at any size.
+- Reuses real geometry from `src/lib/qr-formats.ts` (`FORMATS`, `safeArea`, `templateColors`) so shapes and proportions match production exports rather than being hand-drawn.
+- Folded tent preview reuses the front/back + rotation model from `src/lib/folded-layouts.ts`.
+- The QR module grid stays a deterministic decorative pattern (as it is now); previews are artwork, not scannable codes.
+- One hospitality background image added via the assets pipeline, `loading="lazy"`, reused across the cards.
+- Only `src/routes/index.tsx` and the new component change. No backend, pricing, packs, exports or editor behaviour is touched.
