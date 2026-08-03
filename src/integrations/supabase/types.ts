@@ -1343,6 +1343,74 @@ export type Database = {
         }
         Relationships: []
       }
+      print_interest: {
+        Row: {
+          admin_notes: string | null
+          business_id: string | null
+          comments: string | null
+          contact_consent: boolean
+          country_code: string | null
+          created_at: string
+          desired_timeframe: string | null
+          email: string
+          expected_quantity: string | null
+          id: string
+          owner_id: string
+          preferred_material: string | null
+          preferred_size: string | null
+          product_keys: Json
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          business_id?: string | null
+          comments?: string | null
+          contact_consent?: boolean
+          country_code?: string | null
+          created_at?: string
+          desired_timeframe?: string | null
+          email: string
+          expected_quantity?: string | null
+          id?: string
+          owner_id: string
+          preferred_material?: string | null
+          preferred_size?: string | null
+          product_keys?: Json
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          business_id?: string | null
+          comments?: string | null
+          contact_consent?: boolean
+          country_code?: string | null
+          created_at?: string
+          desired_timeframe?: string | null
+          email?: string
+          expected_quantity?: string | null
+          id?: string
+          owner_id?: string
+          preferred_material?: string | null
+          preferred_size?: string | null
+          product_keys?: Json
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_interest_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       print_order_events: {
         Row: {
           actor_id: string | null
