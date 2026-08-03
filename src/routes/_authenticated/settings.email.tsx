@@ -185,10 +185,7 @@ function EmailSettingsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="local-time">Local delivery time</Label>
-                  <Select
-                    value={form.localTime}
-                    onValueChange={(v) => update({ localTime: v })}
-                  >
+                  <Select value={form.localTime} onValueChange={(v) => update({ localTime: v })}>
                     <SelectTrigger id="local-time">
                       <SelectValue />
                     </SelectTrigger>
@@ -259,7 +256,9 @@ function EmailSettingsPage() {
                   <Label htmlFor="report-format">Report format</Label>
                   <Select
                     value={form.reportFormat}
-                    onValueChange={(v) => update({ reportFormat: v === "summary" ? "summary" : "full" })}
+                    onValueChange={(v) =>
+                      update({ reportFormat: v === "summary" ? "summary" : "full" })
+                    }
                   >
                     <SelectTrigger id="report-format">
                       <SelectValue />

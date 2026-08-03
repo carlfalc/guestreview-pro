@@ -109,7 +109,6 @@ export function parseLocalTime(value: string): number {
   return hours * 60 + mins;
 }
 
-
 export function formatLocalTime(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
