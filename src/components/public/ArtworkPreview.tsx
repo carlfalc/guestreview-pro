@@ -168,7 +168,6 @@ function Panel({
   const starsY = h * (compact ? 0.65 : 0.735);
   const headlineY = h * (compact ? 0.73 : 0.79);
 
-
   return (
     <g clipPath={`url(#${clipId})`}>
       {dark ? (
@@ -215,8 +214,6 @@ function Panel({
       >
         {content.headline}
       </text>
-
-
 
       <rect
         x={(w - ctaW) / 2}
@@ -308,7 +305,6 @@ function CircleFace({
       >
         Scan to review us
       </text>
-
     </g>
   );
 }
