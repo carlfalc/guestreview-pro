@@ -11,6 +11,7 @@ import type { CartDTO } from "./print.server";
 import type { PrintGate } from "./print-validation";
 import type { PrintOrderStatus } from "./print-orders";
 import type { StripeEnvName } from "./entitlements.server";
+import { asJsonObject, type JsonObject, type JsonValue } from "./json";
 
 /* -------------------------------------------------------------------------- */
 /* Shared helpers                                                             */
@@ -35,6 +36,9 @@ async function ctxFor(userId: string) {
   const ctx = await printAccountContext(admin, userId, environment);
   return { admin, ctx, host };
 }
+
+/** Small slack so rounding never blocks an otherwise healthy order. */
+const MARGIN_TOLERANCE_PERCENT = 2;
 
 const trimmed = (value: unknown, max: number): string =>
   typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -65,7 +69,7 @@ export const getPrintCatalogue = createServerFn({ method: "POST" })
   .handler(async ({ context }): Promise<PrintStoreCatalogue> => {
     const { admin, ctx } = await ctxFor(context.userId);
     const { loadCatalogue, loadBundles } = await import("./print.server");
-    const { PLAN_PRINT_DISCOUNT } = await import("./print-pricing");
+    const { DEFAULT_MARGIN_RULES } = await import("./print-pricing");
     const [products, bundles] = await Promise.all([
       loadCatalogue(admin, ctx.region),
       loadBundles(admin),
@@ -77,7 +81,7 @@ export const getPrintCatalogue = createServerFn({ method: "POST" })
       region: ctx.region,
       countryCode: ctx.countryCode,
       plan: ctx.plan,
-      planDiscountPercent: PLAN_PRINT_DISCOUNT[ctx.plan] ?? 0,
+      planDiscountPercent: DEFAULT_MARGIN_RULES.planDiscountPercent[ctx.plan] ?? 0,
     };
   });
 
@@ -102,7 +106,7 @@ export interface AddCartItemInput {
   marketingPackId?: string;
   placementPlanId?: string;
   quantity?: number;
-  design?: Record<string, unknown>;
+  design?: JsonObject;
   bundleId?: string;
   bundleGroup?: string;
 }
@@ -118,7 +122,7 @@ export const addPrintCartItem = createServerFn({ method: "POST" })
     marketingPackId: data?.marketingPackId ? uuid(data.marketingPackId, "pack") : undefined,
     placementPlanId: data?.placementPlanId ? uuid(data.placementPlanId, "plan") : undefined,
     quantity: Math.min(Math.max(Math.round(Number(data?.quantity ?? 1)) || 1, 1), 50),
-    design: (data?.design ?? {}) as Record<string, unknown>,
+    design: asJsonObject(data?.design),
     bundleId: data?.bundleId ? uuid(data.bundleId, "bundle") : undefined,
     bundleGroup: trimmed(data?.bundleGroup, 60) || undefined,
   }))
@@ -289,7 +293,7 @@ export const generatePrintProof = createServerFn({ method: "POST" })
       imageDpi?: number | null;
       validation?: unknown[];
       warningsAcknowledged?: boolean;
-      design?: Record<string, unknown>;
+      design?: JsonObject;
     }) => ({
       itemId: uuid(data?.itemId, "cart item"),
       frontSvg: typeof data?.frontSvg === "string" ? data.frontSvg.slice(0, 900_000) : null,
@@ -299,7 +303,7 @@ export const generatePrintProof = createServerFn({ method: "POST" })
       imageDpi: data?.imageDpi == null ? null : Number(data.imageDpi),
       validation: Array.isArray(data?.validation) ? data.validation.slice(0, 200) : [],
       warningsAcknowledged: data?.warningsAcknowledged === true,
-      design: (data?.design ?? {}) as Record<string, unknown>,
+      design: asJsonObject(data?.design),
     }),
   )
   .handler(async ({ data, context }): Promise<ProofResult> => {
@@ -322,10 +326,11 @@ export const generatePrintProof = createServerFn({ method: "POST" })
     const qr = row.qr_codes as Record<string, unknown>;
     const business = row.businesses as Record<string, unknown>;
 
-    const destination = resolveQrDestination(
-      qr as never,
-      business as never,
-    );
+    const destination = resolveQrDestination({
+      destinationType: (qr.destination_type as string) ?? "google_review",
+      destinationUrl: (qr.destination_url as string | null) ?? null,
+      businessGoogleReviewUrl: (business.google_review_url as string | null) ?? null,
+    });
 
     const gates = printOrderGates({
       product: {
@@ -533,7 +538,7 @@ export const createPrintOrderCheckout = createServerFn({ method: "POST" })
     // Margin floor guard — never sell below the configured minimum.
     if (
       totals.estimatedMarginPercent <
-      DEFAULT_MARGIN_RULES.minimumMarginPercent - DEFAULT_MARGIN_RULES.marginTolerancePercent
+      DEFAULT_MARGIN_RULES.minMarginPercent - MARGIN_TOLERANCE_PERCENT
     ) {
       return { error: "This order cannot be priced right now. Please contact support." };
     }
@@ -601,9 +606,9 @@ export const createPrintOrderCheckout = createServerFn({ method: "POST" })
           unit_retail_minor: unit,
           unit_cost_minor: Number(r.unit_cost_minor ?? 0),
           line_total_minor: unit * quantity,
-          design: (r.design ?? {}) as Record<string, unknown>,
+          design: asJsonObject(r.design),
           artwork_version: Number(r.artwork_version ?? 1),
-          validation_snapshot: (r.validation_snapshot ?? []) as unknown,
+          validation_snapshot: (r.validation_snapshot ?? []) as JsonValue,
         })
         .select("id")
         .single();
@@ -747,7 +752,7 @@ export interface PrintOrderDetail extends PrintOrderSummary {
   shippingMinor: number;
   taxMinor: number;
   shippingName: string | null;
-  shippingAddress: Record<string, unknown>;
+  shippingAddress: JsonObject;
   items: Array<{
     id: string;
     productName: string;
@@ -816,7 +821,7 @@ export const getMyPrintOrder = createServerFn({ method: "POST" })
       estimatedDeliveryDate: (row.estimated_delivery_date as string | null) ?? null,
       itemCount: items.length,
       shippingName: (row.shipping_name as string | null) ?? null,
-      shippingAddress: (row.shipping_address as Record<string, unknown>) ?? {},
+      shippingAddress: asJsonObject(row.shipping_address),
       items,
       timeline: ((events as Array<Record<string, unknown>> | null) ?? []).map((e) => ({
         id: e.id as string,

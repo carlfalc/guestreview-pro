@@ -4,6 +4,7 @@
 // numbers, fulfilment cost — is resolved here from database state.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PricingRegion } from "./regions";
+import { asJsonObject, type JsonObject } from "./json";
 import type { PlanTierKey } from "./entitlements";
 import type { StripeEnvName } from "./entitlements.server";
 import {
@@ -236,7 +237,7 @@ export interface CartItemDTO {
   proofId: string | null;
   approvedAt: string | null;
   artworkVersion: number;
-  design: Record<string, unknown>;
+  design: JsonObject;
 }
 
 export interface CartDTO {
@@ -320,7 +321,7 @@ function mapCartItem(row: Row): CartItemDTO {
     proofId: (row.proof_id as string | null) ?? null,
     approvedAt: (row.approved_at as string | null) ?? null,
     artworkVersion: num(row.artwork_version, 1),
-    design: (row.design as Record<string, unknown> | null) ?? {},
+    design: asJsonObject(row.design),
   };
 }
 
