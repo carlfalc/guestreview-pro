@@ -144,7 +144,69 @@ async function upsertSubscription(subscription: LooseRecord, env: StripeEnv) {
     const { onSubscriptionActivated } = await import("@/lib/upgrade-notifications.server");
     await onSubscriptionActivated(admin(), ownerId, planKey);
   }
+
+  await syncFounderSlot(subscription, env, ownerId, planKey, price, trustedRegion);
 }
+
+/**
+ * Founding Member Beta side-effects.
+ *
+ * A place is only ever allocated AFTER Stripe confirms a paid, active
+ * subscription on a founder price. Payment failure keeps the place during the
+ * grace period; a real cancellation or refund releases it.
+ */
+async function syncFounderSlot(
+  subscription: LooseRecord,
+  env: StripeEnv,
+  ownerId: string,
+  planKey: "free" | "pro" | "business",
+  price: LooseRecord | undefined,
+  trustedRegion: string | null,
+) {
+  const { isFounderLookupKey } = await import("@/lib/founder");
+  const { allocateFounderSlot, releaseFounderSlot, getFounderSlot } =
+    await import("@/lib/founder.server");
+
+  const lookupKey = (price?.lookup_key ?? price?.metadata?.lovable_external_id ?? null) as
+    | string
+    | null;
+  const isFounderPrice =
+    isFounderLookupKey(lookupKey) || subscription.metadata?.founder === "true";
+
+  const status = String(subscription.status ?? "");
+
+  if (isFounderPrice && planKey !== "free" && ["active", "trialing"].includes(status)) {
+    await allocateFounderSlot(admin(), {
+      ownerId,
+      pricingRegion:
+        (subscription.metadata?.pricing_region as string | undefined) ?? trustedRegion ?? "US",
+      billingInterval: intervalFromPrice(price) ?? "monthly",
+      founderPriceId: lookupKey,
+      stripeCustomerId:
+        typeof subscription.customer === "string"
+          ? subscription.customer
+          : (subscription.customer?.id ?? null),
+      stripeSubscriptionId: typeof subscription.id === "string" ? subscription.id : null,
+      environment: env,
+    });
+    return;
+  }
+
+  // Paid access has genuinely ended — free the place for the next customer.
+  if (["canceled", "unpaid", "incomplete_expired"].includes(status)) {
+    const slot = await getFounderSlot(admin(), ownerId);
+    if (slot && (slot.status === "active" || slot.status === "pending")) {
+      await releaseFounderSlot(admin(), {
+        ownerId,
+        status: "canceled",
+        reason: `subscription ${status}`,
+        source: "stripe",
+      });
+    }
+  }
+  // `past_due` deliberately keeps the place: Stripe is still retrying.
+}
+
 
 /** Update payment health without ever touching plan entitlement. */
 async function markPayment(
