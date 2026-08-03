@@ -453,3 +453,54 @@ export async function sendLeadGuide(args: {
       };
   }
 }
+
+/* ── Founding Member Beta ────────────────────────────────────────────── */
+
+const BASE_URL = "https://googlereviewpro.com";
+
+/**
+ * Founder welcome. Sent once per account (idempotency key is the slot), and
+ * only after Stripe confirmed the paid subscription.
+ */
+export async function sendFounderWelcome(args: {
+  ownerId: string;
+  email: string;
+  slotLabel: string;
+  priceLine: string;
+}): Promise<{ queued: boolean }> {
+  const result = await dispatchEmail({
+    templateKey: "founder_welcome",
+    to: args.email,
+    ownerId: args.ownerId,
+    idempotencyKey: `founder-welcome:${args.ownerId}`,
+    templateData: {
+      slotLabel: args.slotLabel,
+      priceLine: args.priceLine,
+      dashboardUrl: `${BASE_URL}/dashboard`,
+    },
+    kind: "triggered",
+  });
+  return { queued: result.status === "sent" || result.status === "duplicate" };
+}
+
+/** Warn a founder that cancelling permanently gives up the locked price. */
+export async function sendFounderCancellationWarning(args: {
+  ownerId: string;
+  email: string;
+  slotLabel: string;
+  accessUntil: string;
+}): Promise<{ queued: boolean }> {
+  const result = await dispatchEmail({
+    templateKey: "founder_cancellation_warning",
+    to: args.email,
+    ownerId: args.ownerId,
+    idempotencyKey: `founder-cancel-warning:${args.ownerId}:${args.accessUntil}`,
+    templateData: {
+      slotLabel: args.slotLabel,
+      accessUntil: args.accessUntil,
+      billingUrl: `${BASE_URL}/billing`,
+    },
+    kind: "triggered",
+  });
+  return { queued: result.status === "sent" || result.status === "duplicate" };
+}
