@@ -43,12 +43,9 @@ export function FounderWelcomeCard() {
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold">
-            Welcome aboard — you're one of the first 100.
-          </h2>
+          <h2 className="text-lg font-semibold">Welcome aboard — you're one of the first 100.</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {FOUNDER_COPY.lockWording}. If you cancel and come back later, standard pricing
-            applies.
+            {FOUNDER_COPY.lockWording}. If you cancel and come back later, standard pricing applies.
           </p>
         </div>
 

@@ -105,8 +105,7 @@ export const getMyFounderStatus = createServerFn({ method: "POST" })
           }
         : null,
       feedbackSubmitted: Boolean(feedback),
-      feedbackDue:
-        slot?.status === "active" && !feedback && founderFeedbackDue(slot.activatedAt),
+      feedbackDue: slot?.status === "active" && !feedback && founderFeedbackDue(slot.activatedAt),
     };
   });
 

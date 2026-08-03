@@ -133,9 +133,7 @@ function AdminFoundersPage() {
               <tbody className="divide-y divide-border/60">
                 {(slots.data ?? []).map((slot) => (
                   <tr key={slot.id}>
-                    <td className="py-2 font-medium">
-                      {String(slot.slotNumber).padStart(3, "0")}
-                    </td>
+                    <td className="py-2 font-medium">{String(slot.slotNumber).padStart(3, "0")}</td>
                     <td>
                       <Badge variant={slot.status === "active" ? "default" : "secondary"}>
                         {slot.status}

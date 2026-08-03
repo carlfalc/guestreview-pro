@@ -96,7 +96,6 @@ function Dashboard() {
       <FinishUpgradeCard />
       <OnboardingChecklist />
 
-
       <div className="flex flex-wrap items-center gap-2">
         {(data?.businesses.length ?? 0) > 1 &&
           data!.businesses.map((b) => (

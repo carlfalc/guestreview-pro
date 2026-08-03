@@ -7,7 +7,6 @@ import { template as portfolioDigest } from "./portfolio-digest";
 import { template as founderWelcome } from "./founder-welcome";
 import { template as founderCancellationWarning } from "./founder-cancellation-warning";
 
-
 export interface TemplateEntry {
   component: ComponentType<any>;
   subject: string | ((data: Record<string, any>) => string);
@@ -38,5 +37,4 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   portfolio_digest: portfolioDigest,
   founder_welcome: founderWelcome,
   founder_cancellation_warning: founderCancellationWarning,
-
 };

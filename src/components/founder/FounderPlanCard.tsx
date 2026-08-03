@@ -83,11 +83,7 @@ export function FounderPlanCard({ region }: { region: AccountRegionDTO }) {
           {plan.standardAmountMinor > plan.amountMinor && (
             <span className="text-sm text-muted-foreground">
               <s>
-                {formatRegionalPriceCompact(
-                  plan.standardAmountMinor,
-                  plan.currency,
-                  config.locale,
-                )}
+                {formatRegionalPriceCompact(plan.standardAmountMinor, plan.currency, config.locale)}
               </s>{" "}
               standard · save {plan.discountPercent}%
             </span>

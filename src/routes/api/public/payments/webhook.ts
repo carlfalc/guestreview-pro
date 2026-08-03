@@ -170,8 +170,7 @@ async function syncFounderSlot(
   const lookupKey = (price?.lookup_key ?? price?.metadata?.lovable_external_id ?? null) as
     | string
     | null;
-  const isFounderPrice =
-    isFounderLookupKey(lookupKey) || subscription.metadata?.founder === "true";
+  const isFounderPrice = isFounderLookupKey(lookupKey) || subscription.metadata?.founder === "true";
 
   const status = String(subscription.status ?? "");
 
@@ -238,11 +237,7 @@ async function notifyFounder(
   options: { kind: "welcome"; priceLine: string } | { kind: "warning"; accessUntil: string },
 ): Promise<void> {
   try {
-    const { data } = await admin()
-      .from("profiles")
-      .select("email")
-      .eq("id", ownerId)
-      .maybeSingle();
+    const { data } = await admin().from("profiles").select("email").eq("id", ownerId).maybeSingle();
     const email = (data as { email?: string | null } | null)?.email;
     if (!email) return;
 
@@ -269,8 +264,6 @@ async function notifyFounder(
     console.error("founder email failed:", e);
   }
 }
-
-
 
 /** Update payment health without ever touching plan entitlement. */
 async function markPayment(
@@ -392,7 +385,6 @@ async function dispatch(event: { type: string; data: { object: LooseRecord } }, 
 
     default:
       console.log("Unhandled Stripe event:", event.type);
-
   }
 }
 
@@ -423,7 +415,6 @@ async function releaseFounderForCharge(
     source: "stripe",
   });
 }
-
 
 /** Returns the HTTP status Stripe should see. */
 async function handle(request: Request, env: StripeEnv): Promise<number> {

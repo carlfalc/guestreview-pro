@@ -5,7 +5,6 @@ import { RegionalPricingTable } from "@/components/billing/RegionalPricingTable"
 import { useTrackOnce } from "@/hooks/use-analytics";
 import { FounderPlanCard } from "@/components/founder/FounderPlanCard";
 
-
 export const Route = createFileRoute("/_authenticated/plans")({
   component: PricingPage,
   head: () => ({
@@ -42,7 +41,6 @@ function PricingPage() {
           <RegionalPricingTable region={region} />
         </>
       )}
-
     </div>
   );
 }

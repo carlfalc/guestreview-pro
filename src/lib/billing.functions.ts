@@ -128,8 +128,10 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       const eligibility = await founderOfferEligible(admin, context.userId);
       if (eligibility.eligible) {
         founderApplied = true;
-        lookupKey = resolveFounderPlan(region.pricing_region as never, data.interval)
-          .stripeLookupKey;
+        lookupKey = resolveFounderPlan(
+          region.pricing_region as never,
+          data.interval,
+        ).stripeLookupKey;
       } else if (!data.acceptStandardIfSoldOut) {
         // Sold out (or already used) — never silently charge standard pricing.
         return {
@@ -167,7 +169,6 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
         error: `This plan is not available for purchase right now. (${plan.stripeLookupKey})`,
       };
     }
-
 
     try {
       const stripe = createStripeClient(environment);
@@ -236,7 +237,6 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
           },
         },
       });
-
 
       // Record the attempt so an abandoned checkout can be recovered later.
       // Best-effort: a failure here must never block a paying customer.

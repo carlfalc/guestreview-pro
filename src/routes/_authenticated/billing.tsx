@@ -16,7 +16,6 @@ import { UpgradeChecklist } from "@/components/billing/UpgradeChecklist";
 import { PlanPrioritiesCard } from "@/components/billing/PlanPrioritiesCard";
 import { FounderBadge } from "@/components/founder/FounderBadge";
 
-
 export const Route = createFileRoute("/_authenticated/billing")({
   component: BillingPage,
   validateSearch: (search: Record<string, unknown>) => ({
@@ -99,7 +98,6 @@ function BillingPage() {
           Your plan, renewal date and payment history. Pricing follows your locked account region.
         </p>
       </div>
-
 
       <UpgradeChecklist />
       <PlanPrioritiesCard />

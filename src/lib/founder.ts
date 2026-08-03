@@ -92,9 +92,7 @@ export function resolveFounderPlan(
     amountMinor,
     standardAmountMinor,
     discountPercent:
-      standardAmountMinor > 0
-        ? Math.round((1 - amountMinor / standardAmountMinor) * 100)
-        : 0,
+      standardAmountMinor > 0 ? Math.round((1 - amountMinor / standardAmountMinor) * 100) : 0,
     stripeLookupKey: `founder_pro_${founder.currency.toLowerCase()}_${interval}`,
     usesFallbackCurrency: !supported,
   };
@@ -128,9 +126,7 @@ export function founderBadgeLabel(slotNumber: number | null | undefined): string
 }
 
 /** Only an active slot keeps founder pricing and the badge. */
-export function isFounderActive(
-  slot: { status?: string | null } | null | undefined,
-): boolean {
+export function isFounderActive(slot: { status?: string | null } | null | undefined): boolean {
   return slot?.status === "active";
 }
 

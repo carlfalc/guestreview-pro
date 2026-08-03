@@ -37,7 +37,6 @@ export const PRODUCT_EVENTS = [
   "founder_feedback_submitted",
 ] as const;
 
-
 export type ProductEventName = (typeof PRODUCT_EVENTS)[number];
 
 export type EventValue = string | number | boolean | null;

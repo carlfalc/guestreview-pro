@@ -75,7 +75,6 @@ function SettingsPage() {
         <p className="mt-1 text-sm text-muted-foreground">Preferences and personalization.</p>
       </div>
 
-
       {region ? <AccountRegionCard region={region} /> : null}
 
       <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">

@@ -4,7 +4,6 @@ import { QrCode, Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FounderBanner } from "@/components/founder/FounderBanner";
 
-
 const NAV = [
   { to: "/features", label: "Features" },
   { to: "/industries", label: "Industries" },
@@ -39,7 +38,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
       <FounderBanner />
 
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[#060826]/80 backdrop-blur">
-
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2.5" aria-label="GuestReview Pro home">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/10">
