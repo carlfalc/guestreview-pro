@@ -593,9 +593,9 @@ export function ArtworkPreview({
   // Landscape and very small pieces cannot carry the full seven-row flow.
   const aspect = w / h;
   const mode: "full" | "compact" | "tiny" =
-    aspect > 1.7 || min <= 60 ? "tiny" : aspect > 1.05 || h < 100 ? "compact" : "full";
+    aspect > 1.35 || min <= 60 ? "tiny" : aspect > 1.05 || h < 100 ? "compact" : "full";
 
-  if (mode === "tiny" && aspect > 1.7) {
+  if (mode === "tiny" && aspect > 1.35) {
     // Wide strips read as a two-column lockup: code left, message right.
     const qr = Math.min(safe.h, safe.w * 0.3);
     const textX = safe.x + qr + safe.w * 0.06;
