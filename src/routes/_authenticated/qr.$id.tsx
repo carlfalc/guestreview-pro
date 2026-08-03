@@ -368,7 +368,7 @@ function QrDetail() {
         </div>
       </div>
 
-      <PrintInterestCard source="qr_detail" businessId={qr.business_id} />
+      <PrintInterestCard source="qr_export" businessId={qr.business_id} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
         <Card className="rounded-3xl border-border/70 shadow-[var(--shadow-card)]">
