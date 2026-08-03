@@ -32,7 +32,7 @@ describe("email content safety", () => {
   });
 
   it("flags unverifiable claims", () => {
-    expect(violatesClaimPolicy("You gained 12 five star reviews")).toBe(true);
+    expect(violatesClaimPolicy("You gained 12 new 5 star reviews")).toBe(true);
     expect(violatesClaimPolicy("Revenue grew last week")).toBe(true);
     expect(violatesClaimPolicy("Your counter placement earned the most scans")).toBe(false);
   });
@@ -116,15 +116,23 @@ describe("deliverability guard rails", () => {
     expect(config.paused).toBe(true);
   });
 
+  it("holds every send until the sending domain is verified", () => {
+    const config = throttleConfigFromEnv({});
+    const counts = { sentLastHour: 0, sentLastDay: 0 };
+    const decision = evaluateThrottle({ config, counts, kind: "scheduled" });
+    expect(decision.allowed).toBe(false);
+    expect(decision.allowed === false && decision.reason).toBe("domain_not_verified");
+  });
+
   it("blocks scheduled email when paused but allows tests", () => {
-    const config = throttleConfigFromEnv({ EMAIL_SENDING_PAUSED: "1" });
+    const config = throttleConfigFromEnv({ EMAIL_SENDING_PAUSED: "1", EMAIL_DOMAIN_STATUS: "active" });
     const counts = { sentLastHour: 0, sentLastDay: 0 };
     expect(evaluateThrottle({ config, counts, kind: "scheduled" }).allowed).toBe(false);
     expect(evaluateThrottle({ config, counts, kind: "test" }).allowed).toBe(true);
   });
 
   it("stops everything on the kill switch", () => {
-    const config = throttleConfigFromEnv({ EMAIL_KILL_SWITCH: "1" });
+    const config = throttleConfigFromEnv({ EMAIL_KILL_SWITCH: "1", EMAIL_DOMAIN_STATUS: "active" });
     const counts = { sentLastHour: 0, sentLastDay: 0 };
     expect(evaluateThrottle({ config, counts, kind: "test" }).allowed).toBe(false);
   });
