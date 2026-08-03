@@ -330,6 +330,24 @@ async function dispatch(event: { type: string; data: { object: LooseRecord } }, 
 
     case "checkout.session.completed": {
       const session = event.data.object;
+
+      // One-off print orders complete here — they have no subscription.
+      const printOrderId =
+        typeof session.metadata?.print_order_id === "string"
+          ? session.metadata.print_order_id
+          : null;
+      if (printOrderId && session.metadata?.purpose === "print_order") {
+        const { markPrintOrderPaid } = await import("@/lib/print-webhook.server");
+        await markPrintOrderPaid(admin(), {
+          printOrderId,
+          paymentIntentId:
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : ((session.payment_intent?.id as string | undefined) ?? null),
+          sessionId: typeof session.id === "string" ? session.id : null,
+        });
+      }
+
       if (session.subscription) {
         const { createStripeClient } = await import("@/lib/stripe.server");
         const stripe = createStripeClient(env);
@@ -357,6 +375,10 @@ async function dispatch(event: { type: string; data: { object: LooseRecord } }, 
     case "checkout.session.expired": {
       const session = event.data.object;
       if (typeof session.id === "string") {
+        const { expirePrintOrder } = await import("@/lib/print-webhook.server");
+        await expirePrintOrder(admin(), session.id);
+      }
+      if (typeof session.id === "string") {
         await admin()
           .from("checkout_attempts")
           .update({ abandoned_reason: "session_expired" })
@@ -378,7 +400,23 @@ async function dispatch(event: { type: string; data: { object: LooseRecord } }, 
           typeof charge.amount === "number" &&
           charge.amount_refunded >= charge.amount);
       if (fullyRefunded) {
-        await releaseFounderForCharge(charge, env, event.type);
+        const paymentIntentId =
+          typeof charge.payment_intent === "string"
+            ? charge.payment_intent
+            : ((charge.payment_intent?.id as string | undefined) ?? null);
+        let handledPrint = false;
+        if (paymentIntentId) {
+          const { refundPrintOrderForPaymentIntent } = await import("@/lib/print-webhook.server");
+          handledPrint = await refundPrintOrderForPaymentIntent(
+            admin(),
+            paymentIntentId,
+            typeof charge.amount_refunded === "number" ? charge.amount_refunded : null,
+          );
+        }
+        // A print refund never touches the subscription/founder lifecycle.
+        if (!handledPrint) {
+          await releaseFounderForCharge(charge, env, event.type);
+        }
       }
       break;
     }
