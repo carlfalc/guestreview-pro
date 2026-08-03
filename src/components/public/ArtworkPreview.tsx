@@ -159,12 +159,15 @@ function Panel({
   const dark = variant === "photo";
   const fg = dark ? "#ffffff" : "#0b0d10";
   const muted = dark ? "rgba(255,255,255,0.78)" : "rgba(11,13,16,0.62)";
-  const qrSize = min * (compact ? 0.46 : 0.42);
+  const qrSize = min * (compact ? 0.4 : 0.42);
   const qrX = (w - qrSize) / 2;
-  const qrY = h * (compact ? 0.24 : 0.22);
+  const qrY = h * (compact ? 0.17 : 0.22);
   const ctaW = w * 0.58;
-  const ctaH = h * (compact ? 0.075 : 0.068);
-  const ctaY = h * (compact ? 0.83 : 0.815);
+  const ctaH = h * (compact ? 0.085 : 0.068);
+  const ctaY = h * (compact ? 0.775 : 0.815);
+  const starsY = h * (compact ? 0.65 : 0.735);
+  const headlineY = h * (compact ? 0.73 : 0.79);
+
 
   return (
     <g clipPath={`url(#${clipId})`}>
