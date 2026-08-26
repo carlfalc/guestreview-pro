@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   MapPin,
   Building2,
+  Globe,
   QrCode,
   LineChart,
   Package,
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/_authenticated")({
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/businesses", label: "Businesses", icon: Building2 },
+  { to: "/website-qr", label: "Website QR codes", icon: Globe },
   { to: "/qr", label: "QR codes", icon: QrCode },
   { to: "/placement-plans", label: "Placement plans", icon: MapPin },
   { to: "/marketing-packs", label: "Marketing Packs", icon: Package },

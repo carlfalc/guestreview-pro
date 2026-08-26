@@ -29,6 +29,7 @@ import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
+import { Route as AuthenticatedWebsiteQrRouteImport } from './routes/_authenticated/website-qr'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedQrRouteImport } from './routes/_authenticated/qr'
@@ -160,6 +161,11 @@ const IndustriesSlugRoute = IndustriesSlugRouteImport.update({
   id: '/industries/$slug',
   path: '/industries/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWebsiteQrRoute = AuthenticatedWebsiteQrRouteImport.update({
+  id: '/website-qr',
+  path: '/website-qr',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -366,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
+  '/website-qr': typeof AuthenticatedWebsiteQrRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByTo {
   '/qr': typeof AuthenticatedQrRouteWithChildren
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
+  '/website-qr': typeof AuthenticatedWebsiteQrRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -474,6 +482,7 @@ export interface FileRoutesById {
   '/_authenticated/qr': typeof AuthenticatedQrRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
+  '/_authenticated/website-qr': typeof AuthenticatedWebsiteQrRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/r/$code': typeof RCodeRoute
   '/resources/$slug': typeof ResourcesSlugRoute
@@ -529,6 +538,7 @@ export interface FileRouteTypes {
     | '/qr'
     | '/reports'
     | '/settings'
+    | '/website-qr'
     | '/industries/$slug'
     | '/r/$code'
     | '/resources/$slug'
@@ -582,6 +592,7 @@ export interface FileRouteTypes {
     | '/qr'
     | '/reports'
     | '/settings'
+    | '/website-qr'
     | '/industries/$slug'
     | '/r/$code'
     | '/resources/$slug'
@@ -636,6 +647,7 @@ export interface FileRouteTypes {
     | '/_authenticated/qr'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/_authenticated/website-qr'
     | '/industries/$slug'
     | '/r/$code'
     | '/resources/$slug'
@@ -833,6 +845,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/industries/$slug'
       preLoaderRoute: typeof IndustriesSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/website-qr': {
+      id: '/_authenticated/website-qr'
+      path: '/website-qr'
+      fullPath: '/website-qr'
+      preLoaderRoute: typeof AuthenticatedWebsiteQrRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -1112,6 +1131,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedQrRoute: typeof AuthenticatedQrRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
+  AuthenticatedWebsiteQrRoute: typeof AuthenticatedWebsiteQrRoute
   AuthenticatedAdminEmailRoute: typeof AuthenticatedAdminEmailRoute
   AuthenticatedAdminFoundersRoute: typeof AuthenticatedAdminFoundersRoute
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
@@ -1139,6 +1159,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedQrRoute: AuthenticatedQrRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
+  AuthenticatedWebsiteQrRoute: AuthenticatedWebsiteQrRoute,
   AuthenticatedAdminEmailRoute: AuthenticatedAdminEmailRoute,
   AuthenticatedAdminFoundersRoute: AuthenticatedAdminFoundersRoute,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
@@ -1187,3 +1208,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
