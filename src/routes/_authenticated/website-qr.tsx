@@ -303,7 +303,7 @@ function CreateWebsiteQrDialog({
       });
       if (error) throw error;
 
-      track("website_qr_created", {});
+      track("qr_created", { destinationType: "website" });
       toast.success("Website QR code created");
       reset();
       onCreated();
