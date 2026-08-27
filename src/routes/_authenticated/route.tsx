@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { useAccountRegion } from "@/hooks/use-account-region";
 import { BillingRegionBadge } from "@/components/billing/BillingRegionBadge";
 import { BetaFeedbackButton } from "@/components/feedback/BetaFeedbackButton";
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -104,9 +105,9 @@ function AuthedLayout() {
           </nav>
           <div className="border-t border-sidebar-border p-3">
             <div className="flex items-center gap-3 rounded-xl px-3 py-2">
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
-                {email.slice(0, 1).toUpperCase()}
-              </div>
+              <Link to="/settings" onClick={() => setOpen(false)} title="Change profile picture">
+                <ProfileAvatar fallback={email} />
+              </Link>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-medium">{email}</p>
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">

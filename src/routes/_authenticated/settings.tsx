@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { AccountRegionCard } from "@/components/billing/AccountRegionCard";
 import { useAccountRegion } from "@/hooks/use-account-region";
+import { ProfilePictureCard } from "@/components/profile/ProfilePictureCard";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -74,6 +75,8 @@ function SettingsPage() {
         </div>
         <p className="mt-1 text-sm text-muted-foreground">Preferences and personalization.</p>
       </div>
+
+      <ProfilePictureCard fallback={profile?.full_name || "?"} />
 
       {region ? <AccountRegionCard region={region} /> : null}
 
