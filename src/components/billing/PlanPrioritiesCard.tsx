@@ -42,6 +42,7 @@ export function PlanPrioritiesCard() {
           .select("id, label, project_name, created_at, status")
           .eq("owner_id", uid)
           .eq("status", "active")
+          .or("destination_type.is.null,destination_type.neq.website")
           .order("created_at", { ascending: true }),
         supabase
           .from("businesses")
