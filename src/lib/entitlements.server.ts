@@ -86,7 +86,9 @@ export async function getAccountUsage(admin: AdminClient, ownerId: string): Prom
       .from("qr_codes")
       .select("id", { count: "exact", head: true })
       .eq("owner_id", ownerId)
-      .eq("status", "active"),
+      .eq("status", "active")
+      // Website QR codes have their own allowance (enforced by the DB trigger).
+      .or("destination_type.is.null,destination_type.neq.website"),
   ]);
   return { businesses: biz.count ?? 0, activeQrCodes: qr.count ?? 0 };
 }
